@@ -313,6 +313,11 @@ function Index() {
 
             <div className="hero-stage">
               <div className="hero-circle load-3" aria-hidden="true"></div>
+              <img
+                className="hero-photo load-4"
+                src={ahmedHero.url}
+                alt="Ahmed Mekki"
+              />
 
               <figure className="hero-note hero-quote load-5">
                 <svg className="quote-icon" viewBox="0 0 32 24" fill="#171718" aria-hidden="true">
