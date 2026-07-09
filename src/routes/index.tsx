@@ -420,7 +420,12 @@ function Index() {
               <p>Script, direction, AI production, edit.</p>
             </div>
 
-            <div className="videos-stage" data-reveal>
+            <div
+              className={`videos-stage${textHidden ? " text-hidden" : ""}`}
+              data-reveal
+              onTouchStart={onTouchStart}
+              onTouchEnd={onTouchEnd}
+            >
               <div className="videos-track">
                 {VIDEOS.map((v, i) => {
                   const pos = getSlidePos(i);
@@ -429,23 +434,37 @@ function Index() {
                   return (
                     <article
                       key={v.title}
-                      className="video-slide"
+                      className={`video-slide${isActive && isPlaying ? " is-playing" : ""}`}
                       data-pos={pos}
-                      onClick={() => setVideoIndex(i)}
                       aria-hidden={pos === "hidden"}
                     >
                       {v.src && (
                         <video
+                          ref={(el) => {
+                            videoRefs.current[i] = el;
+                          }}
                           src={v.src}
                           poster={v.poster}
-                          muted
+                          muted={!isActive || isMuted}
                           playsInline
                           loop
                           preload="metadata"
-                          controls={isActive}
-                          autoPlay={isActive}
+                          onClick={() => {
+                            if (!isActive) goTo(i);
+                            else togglePlay();
+                          }}
+                          onPlay={() => isActive && setIsPlaying(true)}
+                          onPause={() => isActive && setIsPlaying(false)}
+                          onTimeUpdate={(e) => {
+                            if (!isActive) return;
+                            const el = e.currentTarget;
+                            if (el.duration) {
+                              setProgress((el.currentTime / el.duration) * 100);
+                              setCurrentTime(el.currentTime);
+                            }
+                          }}
                           onLoadedMetadata={(e) => {
-                            const d = (e.currentTarget as HTMLVideoElement).duration;
+                            const d = e.currentTarget.duration;
                             if (!isNaN(d)) {
                               setVideoDurations((prev) =>
                                 prev[i] ? prev : { ...prev, [i]: formatTime(d) },
@@ -454,7 +473,92 @@ function Index() {
                           }}
                         />
                       )}
+                      {!isActive && (
+                        <button
+                          type="button"
+                          className="slide-clickcatch"
+                          aria-label={`Show ${v.title}`}
+                          onClick={() => goTo(i)}
+                        />
+                      )}
                       <div className="slide-shade" />
+
+                      {isActive && (
+                        <>
+                          <button
+                            type="button"
+                            className={`slide-play${isPlaying ? " playing" : ""}`}
+                            aria-label={isPlaying ? "Pause" : "Play"}
+                            onClick={togglePlay}
+                          >
+                            {isPlaying ? (
+                              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <rect x="6" y="5" width="4" height="14" rx="1" />
+                                <rect x="14" y="5" width="4" height="14" rx="1" />
+                              </svg>
+                            ) : (
+                              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path d="M8 5v14l11-7z" />
+                              </svg>
+                            )}
+                          </button>
+
+                          <button
+                            type="button"
+                            className="slide-toggle-text"
+                            aria-label={textHidden ? "Show details" : "Hide details"}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setTextHidden((t) => !t);
+                            }}
+                          >
+                            {textHidden ? (
+                              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" stroke="currentColor" strokeWidth="1.8" />
+                                <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.8" />
+                              </svg>
+                            ) : (
+                              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M3 3l18 18M10.6 6.1A9.7 9.7 0 0112 6c6.5 0 10 7 10 7a15.3 15.3 0 01-3.4 4M6.1 6.1C3.5 8 2 12 2 12s3.5 7 10 7c1.7 0 3.2-.4 4.5-1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                              </svg>
+                            )}
+                          </button>
+
+                          <div className="slide-player-bar" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              type="button"
+                              className="pb-btn"
+                              aria-label={isMuted ? "Unmute" : "Mute"}
+                              onClick={toggleMute}
+                            >
+                              {isMuted ? (
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                  <path d="M4 9v6h4l5 4V5L8 9H4zM16 9l6 6M22 9l-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                                </svg>
+                              ) : (
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                  <path d="M4 9v6h4l5 4V5L8 9H4zM16 8a5 5 0 010 8M19 5a9 9 0 010 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                                </svg>
+                              )}
+                            </button>
+                            <input
+                              type="range"
+                              min={0}
+                              max={100}
+                              step={0.1}
+                              value={progress}
+                              onChange={onSeek}
+                              className="pb-seek"
+                              style={{ ["--p" as string]: `${progress}%` }}
+                              aria-label="Seek"
+                            />
+                            <span className="pb-time">
+                              {formatTime(currentTime)} / {videoDurations[i] ?? "0:00"}
+                            </span>
+                          </div>
+                        </>
+                      )}
+
                       <span className="slide-counter">{count}</span>
                       <div className="slide-body">
                         <span className="slide-tag">{v.tag}</span>
@@ -473,20 +577,29 @@ function Index() {
             </div>
 
             <div className="videos-controls">
+              <button
+                className="videos-arrow videos-arrow-prev"
+                aria-label="Previous film"
+                onClick={goPrev}
+              >
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M19 12H5M11 6l-6 6 6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
               <div className="videos-dots" role="tablist" aria-label="Select film">
                 {VIDEOS.map((v, i) => (
                   <button
                     key={v.title}
                     aria-label={v.title}
                     aria-current={i === videoIndex}
-                    onClick={() => setVideoIndex(i)}
+                    onClick={() => goTo(i)}
                   />
                 ))}
               </div>
               <button
                 className="videos-arrow"
                 aria-label="Next film"
-                onClick={() => setVideoIndex((i) => (i + 1) % VIDEOS.length)}
+                onClick={goNext}
               >
                 <svg viewBox="0 0 24 24" fill="none">
                   <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
