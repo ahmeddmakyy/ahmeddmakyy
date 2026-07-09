@@ -1,5 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import easyWayAsset from "@/assets/videos/easy_way.mp4.asset.json";
+import golfCityAsset from "@/assets/videos/golf_city.mp4.asset.json";
+import renewStoryAsset from "@/assets/videos/renew_story.mp4.asset.json";
+import renewStarAsset from "@/assets/videos/renew_star.mp4.asset.json";
 
 export const Route = createFileRoute("/")({
   component: Index,
