@@ -65,6 +65,24 @@ const VIDEOS: Video[] = [
 function Index() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
+  const [videoIndex, setVideoIndex] = useState(0);
+  const [videoDurations, setVideoDurations] = useState<Record<number, string>>({});
+
+  const formatTime = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, "0")}`;
+  };
+
+  const getSlidePos = (i: number): string => {
+    const n = VIDEOS.length;
+    let d = i - videoIndex;
+    if (d > n / 2) d -= n;
+    if (d < -n / 2) d += n;
+    if (d === 0) return "0";
+    if (d === -1 || d === 1 || d === -2 || d === 2) return String(d);
+    return "hidden";
+  };
 
   // Scroll reveal + section spy + reduced motion handling
   useEffect(() => {
