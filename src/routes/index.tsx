@@ -68,6 +68,80 @@ function Index() {
   const [activeSection, setActiveSection] = useState("home");
   const [videoIndex, setVideoIndex] = useState(0);
   const [videoDurations, setVideoDurations] = useState<Record<number, string>>({});
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const [textHidden, setTextHidden] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const videoRefs = useRef<Record<number, HTMLVideoElement | null>>({});
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+
+  const goTo = (n: number) => {
+    const len = VIDEOS.length;
+    const next = ((n % len) + len) % len;
+    setVideoIndex(next);
+    setIsPlaying(false);
+    setProgress(0);
+    setCurrentTime(0);
+    setTextHidden(false);
+  };
+  const goPrev = () => goTo(videoIndex - 1);
+  const goNext = () => goTo(videoIndex + 1);
+
+  // Pause non-active videos when index changes
+  useEffect(() => {
+    Object.entries(videoRefs.current).forEach(([k, v]) => {
+      if (!v) return;
+      if (Number(k) !== videoIndex) {
+        v.pause();
+        v.currentTime = 0;
+      }
+    });
+  }, [videoIndex]);
+
+  const togglePlay = () => {
+    const v = videoRefs.current[videoIndex];
+    if (!v) return;
+    if (v.paused) {
+      v.play();
+      setIsPlaying(true);
+    } else {
+      v.pause();
+      setIsPlaying(false);
+    }
+  };
+
+  const toggleMute = () => {
+    const v = videoRefs.current[videoIndex];
+    if (!v) return;
+    v.muted = !v.muted;
+    setIsMuted(v.muted);
+  };
+
+  const onSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = videoRefs.current[videoIndex];
+    if (!v || !v.duration) return;
+    const p = Number(e.target.value);
+    v.currentTime = (p / 100) * v.duration;
+    setProgress(p);
+  };
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current == null || touchStartY.current == null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    const dy = e.changedTouches[0].clientY - touchStartY.current;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+      if (dx < 0) goNext();
+      else goPrev();
+    }
+    touchStartX.current = null;
+    touchStartY.current = null;
+  };
 
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
