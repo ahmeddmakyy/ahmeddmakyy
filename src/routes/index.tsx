@@ -65,6 +65,24 @@ const VIDEOS: Video[] = [
 function Index() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
+  const [videoIndex, setVideoIndex] = useState(0);
+  const [videoDurations, setVideoDurations] = useState<Record<number, string>>({});
+
+  const formatTime = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, "0")}`;
+  };
+
+  const getSlidePos = (i: number): string => {
+    const n = VIDEOS.length;
+    let d = i - videoIndex;
+    if (d > n / 2) d -= n;
+    if (d < -n / 2) d += n;
+    if (d === 0) return "0";
+    if (d === -1 || d === 1 || d === -2 || d === 2) return String(d);
+    return "hidden";
+  };
 
   // Scroll reveal + section spy + reduced motion handling
   useEffect(() => {
@@ -315,41 +333,89 @@ function Index() {
         {/* ══════════ VIDEOS ══════════ */}
         <section className="section dark" id="videos">
           <div className="container">
-            <div className="section-head" data-reveal>
-              <h2 className="section-title"><span className="accent">Videos</span></h2>
-              <p className="section-lede">
-                Films directed end to end — script, characters, shots, VO, edit. Drop the MP4s in and they play right here.
-              </p>
+            <div className="videos-hero" data-reveal>
+              <h2>
+                Every <span className="accent">film</span> starts with an <span className="accent">idea.</span>
+              </h2>
+              <p>Script, direction, AI production, edit.</p>
             </div>
-            <div className="videos-grid">
-              {VIDEOS.map((v) => (
-                <article className="video-card" data-reveal key={v.title}>
-                  <div className={`video-frame${v.orientation === "vertical" ? " vertical" : ""}`}>
-                    {v.src ? (
-                      <video
-                        src={v.src}
-                        poster={v.poster}
-                        controls
-                        preload="metadata"
-                        playsInline
-                      />
-                    ) : (
-                      <div className="video-empty">Video coming soon</div>
-                    )}
-                  </div>
-                  <div className="video-meta">
-                    <div className="work-meta">
-                      <span className="tag">{v.tag}</span>
-                      <span className="period">{v.client}</span>
-                    </div>
-                    <h3>{v.title}</h3>
-                    <p>{v.description}</p>
-                  </div>
-                </article>
-              ))}
+
+            <div className="videos-stage" data-reveal>
+              <div className="videos-track">
+                {VIDEOS.map((v, i) => {
+                  const pos = getSlidePos(i);
+                  const isActive = pos === "0";
+                  const count = `${(i + 1).toString().padStart(2, "0")} / ${VIDEOS.length.toString().padStart(2, "0")}`;
+                  return (
+                    <article
+                      key={v.title}
+                      className="video-slide"
+                      data-pos={pos}
+                      onClick={() => setVideoIndex(i)}
+                      aria-hidden={pos === "hidden"}
+                    >
+                      {v.src && (
+                        <video
+                          src={v.src}
+                          poster={v.poster}
+                          muted
+                          playsInline
+                          loop
+                          preload="metadata"
+                          controls={isActive}
+                          autoPlay={isActive}
+                          onLoadedMetadata={(e) => {
+                            const d = (e.currentTarget as HTMLVideoElement).duration;
+                            if (!isNaN(d)) {
+                              setVideoDurations((prev) =>
+                                prev[i] ? prev : { ...prev, [i]: formatTime(d) },
+                              );
+                            }
+                          }}
+                        />
+                      )}
+                      <div className="slide-shade" />
+                      <span className="slide-counter">{count}</span>
+                      <div className="slide-body">
+                        <span className="slide-tag">{v.tag}</span>
+                        <h3 className="slide-title">{v.title}</h3>
+                        <p className="slide-desc">{v.description}</p>
+                        <div className="slide-foot">
+                          <span>◷ {videoDurations[i] ?? "—"}</span>
+                          <span className="dot">|</span>
+                          <span>▤ {v.client}</span>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="videos-controls">
+              <div className="videos-dots" role="tablist" aria-label="Select film">
+                {VIDEOS.map((v, i) => (
+                  <button
+                    key={v.title}
+                    aria-label={v.title}
+                    aria-current={i === videoIndex}
+                    onClick={() => setVideoIndex(i)}
+                  />
+                ))}
+              </div>
+              <button
+                className="videos-arrow"
+                aria-label="Next film"
+                onClick={() => setVideoIndex((i) => (i + 1) % VIDEOS.length)}
+              >
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
             </div>
           </div>
         </section>
+
 
         {/* ══════════ ABOUT ══════════ */}
         <section className="section light" id="about">
