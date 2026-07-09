@@ -1,5 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import easyWayAsset from "@/assets/videos/easy_way.mp4.asset.json";
+import golfCityAsset from "@/assets/videos/golf_city.mp4.asset.json";
+import renewStoryAsset from "@/assets/videos/renew_story.mp4.asset.json";
+import renewStarAsset from "@/assets/videos/renew_star.mp4.asset.json";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -26,7 +30,8 @@ const VIDEOS: Video[] = [
     client: "Legal / IP",
     description:
       "Cinematic AI reel produced end to end: script, character sheets, Veo shots, Arabic voice-over, final edit.",
-    orientation: "horizontal",
+    src: easyWayAsset.url,
+    orientation: "vertical",
   },
   {
     title: "Golf City Club — All the Games in One Place",
@@ -34,6 +39,7 @@ const VIDEOS: Video[] = [
     client: "Sports Club",
     description:
       "Vertical cinematic sports film cut from Veo 3.1 clips with morph transitions for a club with 188K followers.",
+    src: golfCityAsset.url,
     orientation: "vertical",
   },
   {
@@ -42,7 +48,8 @@ const VIDEOS: Video[] = [
     client: "Agency · Egypt",
     description:
       "AI stop-motion film for the agency's own 2026 slate — nostalgic Egyptian storytelling, hand-directed shot by shot.",
-    orientation: "horizontal",
+    src: renewStoryAsset.url,
+    orientation: "vertical",
   },
   {
     title: "Renew Media — Star of the Party",
@@ -50,7 +57,8 @@ const VIDEOS: Video[] = [
     client: "Agency · KSA",
     description:
       "AI stop-motion film written in Saudi dialect, cut to a VO-first edit — the same system, a new voice.",
-    orientation: "horizontal",
+    src: renewStarAsset.url,
+    orientation: "vertical",
   },
 ];
 
