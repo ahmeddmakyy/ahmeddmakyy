@@ -71,11 +71,30 @@ function Index() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [textHidden, setTextHidden] = useState(false);
+  const [controlsVisible, setControlsVisible] = useState(true);
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const videoRefs = useRef<Record<number, HTMLVideoElement | null>>({});
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
+  const hideTimer = useRef<number | null>(null);
+
+  const clearHideTimer = () => {
+    if (hideTimer.current) {
+      window.clearTimeout(hideTimer.current);
+      hideTimer.current = null;
+    }
+  };
+
+  const scheduleHide = () => {
+    clearHideTimer();
+    hideTimer.current = window.setTimeout(() => setControlsVisible(false), 2600);
+  };
+
+  const showControls = () => {
+    setControlsVisible(true);
+    if (isPlaying) scheduleHide();
+  };
 
   const goTo = (n: number) => {
     const len = VIDEOS.length;
@@ -85,6 +104,8 @@ function Index() {
     setProgress(0);
     setCurrentTime(0);
     setTextHidden(false);
+    setControlsVisible(true);
+    clearHideTimer();
   };
   const goPrev = () => goTo(videoIndex - 1);
   const goNext = () => goTo(videoIndex + 1);
@@ -99,6 +120,17 @@ function Index() {
       }
     });
   }, [videoIndex]);
+
+  // Auto-hide controls while playing
+  useEffect(() => {
+    if (isPlaying) scheduleHide();
+    else {
+      clearHideTimer();
+      setControlsVisible(true);
+    }
+    return clearHideTimer;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPlaying, videoIndex]);
 
   const togglePlay = () => {
     const v = videoRefs.current[videoIndex];
@@ -117,6 +149,15 @@ function Index() {
     if (!v) return;
     v.muted = !v.muted;
     setIsMuted(v.muted);
+    showControls();
+  };
+
+  const skip = (delta: number) => {
+    const v = videoRefs.current[videoIndex];
+    if (!v) return;
+    const d = v.duration || 0;
+    v.currentTime = Math.max(0, Math.min(d, v.currentTime + delta));
+    showControls();
   };
 
   const onSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,6 +166,20 @@ function Index() {
     const p = Number(e.target.value);
     v.currentTime = (p / 100) * v.duration;
     setProgress(p);
+    showControls();
+  };
+
+  const onSlideTap = () => {
+    if (!isPlaying) {
+      togglePlay();
+      return;
+    }
+    if (controlsVisible) {
+      setControlsVisible(false);
+      clearHideTimer();
+    } else {
+      showControls();
+    }
   };
 
   const onTouchStart = (e: React.TouchEvent) => {
@@ -158,6 +213,7 @@ function Index() {
     if (d === -1 || d === 1 || d === -2 || d === 2) return String(d);
     return "hidden";
   };
+
 
   // Scroll reveal + section spy + reduced motion handling
   useEffect(() => {
