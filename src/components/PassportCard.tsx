@@ -7,7 +7,7 @@ import {
 } from "framer-motion";
 import type { PointerEvent, ReactNode } from "react";
 import photo from "@/assets/ahmed-passport-photo.webp";
-import egFlag from "@/assets/eg-flag-apple.png";
+import egFlag from "@/assets/egypt-flag.svg";
 
 /* A stylized "passport" ID card for the About section, modeled on the open-
    passport look (guilloché paper, page fold, dense rubber stamps, photo + data
@@ -225,13 +225,13 @@ export default function PassportCard() {
 
         {/* ── data page ── */}
         <div className="pp-pass-lbl">PASSPORT</div>
-        {/* Egyptian flag — the real Apple (iOS) emoji artwork, bundled locally */}
+        {/* Egyptian flag — detailed vector artwork (crisp at any size) */}
         <img
           className="pp-flag"
           src={egFlag}
           alt=""
-          width={160}
-          height={160}
+          width={513}
+          height={357}
           loading="lazy"
           aria-hidden="true"
         />
