@@ -29,7 +29,10 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const root = document.documentElement;
     root.lang = lang;
-    root.dir = CONTENT[lang].dir;
+    // Layout stays LTR in both languages by request — only the copy swaps.
+    // Arabic glyphs still shape/read right-to-left within each element via the
+    // Unicode bidi algorithm; the page structure is never mirrored.
+    root.dir = "ltr";
     window.localStorage.setItem("lang", lang);
   }, [lang]);
 

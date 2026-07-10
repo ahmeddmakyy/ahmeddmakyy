@@ -1,38 +1,45 @@
 import { animate, useInView, useReducedMotion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 // Counts a numeric stat up from 0 when it scrolls into view.
-// SSR + first client render show the final value (SEO-safe); the client then
-// resets to 0 and animates. Non-numeric strings render unchanged.
+// SSR + first client render show the final value (SEO-safe); on the client it
+// resets to 0, then animates once the stat enters the viewport.
 function StatNumber({ value }: { value: string }) {
-  const parts = value.match(/^(\D*)(\d+)(\D*)$/);
+  // Parse ONCE per value. A fresh array on every render would be an unstable
+  // effect dependency and restart the animation each frame (the count would
+  // never advance past 0) — this was the "numbers not animating" bug.
+  const parsed = useMemo(() => {
+    const m = value.match(/^(\D*)(\d+)(\D*)$/);
+    return m ? { prefix: m[1], target: parseInt(m[2], 10), suffix: m[3] } : null;
+  }, [value]);
+
   const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true, margin: "0px 0px -10% 0px" });
+  const inView = useInView(ref, { once: true, margin: "0px 0px -12% 0px" });
   const reduce = useReducedMotion();
-  const [display, setDisplay] = useState(parts ? parts[2] : value);
-
-  // On client mount, drop to 0 so the count-up has somewhere to start.
-  useEffect(() => {
-    if (parts && !reduce) setDisplay("0");
-  }, [parts, reduce]);
+  const [display, setDisplay] = useState<number | null>(
+    parsed ? parsed.target : null,
+  );
 
   useEffect(() => {
-    if (!parts || reduce || !inView) return;
-    const target = parseInt(parts[2], 10);
-    const controls = animate(0, target, {
-      duration: 1.1,
+    if (!parsed || reduce) return;
+    if (!inView) {
+      setDisplay(0); // hold at 0 until it scrolls into view
+      return;
+    }
+    const controls = animate(0, parsed.target, {
+      duration: 1.5,
       ease: [0.22, 0.8, 0.3, 1],
-      onUpdate: (v) => setDisplay(String(Math.round(v))),
+      onUpdate: (v) => setDisplay(Math.round(v)),
     });
     return () => controls.stop();
-  }, [inView, parts, reduce]);
+  }, [inView, parsed, reduce]);
 
-  if (!parts) return <>{value}</>;
+  if (!parsed) return <>{value}</>;
   return (
     <span ref={ref}>
-      {parts[1]}
-      {display}
-      {parts[3]}
+      {parsed.prefix}
+      {display ?? parsed.target}
+      {parsed.suffix}
     </span>
   );
 }

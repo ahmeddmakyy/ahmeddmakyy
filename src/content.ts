@@ -265,7 +265,8 @@ const en: SiteContent = {
 };
 
 const ar: SiteContent = {
-  dir: "rtl",
+  // Layout stays LTR in Arabic too (by request) — see i18n.tsx.
+  dir: "ltr",
   a11y: { skip: "تخطَّ إلى المحتوى", menu: "القائمة" },
   nav: {
     home: "الرئيسية",

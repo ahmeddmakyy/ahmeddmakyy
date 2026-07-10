@@ -17,6 +17,8 @@ import quickLoanPoster from "@/assets/posters/quick_loan.webp";
 import BrandMarquee from "@/components/BrandMarquee";
 import AnimatedStats from "@/components/AnimatedStats";
 import RevealCard from "@/components/RevealCard";
+import PassportCard from "@/components/PassportCard";
+import SocialLinks from "@/components/SocialLinks";
 import { useLang, LangToggle } from "@/i18n";
 import type { Rich as RichText } from "@/content";
 
@@ -762,11 +764,12 @@ function Index() {
         {/* ══════════ ABOUT ══════════ */}
         <section className="section light" id="about">
           <div className="container about-grid">
-            <div className="about-left" data-reveal>
-              <p className="eyebrow">{c.about.eyebrow}</p>
-              <h2 className="section-title"><Rich parts={c.about.title} /></h2>
+            <div className="about-visual">
+              <PassportCard />
             </div>
             <div className="about-right" data-reveal>
+              <p className="eyebrow">{c.about.eyebrow}</p>
+              <h2 className="section-title"><Rich parts={c.about.title} /></h2>
               <p>{c.about.p1}</p>
               <p>{c.about.p2}</p>
               <AnimatedStats stats={c.about.stats} />
@@ -854,6 +857,7 @@ function Index() {
                 {c.contact.whatsapp}
               </a>
             </div>
+            <SocialLinks />
             <p className="contact-loc">{c.contact.loc}</p>
           </div>
           <footer className="footer container">

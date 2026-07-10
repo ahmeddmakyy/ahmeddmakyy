@@ -610,6 +610,173 @@ ul, ol { list-style: none; }
   margin-top: 4px;
 }
 
+/* ══════════ ABOUT PASSPORT CARD ══════════ */
+/* Sizes/offsets are in cqw (1% of the card's own width) so the whole passport
+   scales fluidly on any screen while the absolute layout stays pinned. */
+.about-visual { display: flex; justify-content: center; }
+.passport-wrap { perspective: 1100px; width: min(390px, 86vw); }
+
+.passport {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 390 / 520;
+  container-type: inline-size;
+  border-radius: 16px;
+  padding: 4.1cqw;
+  color: #2f2c24;
+  background: linear-gradient(158deg, #f4edda 0%, #ece2c9 55%, #e4d9bd 100%);
+  box-shadow:
+    0 30px 60px -26px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(90, 70, 30, 0.14) inset,
+    0 2px 0 rgba(255, 255, 255, 0.45) inset;
+  overflow: hidden;
+  will-change: transform;
+}
+.passport::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.pp-perf {
+  position: absolute;
+  left: 3.6cqw;
+  right: 3.6cqw;
+  top: 53.8cqw;
+  border-top: 1.5px dashed rgba(90, 70, 30, 0.28);
+}
+
+.pp-stamps { position: absolute; inset: 0; }
+.pp-stamp {
+  position: absolute;
+  mix-blend-mode: multiply;
+  opacity: 0.82;
+  filter: url(#pp-grunge);
+}
+.pp-stamp svg { display: block; width: 100%; height: auto; overflow: visible; }
+.pp-stamp text {
+  font-family: "Arial Narrow", "Arial", sans-serif;
+  font-weight: 700;
+  fill: currentColor;
+}
+.ink-indigo { color: #3a5583; }
+.ink-red { color: #a8463f; }
+.ink-green { color: #5c7a4d; }
+.ink-teal { color: #3d7a74; }
+
+.pp-s1 { top: 4.1cqw; left: 5.1cqw; width: 27.7cqw; }
+.pp-s2 { top: 2.6cqw; right: 5.6cqw; width: 26.7cqw; }
+.pp-s3 { top: 23.6cqw; left: 33.8cqw; width: 26.7cqw; }
+.pp-s4 { top: 38.5cqw; right: 4.6cqw; width: 30.8cqw; }
+.pp-s5 { top: 38.5cqw; left: 6.7cqw; width: 17.9cqw; }
+
+.pp-page {
+  position: absolute;
+  left: 4.1cqw;
+  right: 4.1cqw;
+  top: 57.4cqw;
+  display: flex;
+  gap: 3.6cqw;
+}
+.pp-photo {
+  width: 30.3cqw;
+  aspect-ratio: 118 / 158;
+  flex: none;
+  border-radius: 1.5cqw;
+  overflow: hidden;
+  border: 1px solid rgba(90, 70, 30, 0.35);
+  box-shadow: 0 3px 10px -4px rgba(0, 0, 0, 0.4);
+  background: #dfe3e8;
+}
+.pp-photo img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 12%; }
+
+.pp-fields {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2.05cqw;
+  padding-top: 0.5cqw;
+}
+.pp-field {
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid rgba(90, 70, 30, 0.14);
+  padding-bottom: 1cqw;
+}
+.pp-lbl {
+  font-size: 2.05cqw;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #a99b7c;
+  font-weight: 700;
+}
+.pp-mono {
+  font-family: "Courier New", ui-monospace, monospace;
+  font-size: 3.21cqw;
+  font-weight: 700;
+  color: #2f2c24;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.pp-flag {
+  position: absolute;
+  top: 57.4cqw;
+  right: 4.1cqw;
+  width: 7.7cqw;
+  aspect-ratio: 3 / 2;
+  border-radius: 0.8cqw;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+.pp-flag i { display: block; height: 33.34%; }
+
+.pp-row2 {
+  position: absolute;
+  left: 4.1cqw;
+  right: 4.1cqw;
+  top: 100.5cqw;
+  display: flex;
+  gap: 3.6cqw;
+}
+.pp-row2 .pp-field { flex: 1; }
+
+.pp-mrz {
+  position: absolute;
+  left: 4.1cqw;
+  right: 4.1cqw;
+  bottom: 3.6cqw;
+  font-family: "Courier New", ui-monospace, monospace;
+  font-size: 2.82cqw;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #4a4536;
+  line-height: 1.5;
+  border-top: 1px solid rgba(90, 70, 30, 0.2);
+  padding-top: 1.8cqw;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* ══════════ SOCIAL LINKS ══════════ */
+.social-links { display: flex; gap: 14px; justify-content: center; margin-top: 26px; }
+.social-link {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+.social-link svg { width: 20px; height: 20px; }
+.social-link:hover { background: var(--orange); border-color: transparent; color: #fff; }
+
 /* ══════════ PROCESS ══════════ */
 .process-grid {
   display: grid;
@@ -1278,33 +1445,28 @@ html.js [data-reveal].revealed {
   .lang-toggle-mobile { display: inline-flex; margin-inline-start: auto; margin-inline-end: 10px; }
 }
 
-/* ══════════ RTL / ARABIC ══════════ */
-[dir="rtl"] body,
-[dir="rtl"] .btn,
-[dir="rtl"] .nav-link,
-[dir="rtl"] input,
-[dir="rtl"] textarea {
+/* ══════════ ARABIC ══════════ */
+/* By request the layout is NEVER mirrored — Arabic keeps the LTR structure and
+   only the copy changes. We key off [lang="ar"] (not dir) and just swap the
+   font + relax Latin letter-spacing so Arabic glyphs join correctly. */
+html[lang="ar"] body,
+html[lang="ar"] .btn,
+html[lang="ar"] .nav-link,
+html[lang="ar"] input,
+html[lang="ar"] textarea {
   font-family: 'Tajawal', 'Segoe UI', Tahoma, sans-serif;
 }
 /* Latin lockups keep the Latin face + tracking even in Arabic mode */
-[dir="rtl"] .brand-word,
-[dir="rtl"] .tool-chip,
-[dir="rtl"] .lang-toggle,
-[dir="rtl"] .sp-time { font-family: 'Urbanist', 'Segoe UI', sans-serif; }
+html[lang="ar"] .brand-word,
+html[lang="ar"] .tool-chip,
+html[lang="ar"] .lang-toggle,
+html[lang="ar"] .sp-time { font-family: 'Urbanist', 'Segoe UI', sans-serif; }
 /* letter-spacing breaks Arabic glyph joining — drop it on Arabic-bearing bits */
-[dir="rtl"] .eyebrow,
-[dir="rtl"] .tag,
-[dir="rtl"] .slide-tag,
-[dir="rtl"] .step-num,
-[dir="rtl"] .section-title,
-[dir="rtl"] .contact-title,
-[dir="rtl"] .hero-title { letter-spacing: normal; }
-/* the tool marquee stays LTR (Latin names, left-scrolling) */
-.marquee { direction: ltr; }
-/* hero side-notes swap sides */
-[dir="rtl"] .hero-quote { left: auto; right: 0; text-align: right; }
-[dir="rtl"] .hero-rating { right: auto; left: 0; text-align: left; }
-[dir="rtl"] .hero-rating .stars { justify-content: flex-start; }
-/* about paragraphs read right-aligned */
-[dir="rtl"] .about-right p { text-align: right; }
+html[lang="ar"] .eyebrow,
+html[lang="ar"] .tag,
+html[lang="ar"] .slide-tag,
+html[lang="ar"] .step-num,
+html[lang="ar"] .section-title,
+html[lang="ar"] .contact-title,
+html[lang="ar"] .hero-title { letter-spacing: normal; }
 
