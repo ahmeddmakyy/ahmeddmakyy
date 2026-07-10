@@ -611,152 +611,177 @@ ul, ol { list-style: none; }
 }
 
 /* ══════════ ABOUT PASSPORT CARD ══════════ */
-/* Sizes/offsets are in cqw (1% of the card's own width) so the whole passport
-   scales fluidly on any screen while the absolute layout stays pinned. */
+/* Open-passport look: guilloché paper, page fold, dense rubber stamps, data
+   page + MRZ. All sizes are in cqw (1% of the card's width) so the whole card
+   scales fluidly while the absolute layout stays pinned. Design width = 500px,
+   so 1cqw = 5px at design scale (px × 0.2 = cqw). */
 .about-visual { display: flex; justify-content: center; }
-.passport-wrap { perspective: 1100px; width: min(390px, 86vw); }
+.passport-wrap { perspective: 1200px; width: min(430px, 90vw); }
 
 .passport {
   position: relative;
   width: 100%;
-  aspect-ratio: 390 / 520;
+  aspect-ratio: 500 / 720;
   container-type: inline-size;
-  border-radius: 16px;
-  padding: 4.1cqw;
-  color: #2f2c24;
-  background: linear-gradient(158deg, #f4edda 0%, #ece2c9 55%, #e4d9bd 100%);
-  box-shadow:
-    0 30px 60px -26px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(90, 70, 30, 0.14) inset,
-    0 2px 0 rgba(255, 255, 255, 0.45) inset;
+  border-radius: 14px;
   overflow: hidden;
+  color: #2b2a28;
+  background-color: #f4ecdd;
+  background-image:
+    repeating-linear-gradient(72deg, rgba(176, 120, 110, 0.14) 0 1px, transparent 1px 13px),
+    repeating-linear-gradient(-72deg, rgba(176, 120, 110, 0.14) 0 1px, transparent 1px 13px);
+  box-shadow: 0 30px 70px -26px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(120, 90, 50, 0.16) inset;
   will-change: transform;
 }
-.passport::before {
-  content: "";
+.pp-spine {
   position: absolute;
-  inset: 0;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-1px);
+  background: linear-gradient(rgba(120, 90, 50, 0.16), rgba(120, 90, 50, 0.05));
   pointer-events: none;
-  opacity: 0.5;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
-.pp-perf {
+.pp-fold {
   position: absolute;
-  left: 3.6cqw;
-  right: 3.6cqw;
-  top: 53.8cqw;
-  border-top: 1.5px dashed rgba(90, 70, 30, 0.28);
+  left: 0;
+  right: 0;
+  top: 70.4cqw;
+  height: 4.8cqw;
+  pointer-events: none;
+  background: linear-gradient(rgba(120, 90, 50, 0.14), rgba(255, 255, 255, 0.5), rgba(120, 90, 50, 0.1));
 }
 
 .pp-stamps { position: absolute; inset: 0; }
 .pp-stamp {
   position: absolute;
   mix-blend-mode: multiply;
-  opacity: 0.82;
+  opacity: 0.85;
   filter: url(#pp-grunge);
 }
 .pp-stamp svg { display: block; width: 100%; height: auto; overflow: visible; }
-.pp-stamp text {
+.pp-stamp text,
+.pp-stamp textPath {
   font-family: "Arial Narrow", "Arial", sans-serif;
   font-weight: 700;
   fill: currentColor;
 }
-.ink-indigo { color: #3a5583; }
-.ink-red { color: #a8463f; }
-.ink-green { color: #5c7a4d; }
-.ink-teal { color: #3d7a74; }
+.bl { color: #4a6b9c; }
+.rd { color: #b0413e; }
+.gr { color: #6b8e5a; }
 
-.pp-s1 { top: 4.1cqw; left: 5.1cqw; width: 27.7cqw; }
-.pp-s2 { top: 2.6cqw; right: 5.6cqw; width: 26.7cqw; }
-.pp-s3 { top: 23.6cqw; left: 33.8cqw; width: 26.7cqw; }
-.pp-s4 { top: 38.5cqw; right: 4.6cqw; width: 30.8cqw; }
-.pp-s5 { top: 38.5cqw; left: 6.7cqw; width: 17.9cqw; }
+.pp-s1 { left: 7.6cqw; top: 9.2cqw; width: 30.4cqw; }
+.pp-s2 { left: 12cqw; top: 18.4cqw; width: 24cqw; }
+.pp-s3 { left: 36.8cqw; top: 23.2cqw; width: 26.4cqw; }
+.pp-s4 { left: 52.4cqw; top: 7.2cqw; width: 19.2cqw; }
+.pp-s5 { left: 66.8cqw; top: 8cqw; width: 25.6cqw; }
+.pp-s6 { left: 72cqw; top: 28cqw; width: 20.8cqw; }
+.pp-s7 { left: 4cqw; top: 44.4cqw; width: 23.2cqw; }
+.pp-s8 { left: 22cqw; top: 46.4cqw; width: 20cqw; }
+.pp-s9 { left: 38.4cqw; top: 48.8cqw; width: 19.6cqw; }
+.pp-s10 { left: 53.2cqw; top: 42cqw; width: 25.2cqw; }
+.pp-s11 { left: 71.2cqw; top: 56cqw; width: 22.4cqw; }
 
-.pp-page {
+.pp-pass-lbl {
   position: absolute;
-  left: 4.1cqw;
-  right: 4.1cqw;
-  top: 57.4cqw;
-  display: flex;
-  gap: 3.6cqw;
+  left: 6cqw;
+  top: 76.4cqw;
+  font-family: "Courier New", ui-monospace, monospace;
+  font-size: 2.4cqw;
+  font-weight: 700;
+  letter-spacing: 0.18em;
 }
+.pp-chip {
+  position: absolute;
+  right: 4.8cqw;
+  top: 75.6cqw;
+  width: 8.8cqw;
+  color: #4a6b9c;
+}
+.pp-chip svg { width: 100%; height: auto; display: block; }
+
 .pp-photo {
-  width: 30.3cqw;
-  aspect-ratio: 118 / 158;
-  flex: none;
-  border-radius: 1.5cqw;
+  position: absolute;
+  left: 5.2cqw;
+  top: 80.4cqw;
+  width: 30cqw;
+  aspect-ratio: 150 / 206;
+  border-radius: 0.6cqw;
   overflow: hidden;
-  border: 1px solid rgba(90, 70, 30, 0.35);
-  box-shadow: 0 3px 10px -4px rgba(0, 0, 0, 0.4);
-  background: #dfe3e8;
+  box-shadow: 0 2px 8px -3px rgba(0, 0, 0, 0.4);
+  background: #c9cdd2;
 }
 .pp-photo img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 12%; }
 
 .pp-fields {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2.05cqw;
-  padding-top: 0.5cqw;
-}
-.pp-field {
-  display: flex;
-  flex-direction: column;
-  border-bottom: 1px solid rgba(90, 70, 30, 0.14);
-  padding-bottom: 1cqw;
+  position: absolute;
+  left: 39.2cqw;
+  right: 4.4cqw;
+  top: 76cqw;
+  font-family: "Courier New", ui-monospace, monospace;
+  line-height: 1.05; /* kill inline-block line-box leading so boxes stack tight */
 }
 .pp-lbl {
-  font-size: 2.05cqw;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #a99b7c;
-  font-weight: 700;
-}
-.pp-mono {
-  font-family: "Courier New", ui-monospace, monospace;
-  font-size: 3.21cqw;
-  font-weight: 700;
-  color: #2f2c24;
+  font-size: 2.1cqw;
   line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  margin-bottom: 0.8cqw;
+  color: #3f3e3a;
+}
+.pp-val {
+  display: inline-block;
+  background: #fff;
+  padding: 0.5cqw 1.7cqw;
+  font-size: 2.5cqw;
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #232220;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
   white-space: nowrap;
 }
-
-.pp-flag {
-  position: absolute;
-  top: 57.4cqw;
-  right: 4.1cqw;
-  width: 7.7cqw;
-  aspect-ratio: 3 / 2;
-  border-radius: 0.8cqw;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+.pp-sub {
+  display: inline-block;
+  background: #fff;
+  padding: 0.5cqw 1.7cqw;
+  font-size: 2.2cqw;
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #232220;
+  margin-top: 1cqw;
 }
-.pp-flag i { display: block; height: 33.34%; }
+.pp-two { display: flex; gap: 5.2cqw; margin-top: 3cqw; }
+.pp-gap { margin-top: 3.2cqw; }
+.pp-indent { margin-left: 3.2cqw; }
 
-.pp-row2 {
+.pp-dep {
   position: absolute;
-  left: 4.1cqw;
-  right: 4.1cqw;
-  top: 100.5cqw;
-  display: flex;
-  gap: 3.6cqw;
+  right: 4cqw;
+  top: 104cqw;
+  width: 30cqw;
+  color: #4a6b9c;
+  mix-blend-mode: multiply;
+  opacity: 0.8;
+  filter: url(#pp-grunge);
+  transform: rotate(-5deg);
 }
-.pp-row2 .pp-field { flex: 1; }
+.pp-dep svg { width: 100%; height: auto; display: block; overflow: visible; }
+.pp-dep text { font-family: "Arial Narrow", "Arial", sans-serif; font-weight: 700; fill: currentColor; }
 
 .pp-mrz {
   position: absolute;
-  left: 4.1cqw;
-  right: 4.1cqw;
-  bottom: 3.6cqw;
+  left: 4.8cqw;
+  right: 4.8cqw;
+  bottom: 3.2cqw;
   font-family: "Courier New", ui-monospace, monospace;
-  font-size: 2.82cqw;
+  font-size: 2.45cqw;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  color: #4a4536;
-  line-height: 1.5;
-  border-top: 1px solid rgba(90, 70, 30, 0.2);
-  padding-top: 1.8cqw;
+  letter-spacing: 0.02em;
+  line-height: 1.6;
+  color: #3a3934;
   white-space: nowrap;
   overflow: hidden;
 }
