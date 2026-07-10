@@ -693,20 +693,16 @@ ul, ol { list-style: none; }
   font-weight: 700;
   letter-spacing: 0.18em;
 }
+/* Apple emoji artwork ships with transparent padding, so the box is slightly
+   larger than the old drawn flag to keep the same visual size. */
 .pp-flag {
   position: absolute;
-  right: 4.8cqw;
-  top: 75.6cqw;
-  width: 9.6cqw;
-  aspect-ratio: 3 / 2;
-  border-radius: 0.6cqw;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-  display: flex;
-  flex-direction: column;
+  right: 3.2cqw;
+  top: 73.6cqw;
+  width: 13.6cqw;
+  height: auto;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
 }
-.pp-flag i { flex: 1; display: grid; place-items: center; }
-.pp-flag svg { width: 60%; height: auto; display: block; }
 
 .pp-photo {
   position: absolute;

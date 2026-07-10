@@ -259,7 +259,7 @@ const en: SiteContent = {
     title: [{ t: "Got a brand that needs a " }, { t: "voice", accent: true }, { t: "?" }],
     lede: "Tell me what you're building — I'll tell you how it should sound.",
     whatsapp: "WhatsApp",
-    loc: "Cairo, Egypt · Working across Egypt & KSA",
+    loc: "Cairo, Egypt",
   },
   footer: "© 2026 Ahmed Mekki — built by directing the same tools I use for clients.",
 };
@@ -450,7 +450,7 @@ const ar: SiteContent = {
     title: [{ t: "عندك علامة تجارية تحتاج " }, { t: "صوتًا", accent: true }, { t: "؟" }],
     lede: "احكِ لي عمّا تبنيه — وسأخبرك كيف ينبغي أن يبدو صوته.",
     whatsapp: "واتساب",
-    loc: "القاهرة، مصر · أعمل عبر مصر والسعودية",
+    loc: "القاهرة، مصر",
   },
   footer: "© 2026 أحمد مكي — بُنيَ بتوجيه الأدوات نفسها التي أستخدمها لعملائي.",
 };
