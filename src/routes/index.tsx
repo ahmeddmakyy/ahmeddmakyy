@@ -490,24 +490,26 @@ function Index() {
                   return (
                     <article
                       key={v.title}
-                      className={`video-slide${isActive && isPlaying ? " is-playing" : ""}`}
+                      className={`video-slide${isActive && isPlaying ? " is-playing" : ""}${isActive && controlsVisible ? " show-controls" : ""}`}
                       data-pos={pos}
                       aria-hidden={pos === "hidden"}
+                      onMouseMove={isActive ? showControls : undefined}
+                      onMouseLeave={isActive && isPlaying ? () => { setControlsVisible(false); clearHideTimer(); } : undefined}
                     >
                       {v.src && (
                         <video
                           ref={(el) => {
                             videoRefs.current[i] = el;
                           }}
-                          src={v.src}
+                          src={isActive || Math.abs(i - videoIndex) <= 1 ? v.src : undefined}
                           poster={v.poster}
                           muted={!isActive || isMuted}
                           playsInline
                           loop
-                          preload="metadata"
+                          preload={isActive ? "metadata" : "none"}
                           onClick={() => {
                             if (!isActive) goTo(i);
-                            else togglePlay();
+                            else onSlideTap();
                           }}
                           onPlay={() => isActive && setIsPlaying(true)}
                           onPause={() => isActive && setIsPlaying(false)}
@@ -540,32 +542,59 @@ function Index() {
                       <div className="slide-shade" />
 
                       {isActive && (
-                        <>
-                          <button
-                            type="button"
-                            className={`slide-play${isPlaying ? " playing" : ""}`}
-                            aria-label={isPlaying ? "Pause" : "Play"}
-                            onClick={togglePlay}
-                          >
-                            {isPlaying ? (
-                              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                <rect x="6" y="5" width="4" height="14" rx="1" />
-                                <rect x="14" y="5" width="4" height="14" rx="1" />
+                        <div className="slide-player" onClick={(e) => e.stopPropagation()}>
+                          {/* Center controls: skip -15, play/pause, skip +15 */}
+                          <div className="sp-center">
+                            <button
+                              type="button"
+                              className="sp-btn sp-skip"
+                              aria-label="Rewind 15 seconds"
+                              onClick={() => skip(-15)}
+                            >
+                              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M12 5V2L7 6l5 4V7a6 6 0 11-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                                <text x="12" y="16" textAnchor="middle" fontSize="7" fontWeight="700" fill="currentColor">15</text>
                               </svg>
-                            ) : (
-                              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                <path d="M8 5v14l11-7z" />
+                            </button>
+                            <button
+                              type="button"
+                              className={`sp-btn sp-play${isPlaying ? " playing" : ""}`}
+                              aria-label={isPlaying ? "Pause" : "Play"}
+                              onClick={togglePlay}
+                            >
+                              {isPlaying ? (
+                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                  <rect x="6" y="5" width="4" height="14" rx="1.2" />
+                                  <rect x="14" y="5" width="4" height="14" rx="1.2" />
+                                </svg>
+                              ) : (
+                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                  <path d="M8 5v14l11-7z" />
+                                </svg>
+                              )}
+                            </button>
+                            <button
+                              type="button"
+                              className="sp-btn sp-skip"
+                              aria-label="Forward 15 seconds"
+                              onClick={() => skip(15)}
+                            >
+                              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M12 5V2l5 4-5 4V7a6 6 0 106 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                                <text x="12" y="16" textAnchor="middle" fontSize="7" fontWeight="700" fill="currentColor">15</text>
                               </svg>
-                            )}
-                          </button>
+                            </button>
+                          </div>
 
+                          {/* Top-right: hide details */}
                           <button
                             type="button"
-                            className="slide-toggle-text"
+                            className="sp-btn sp-corner sp-toggle-text"
                             aria-label={textHidden ? "Show details" : "Hide details"}
                             onClick={(e) => {
                               e.stopPropagation();
                               setTextHidden((t) => !t);
+                              showControls();
                             }}
                           >
                             {textHidden ? (
@@ -580,10 +609,11 @@ function Index() {
                             )}
                           </button>
 
-                          <div className="slide-player-bar" onClick={(e) => e.stopPropagation()}>
+                          {/* Bottom bar: mute + seek + time */}
+                          <div className="sp-bar">
                             <button
                               type="button"
-                              className="pb-btn"
+                              className="sp-btn sp-mini"
                               aria-label={isMuted ? "Unmute" : "Mute"}
                               onClick={toggleMute}
                             >
@@ -604,16 +634,17 @@ function Index() {
                               step={0.1}
                               value={progress}
                               onChange={onSeek}
-                              className="pb-seek"
+                              className="sp-seek"
                               style={{ ["--p" as string]: `${progress}%` }}
                               aria-label="Seek"
                             />
-                            <span className="pb-time">
+                            <span className="sp-time">
                               {formatTime(currentTime)} / {videoDurations[i] ?? "0:00"}
                             </span>
                           </div>
-                        </>
+                        </div>
                       )}
+
 
                       <span className="slide-counter">{count}</span>
                       <div className="slide-body">
