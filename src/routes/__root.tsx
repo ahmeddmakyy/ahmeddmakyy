@@ -72,9 +72,9 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
-const SITE_TITLE = "Ahmed Mekki — AI-Native Content Creator";
+const SITE_TITLE = "Reels With Maki | Content Creator & AI Video Director";
 const SITE_DESC =
-  "Ahmed Mekki — AI-native content creator & video producer. Brand strategy, AI video production, and Egyptian-Arabic copy for 15+ brands across 10 industries.";
+  "Reels With Maki — AI-native content creator & social media specialist. Content strategy, brand campaigns, and AI video production for 15+ brands across Egypt & KSA.";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
@@ -84,7 +84,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: SITE_TITLE },
       { name: "description", content: SITE_DESC },
       { name: "author", content: "Ahmed Mekki" },
-      { property: "og:site_name", content: "Ahmed Mekki" },
+      { property: "og:site_name", content: "Reels With Maki" },
       { property: "og:title", content: SITE_TITLE },
       { property: "og:description", content: SITE_DESC },
       { property: "og:type", content: "profile" },
@@ -119,6 +119,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           mainEntity: {
             "@type": "Person",
             name: "Ahmed Mekki",
+            alternateName: "Reels With Maki",
             jobTitle: "AI-Native Content Creator",
             url: "https://ahmeddmakyy.lovable.app/",
             email: "ahmeddmakyy@gmail.com",

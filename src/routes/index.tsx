@@ -8,6 +8,7 @@ import demoStarVideo from "@/assets/videos/demo-star-ui-animation.mp4";
 import quickLoanVideo from "@/assets/videos/quick-loan-ui-animation.mp4";
 import ahmedHero from "@/assets/ahmed-hero-cropped.webp";
 import logoMark from "@/assets/logo-mark.webp";
+import BrandMarquee from "@/components/BrandMarquee";
 import easyWayPoster from "@/assets/posters/easy_way.webp";
 import golfCityPoster from "@/assets/posters/golf_city.webp";
 import renewStoryPoster from "@/assets/posters/renew_story.webp";
@@ -18,6 +19,12 @@ import quickLoanPoster from "@/assets/posters/quick_loan.webp";
 export const Route = createFileRoute("/")({
   component: Index,
 });
+
+// The four films are hosted on Lovable's CDN. Their asset URLs are root-relative
+// (/__l5e/...), which only resolve on the Lovable host — on Vercel they 404.
+// Prefix the Lovable origin so both deployments load them (CDN allows CORS + range).
+const LOVABLE_CDN = "https://ahmeddmakyy.lovable.app";
+const cdn = (u: string) => (u.startsWith("/") ? LOVABLE_CDN + u : u);
 
 // ────────────────────────────────────────────────────────────
 // Videos — replace the `src` values with your uploaded MP4 URLs.
@@ -40,7 +47,7 @@ const VIDEOS: Video[] = [
     client: "Legal / IP",
     description:
       "Cinematic AI reel produced end to end: script, character sheets, Veo shots, Arabic voice-over, final edit.",
-    src: easyWayAsset.url,
+    src: cdn(easyWayAsset.url),
     poster: easyWayPoster,
     orientation: "vertical",
   },
@@ -50,7 +57,7 @@ const VIDEOS: Video[] = [
     client: "Sports Club",
     description:
       "Vertical cinematic sports film cut from Veo 3.1 clips with morph transitions for a club with 188K followers.",
-    src: golfCityAsset.url,
+    src: cdn(golfCityAsset.url),
     poster: golfCityPoster,
     orientation: "vertical",
   },
@@ -60,7 +67,7 @@ const VIDEOS: Video[] = [
     client: "Agency · Egypt",
     description:
       "AI stop-motion film for the agency's own 2026 slate — nostalgic Egyptian storytelling, hand-directed shot by shot.",
-    src: renewStoryAsset.url,
+    src: cdn(renewStoryAsset.url),
     poster: renewStoryPoster,
     orientation: "vertical",
   },
@@ -70,7 +77,7 @@ const VIDEOS: Video[] = [
     client: "Agency · KSA",
     description:
       "AI stop-motion film written in Saudi dialect, cut to a VO-first edit — the same system, a new voice.",
-    src: renewStarAsset.url,
+    src: cdn(renewStarAsset.url),
     poster: renewStarPoster,
     orientation: "vertical",
   },
@@ -195,6 +202,23 @@ function VideosSection() {
     if (!v) return;
     v.muted = !v.muted;
     setIsMuted(v.muted);
+    showControls();
+  };
+
+  const enterFullscreen = () => {
+    const v = videoRefs.current[videoIndex];
+    if (!v) return;
+    const vAny = v as HTMLVideoElement & {
+      webkitEnterFullscreen?: () => void;
+    };
+    // iOS Safari only fullscreens the <video> itself via this call
+    if (vAny.webkitEnterFullscreen) {
+      vAny.webkitEnterFullscreen();
+    } else if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else if (v.requestFullscreen) {
+      v.requestFullscreen();
+    }
     showControls();
   };
 
@@ -391,28 +415,43 @@ function VideosSection() {
                         </button>
                       </div>
 
-                      {/* Top-right: hide details */}
-                      <button
-                        type="button"
-                        className="sp-btn sp-corner sp-toggle-text"
-                        aria-label={textHidden ? "Show details" : "Hide details"}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setTextHidden((t) => !t);
-                          showControls();
-                        }}
-                      >
-                        {textHidden ? (
+                      {/* Top-right: fullscreen + hide details */}
+                      <div className="sp-corner-group">
+                        <button
+                          type="button"
+                          className="sp-btn sp-corner-btn"
+                          aria-label="Fullscreen"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            enterFullscreen();
+                          }}
+                        >
                           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                            <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" stroke="currentColor" strokeWidth="1.8" />
-                            <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.8" />
+                            <path d="M8 3H5a2 2 0 00-2 2v3M16 3h3a2 2 0 012 2v3M8 21H5a2 2 0 01-2-2v-3M16 21h3a2 2 0 002-2v-3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
-                        ) : (
-                          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                            <path d="M3 3l18 18M10.6 6.1A9.7 9.7 0 0112 6c6.5 0 10 7 10 7a15.3 15.3 0 01-3.4 4M6.1 6.1C3.5 8 2 12 2 12s3.5 7 10 7c1.7 0 3.2-.4 4.5-1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                          </svg>
-                        )}
-                      </button>
+                        </button>
+                        <button
+                          type="button"
+                          className="sp-btn sp-corner-btn sp-toggle-text"
+                          aria-label={textHidden ? "Show details" : "Hide details"}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setTextHidden((t) => !t);
+                            showControls();
+                          }}
+                        >
+                          {textHidden ? (
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                              <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" stroke="currentColor" strokeWidth="1.8" />
+                              <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.8" />
+                            </svg>
+                          ) : (
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                              <path d="M3 3l18 18M10.6 6.1A9.7 9.7 0 0112 6c6.5 0 10 7 10 7a15.3 15.3 0 01-3.4 4M6.1 6.1C3.5 8 2 12 2 12s3.5 7 10 7c1.7 0 3.2-.4 4.5-1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
 
                       {/* Bottom bar: mute + seek + time */}
                       <div className="sp-bar">
@@ -725,21 +764,12 @@ function Index() {
         </section>
 
         {/* ══════════ MARQUEE ══════════ */}
-        <div className="marquee">
-          <div className="marquee-track">
-            {[0, 1].map((k) => (
-              <div className="marquee-group" key={k} aria-hidden={k === 1 || undefined}>
-                <span>Veo 3.1</span><i>✦</i><span>Google Flow</span><i>✦</i><span>CapCut</span><i>✦</i><span>Gemini</span><i>✦</i><span>FLUX</span><i>✦</i><span>Midjourney</span><i>✦</i><span>Ideogram</span><i>✦</i><span>ElevenLabs</span><i>✦</i><span>Claude</span><i>✦</i><span>ChatGPT</span><i>✦</i>
-              </div>
-            ))}
-          </div>
-        </div>
+        <BrandMarquee />
 
         {/* ══════════ SERVICES ══════════ */}
         <section className="section dark" id="services">
           <div className="container services-wrap">
             <div className="blob blob-float blob-f1" aria-hidden="true"></div>
-            <div className="blob blob-float blob-f2" aria-hidden="true"></div>
             <div className="section-head" data-reveal>
               <h2 className="section-title"><span className="accent">Services</span></h2>
               <p className="section-lede">
@@ -802,6 +832,18 @@ function Index() {
                 <div><dt>10</dt><dd>Industries</dd></div>
                 <div><dt>2</dt><dd>Markets · Egypt &amp; KSA</dd></div>
               </dl>
+              <div className="about-cta">
+                <a
+                  className="btn btn-dark"
+                  href="/ahmed-mekki-cv.pdf"
+                  download="Ahmed-Mekki-CV.pdf"
+                >
+                  Download CV
+                  <svg className="dl-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5M5 20h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </a>
+              </div>
             </div>
           </div>
         </section>
@@ -845,16 +887,16 @@ function Index() {
           <div className="container">
             <div className="section-head" data-reveal>
               <h2 className="section-title">How I <span className="accent">Work</span></h2>
-              <p className="section-lede">The same system, every client, so quality is a habit, not an accident.</p>
+              <p className="section-lede">A full content system, not one-off posts: research, strategy, ideas, and production — the same way for every brand.</p>
             </div>
             <ol className="process-grid">
               {[
-                { n: "01", t: "Context first", b: "A brand knowledge file before any content, sometimes written specifically to brief the AI." },
-                { n: "02", t: "Research before creative", b: "Market, competitors, and page audits. Facts kept separate from estimates." },
-                { n: "03", t: "Reference-locking", b: "Character sheets and reference images reused across every shot, so faces never drift." },
-                { n: "04", t: "Voice-over first", b: "Record and measure the VO, then cut every scene to the audio, not the other way around." },
-                { n: "05", t: "Humanize & QA", b: "Review passes until nothing reads as AI: copy, pronunciation, and Arabic letter by letter." },
-                { n: "06", t: "Staged delivery", b: "Stage 1 → 2 → 3 client revisions, organized folders, and nothing ever deleted." },
+                { n: "01", t: "Research & insight", b: "Market, competitors, and audience first. I dig for the one real insight a brand can build on — before a single idea." },
+                { n: "02", t: "Strategy & pillars", b: "One proposition the brand can own and weighted content pillars, so the feed has a direction instead of random posts." },
+                { n: "03", t: "Ideas & content plan", b: "A 3-month plan with 60–150 fully specified ideas: the hook, the format, the shot, and the caption — ready to shoot." },
+                { n: "04", t: "Production", b: "From shoot lists to AI films. I direct the tools (Veo, FLUX, Gemini) and the camera the same way: idea, references, and final call are mine." },
+                { n: "05", t: "Humanize & QA", b: "Review passes until nothing reads as AI — copy, pronunciation, and Arabic letter by letter, in real Egyptian dialect." },
+                { n: "06", t: "Deliver & iterate", b: "Staged revisions, organized folders, nothing deleted — then read the numbers and sharpen the next batch." },
               ].map((s) => (
                 <li className="step" data-reveal key={s.n}>
                   <span className="step-num">{s.n}</span>

@@ -227,7 +227,9 @@ ul, ol { list-style: none; }
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  height: 128%;
+  /* desktop: shorter so the portrait clears most of the headline
+     (mobile keeps its own 114% below — do not touch that) */
+  height: 113%;
   width: auto;
   /* the global img max-width:100% would squeeze the tall photo on
      narrow viewports and detach it from the circle — never cap it */
@@ -324,6 +326,13 @@ ul, ol { list-style: none; }
 .btn .wa-icon { width: 20px; height: 20px; }
 .btn-whatsapp:hover { border-color: var(--orange); color: var(--orange); }
 
+/* Dark solid button (for the light About section) + CV download */
+.btn-dark { background: var(--ink); color: #fff; }
+.btn-dark:hover { background: #000; }
+.btn .dl-icon { width: 18px; height: 18px; transition: transform 0.3s var(--ease); }
+.btn-dark:hover .dl-icon { transform: translateY(2px); }
+.about-cta { margin-top: 30px; }
+
 /* ══════════ MARQUEE ══════════ */
 .marquee {
   background: var(--black);
@@ -351,6 +360,24 @@ ul, ol { list-style: none; }
   color: var(--orange);
   font-style: normal;
   font-size: 14px;
+}
+/* Tool chips: brand icon + name */
+.tool-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.tool-icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  opacity: 0.92;
 }
 
 @keyframes marquee {
@@ -955,7 +982,7 @@ html.js [data-reveal].revealed {
 
 /* Fade the whole overlay when controls hidden */
 .video-slide:not(.show-controls) .sp-center,
-.video-slide:not(.show-controls) .sp-corner,
+.video-slide:not(.show-controls) .sp-corner-group,
 .video-slide:not(.show-controls) .sp-bar {
   opacity: 0;
   pointer-events: none;
@@ -1015,16 +1042,21 @@ html.js [data-reveal].revealed {
 .sp-play svg { width: 26px; height: 26px; margin-left: 3px; }
 .sp-play.playing svg { margin-left: 0; }
 
-/* Top-right corner button */
-.sp-corner {
+/* Top-right corner buttons: fullscreen + hide-details */
+.sp-corner-group {
   position: absolute;
   top: 16px;
   right: 16px;
+  display: flex;
+  gap: 8px;
+  transition: opacity 0.3s var(--ease), transform 0.3s var(--ease);
+}
+.sp-corner-btn {
   width: 42px;
   height: 42px;
-  transition: opacity 0.3s var(--ease), transform 0.3s var(--ease), background 0.25s var(--ease);
+  transition: background 0.25s var(--ease), transform 0.25s var(--ease), border-color 0.25s var(--ease);
 }
-.sp-corner svg { width: 20px; height: 20px; }
+.sp-corner-btn svg { width: 20px; height: 20px; }
 
 /* Bottom bar */
 .sp-bar {
@@ -1193,7 +1225,8 @@ html.js [data-reveal].revealed {
   .sp-skip svg { width: 22px; height: 22px; }
   .sp-center { gap: 16px; }
   /* 44px is the minimum comfortable touch target */
-  .sp-corner { top: 12px; right: 12px; width: 44px; height: 44px; }
+  .sp-corner-group { top: 12px; right: 12px; gap: 8px; }
+  .sp-corner-btn { width: 44px; height: 44px; }
   .sp-bar { left: 10px; right: 10px; bottom: 10px; padding: 6px 12px; gap: 8px; }
   .sp-time { font-size: 11px; }
   .videos-arrow { width: 44px; height: 44px; }
