@@ -71,11 +71,30 @@ function Index() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [textHidden, setTextHidden] = useState(false);
+  const [controlsVisible, setControlsVisible] = useState(true);
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const videoRefs = useRef<Record<number, HTMLVideoElement | null>>({});
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
+  const hideTimer = useRef<number | null>(null);
+
+  const clearHideTimer = () => {
+    if (hideTimer.current) {
+      window.clearTimeout(hideTimer.current);
+      hideTimer.current = null;
+    }
+  };
+
+  const scheduleHide = () => {
+    clearHideTimer();
+    hideTimer.current = window.setTimeout(() => setControlsVisible(false), 2600);
+  };
+
+  const showControls = () => {
+    setControlsVisible(true);
+    if (isPlaying) scheduleHide();
+  };
 
   const goTo = (n: number) => {
     const len = VIDEOS.length;
@@ -85,6 +104,8 @@ function Index() {
     setProgress(0);
     setCurrentTime(0);
     setTextHidden(false);
+    setControlsVisible(true);
+    clearHideTimer();
   };
   const goPrev = () => goTo(videoIndex - 1);
   const goNext = () => goTo(videoIndex + 1);
@@ -99,6 +120,17 @@ function Index() {
       }
     });
   }, [videoIndex]);
+
+  // Auto-hide controls while playing
+  useEffect(() => {
+    if (isPlaying) scheduleHide();
+    else {
+      clearHideTimer();
+      setControlsVisible(true);
+    }
+    return clearHideTimer;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPlaying, videoIndex]);
 
   const togglePlay = () => {
     const v = videoRefs.current[videoIndex];
@@ -117,6 +149,15 @@ function Index() {
     if (!v) return;
     v.muted = !v.muted;
     setIsMuted(v.muted);
+    showControls();
+  };
+
+  const skip = (delta: number) => {
+    const v = videoRefs.current[videoIndex];
+    if (!v) return;
+    const d = v.duration || 0;
+    v.currentTime = Math.max(0, Math.min(d, v.currentTime + delta));
+    showControls();
   };
 
   const onSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,6 +166,20 @@ function Index() {
     const p = Number(e.target.value);
     v.currentTime = (p / 100) * v.duration;
     setProgress(p);
+    showControls();
+  };
+
+  const onSlideTap = () => {
+    if (!isPlaying) {
+      togglePlay();
+      return;
+    }
+    if (controlsVisible) {
+      setControlsVisible(false);
+      clearHideTimer();
+    } else {
+      showControls();
+    }
   };
 
   const onTouchStart = (e: React.TouchEvent) => {
@@ -158,6 +213,7 @@ function Index() {
     if (d === -1 || d === 1 || d === -2 || d === 2) return String(d);
     return "hidden";
   };
+
 
   // Scroll reveal + section spy + reduced motion handling
   useEffect(() => {
@@ -434,24 +490,26 @@ function Index() {
                   return (
                     <article
                       key={v.title}
-                      className={`video-slide${isActive && isPlaying ? " is-playing" : ""}`}
+                      className={`video-slide${isActive && isPlaying ? " is-playing" : ""}${isActive && controlsVisible ? " show-controls" : ""}`}
                       data-pos={pos}
                       aria-hidden={pos === "hidden"}
+                      onMouseMove={isActive ? showControls : undefined}
+                      onMouseLeave={isActive && isPlaying ? () => { setControlsVisible(false); clearHideTimer(); } : undefined}
                     >
                       {v.src && (
                         <video
                           ref={(el) => {
                             videoRefs.current[i] = el;
                           }}
-                          src={v.src}
+                          src={isActive || Math.abs(i - videoIndex) <= 1 ? v.src : undefined}
                           poster={v.poster}
                           muted={!isActive || isMuted}
                           playsInline
                           loop
-                          preload="metadata"
+                          preload={isActive ? "metadata" : "none"}
                           onClick={() => {
                             if (!isActive) goTo(i);
-                            else togglePlay();
+                            else onSlideTap();
                           }}
                           onPlay={() => isActive && setIsPlaying(true)}
                           onPause={() => isActive && setIsPlaying(false)}
@@ -484,32 +542,59 @@ function Index() {
                       <div className="slide-shade" />
 
                       {isActive && (
-                        <>
-                          <button
-                            type="button"
-                            className={`slide-play${isPlaying ? " playing" : ""}`}
-                            aria-label={isPlaying ? "Pause" : "Play"}
-                            onClick={togglePlay}
-                          >
-                            {isPlaying ? (
-                              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                <rect x="6" y="5" width="4" height="14" rx="1" />
-                                <rect x="14" y="5" width="4" height="14" rx="1" />
+                        <div className="slide-player" onClick={(e) => e.stopPropagation()}>
+                          {/* Center controls: skip -15, play/pause, skip +15 */}
+                          <div className="sp-center">
+                            <button
+                              type="button"
+                              className="sp-btn sp-skip"
+                              aria-label="Rewind 15 seconds"
+                              onClick={() => skip(-15)}
+                            >
+                              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M12 5V2L7 6l5 4V7a6 6 0 11-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                                <text x="12" y="16" textAnchor="middle" fontSize="7" fontWeight="700" fill="currentColor">15</text>
                               </svg>
-                            ) : (
-                              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                <path d="M8 5v14l11-7z" />
+                            </button>
+                            <button
+                              type="button"
+                              className={`sp-btn sp-play${isPlaying ? " playing" : ""}`}
+                              aria-label={isPlaying ? "Pause" : "Play"}
+                              onClick={togglePlay}
+                            >
+                              {isPlaying ? (
+                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                  <rect x="6" y="5" width="4" height="14" rx="1.2" />
+                                  <rect x="14" y="5" width="4" height="14" rx="1.2" />
+                                </svg>
+                              ) : (
+                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                  <path d="M8 5v14l11-7z" />
+                                </svg>
+                              )}
+                            </button>
+                            <button
+                              type="button"
+                              className="sp-btn sp-skip"
+                              aria-label="Forward 15 seconds"
+                              onClick={() => skip(15)}
+                            >
+                              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M12 5V2l5 4-5 4V7a6 6 0 106 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                                <text x="12" y="16" textAnchor="middle" fontSize="7" fontWeight="700" fill="currentColor">15</text>
                               </svg>
-                            )}
-                          </button>
+                            </button>
+                          </div>
 
+                          {/* Top-right: hide details */}
                           <button
                             type="button"
-                            className="slide-toggle-text"
+                            className="sp-btn sp-corner sp-toggle-text"
                             aria-label={textHidden ? "Show details" : "Hide details"}
                             onClick={(e) => {
                               e.stopPropagation();
                               setTextHidden((t) => !t);
+                              showControls();
                             }}
                           >
                             {textHidden ? (
@@ -524,10 +609,11 @@ function Index() {
                             )}
                           </button>
 
-                          <div className="slide-player-bar" onClick={(e) => e.stopPropagation()}>
+                          {/* Bottom bar: mute + seek + time */}
+                          <div className="sp-bar">
                             <button
                               type="button"
-                              className="pb-btn"
+                              className="sp-btn sp-mini"
                               aria-label={isMuted ? "Unmute" : "Mute"}
                               onClick={toggleMute}
                             >
@@ -548,16 +634,17 @@ function Index() {
                               step={0.1}
                               value={progress}
                               onChange={onSeek}
-                              className="pb-seek"
+                              className="sp-seek"
                               style={{ ["--p" as string]: `${progress}%` }}
                               aria-label="Seek"
                             />
-                            <span className="pb-time">
+                            <span className="sp-time">
                               {formatTime(currentTime)} / {videoDurations[i] ?? "0:00"}
                             </span>
                           </div>
-                        </>
+                        </div>
                       )}
+
 
                       <span className="slide-counter">{count}</span>
                       <div className="slide-body">
