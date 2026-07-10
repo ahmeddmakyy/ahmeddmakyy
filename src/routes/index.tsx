@@ -15,6 +15,8 @@ import renewStarPoster from "@/assets/posters/renew_star.webp";
 import demoStarPoster from "@/assets/posters/demo_star.webp";
 import quickLoanPoster from "@/assets/posters/quick_loan.webp";
 import BrandMarquee from "@/components/BrandMarquee";
+import AnimatedStats from "@/components/AnimatedStats";
+import RevealCard from "@/components/RevealCard";
 import { useLang, LangToggle } from "@/i18n";
 import type { Rich as RichText } from "@/content";
 
@@ -738,7 +740,7 @@ function Index() {
             </div>
             <div className="cards-grid services-grid">
               {c.services.cards.map((s, idx) => (
-                <article className="card service-card" data-reveal key={idx}>
+                <RevealCard className="card service-card" index={idx} key={idx}>
                   <span className="card-arrow" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none">
                       <path d="M7 17L17 7M17 7H9M17 7v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -747,7 +749,7 @@ function Index() {
                   <h3>{s.title}</h3>
                   <p>{s.body}</p>
                   <div className={`blob blob-${idx + 1}`} aria-hidden="true"></div>
-                </article>
+                </RevealCard>
               ))}
             </div>
           </div>
@@ -767,11 +769,7 @@ function Index() {
             <div className="about-right" data-reveal>
               <p>{c.about.p1}</p>
               <p>{c.about.p2}</p>
-              <dl className="stats-row">
-                {c.about.stats.map((st, idx) => (
-                  <div key={idx}><dt>{st.n}</dt><dd>{st.label}</dd></div>
-                ))}
-              </dl>
+              <AnimatedStats stats={c.about.stats} />
               <div className="about-cta">
                 <a
                   className="btn btn-dark"
@@ -797,14 +795,14 @@ function Index() {
             </div>
             <div className="cards-grid work-grid">
               {c.work.cards.map((w, idx) => (
-                <article className="card work-card" data-reveal key={idx}>
+                <RevealCard className="card work-card" index={idx} key={idx}>
                   <div className="work-meta">
                     <span className="tag">{w.tag}</span>
                     <span className="period">{w.period}</span>
                   </div>
                   <h3>{w.title}</h3>
                   <p>{w.body}</p>
-                </article>
+                </RevealCard>
               ))}
             </div>
             <p className="work-more" data-reveal>{c.work.more}</p>
