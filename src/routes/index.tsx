@@ -4,7 +4,10 @@ import easyWayAsset from "@/assets/videos/easy_way.mp4.asset.json";
 import golfCityAsset from "@/assets/videos/golf_city.mp4.asset.json";
 import renewStoryAsset from "@/assets/videos/renew_story.mp4.asset.json";
 import renewStarAsset from "@/assets/videos/renew_star.mp4.asset.json";
-import ahmedHero from "@/assets/ahmed-hero.png.asset.json";
+import demoStarVideo from "@/assets/videos/demo-star-ui-animation.mp4";
+import quickLoanVideo from "@/assets/videos/quick-loan-ui-animation.mp4";
+import ahmedHero from "@/assets/ahmed-hero-cropped.webp";
+import logoMark from "@/assets/logo-mark.webp";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -35,7 +38,7 @@ const VIDEOS: Video[] = [
     orientation: "vertical",
   },
   {
-    title: "Golf City Club — All the Games in One Place",
+    title: "Golf City Club — All Sports in One Place",
     tag: "AI Film",
     client: "Sports Club",
     description:
@@ -61,23 +64,55 @@ const VIDEOS: Video[] = [
     src: renewStarAsset.url,
     orientation: "vertical",
   },
+  {
+    title: "Demo Star — Men's Fashion Experience",
+    tag: "UI Animation",
+    client: "Menswear",
+    description:
+      "A product showcase animated entirely in code — HTML, CSS and JS directed with AI, rendered as a vertical fashion reel for the menswear brand.",
+    src: demoStarVideo,
+    orientation: "vertical",
+  },
+  {
+    title: "Quick Loan — Cars & Financing",
+    tag: "UI Animation",
+    client: "Automotive · Finance",
+    description:
+      "A UI animation reel for a car showroom and financing brand — designed and animated entirely in code from the brand's own assets.",
+    src: quickLoanVideo,
+    orientation: "vertical",
+  },
 ];
 
-function Index() {
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState("home");
+// Isolated so per-frame playback updates never re-render the rest of the page.
+function VideosSection() {
   const [videoIndex, setVideoIndex] = useState(0);
   const [videoDurations, setVideoDurations] = useState<Record<number, string>>({});
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
   const [textHidden, setTextHidden] = useState(false);
   const [controlsVisible, setControlsVisible] = useState(true);
-  const [progress, setProgress] = useState(0);
-  const [currentTime, setCurrentTime] = useState(0);
   const videoRefs = useRef<Record<number, HTMLVideoElement | null>>({});
+  const seekRef = useRef<HTMLInputElement | null>(null);
+  const timeRef = useRef<HTMLSpanElement | null>(null);
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
   const hideTimer = useRef<number | null>(null);
+
+  const formatTime = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, "0")}`;
+  };
+
+  // Progress is painted imperatively — no React state per timeupdate tick.
+  const updateProgressUI = (p: number, t: number) => {
+    if (seekRef.current) {
+      seekRef.current.value = String(p);
+      seekRef.current.style.setProperty("--p", `${p}%`);
+    }
+    if (timeRef.current) timeRef.current.textContent = formatTime(t);
+  };
 
   const clearHideTimer = () => {
     if (hideTimer.current) {
@@ -101,11 +136,10 @@ function Index() {
     const next = ((n % len) + len) % len;
     setVideoIndex(next);
     setIsPlaying(false);
-    setProgress(0);
-    setCurrentTime(0);
     setTextHidden(false);
     setControlsVisible(true);
     clearHideTimer();
+    updateProgressUI(0, 0);
   };
   const goPrev = () => goTo(videoIndex - 1);
   const goNext = () => goTo(videoIndex + 1);
@@ -136,7 +170,7 @@ function Index() {
     const v = videoRefs.current[videoIndex];
     if (!v) return;
     if (v.paused) {
-      v.play();
+      v.play().catch(() => {});
       setIsPlaying(true);
     } else {
       v.pause();
@@ -157,6 +191,7 @@ function Index() {
     if (!v) return;
     const d = v.duration || 0;
     v.currentTime = Math.max(0, Math.min(d, v.currentTime + delta));
+    if (d) updateProgressUI((v.currentTime / d) * 100, v.currentTime);
     showControls();
   };
 
@@ -165,7 +200,7 @@ function Index() {
     if (!v || !v.duration) return;
     const p = Number(e.target.value);
     v.currentTime = (p / 100) * v.duration;
-    setProgress(p);
+    updateProgressUI(p, v.currentTime);
     showControls();
   };
 
@@ -183,6 +218,12 @@ function Index() {
   };
 
   const onTouchStart = (e: React.TouchEvent) => {
+    // Drags that start on the player controls (seek bar etc.) are not swipes
+    if ((e.target as HTMLElement).closest(".slide-player")) {
+      touchStartX.current = null;
+      touchStartY.current = null;
+      return;
+    }
     touchStartX.current = e.touches[0].clientX;
     touchStartY.current = e.touches[0].clientY;
   };
@@ -198,10 +239,11 @@ function Index() {
     touchStartY.current = null;
   };
 
-  const formatTime = (s: number) => {
-    const m = Math.floor(s / 60);
-    const sec = Math.floor(s % 60);
-    return `${m}:${sec.toString().padStart(2, "0")}`;
+  // Distance around the circular carousel — wraps, unlike |i - videoIndex|
+  const circDist = (i: number) => {
+    const n = VIDEOS.length;
+    const d = Math.abs(i - videoIndex);
+    return Math.min(d, n - d);
   };
 
   const getSlidePos = (i: number): string => {
@@ -214,6 +256,240 @@ function Index() {
     return "hidden";
   };
 
+  return (
+    <section className="section dark" id="videos">
+      <div className="container">
+        <div className="videos-hero" data-reveal>
+          <h2>
+            Every <span className="accent">film</span> starts with an <span className="accent">idea.</span>
+          </h2>
+          <p>Script, direction, AI production, edit.</p>
+        </div>
+
+        <div
+          className={`videos-stage${textHidden ? " text-hidden" : ""}`}
+          data-reveal
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+        >
+          <div className="videos-track">
+            {VIDEOS.map((v, i) => {
+              const pos = getSlidePos(i);
+              const isActive = pos === "0";
+              const count = `${(i + 1).toString().padStart(2, "0")} / ${VIDEOS.length.toString().padStart(2, "0")}`;
+              return (
+                <article
+                  key={v.title}
+                  className={`video-slide${isActive && isPlaying ? " is-playing" : ""}${isActive && controlsVisible ? " show-controls" : ""}`}
+                  data-pos={pos}
+                  aria-hidden={pos === "hidden"}
+                  onClick={() => {
+                    if (isActive) onSlideTap();
+                    else goTo(i);
+                  }}
+                  onMouseMove={isActive ? showControls : undefined}
+                  onMouseLeave={isActive && isPlaying ? () => { setControlsVisible(false); clearHideTimer(); } : undefined}
+                >
+                  {v.src && (
+                    <video
+                      ref={(el) => {
+                        videoRefs.current[i] = el;
+                      }}
+                      src={circDist(i) <= 1 ? `${v.src}#t=0.001` : undefined}
+                      poster={v.poster}
+                      muted={!isActive || isMuted}
+                      playsInline
+                      loop
+                      preload={circDist(i) <= 1 ? "metadata" : "none"}
+                      onPlay={() => isActive && setIsPlaying(true)}
+                      onPause={() => isActive && setIsPlaying(false)}
+                      onTimeUpdate={(e) => {
+                        if (!isActive) return;
+                        const el = e.currentTarget;
+                        if (el.duration) {
+                          updateProgressUI((el.currentTime / el.duration) * 100, el.currentTime);
+                        }
+                      }}
+                      onLoadedMetadata={(e) => {
+                        const d = e.currentTarget.duration;
+                        if (!isNaN(d)) {
+                          setVideoDurations((prev) =>
+                            prev[i] ? prev : { ...prev, [i]: formatTime(d) },
+                          );
+                        }
+                      }}
+                    />
+                  )}
+                  {!isActive && (
+                    <button
+                      type="button"
+                      className="slide-clickcatch"
+                      aria-label={`Show ${v.title}`}
+                      onClick={() => goTo(i)}
+                    />
+                  )}
+                  <div className="slide-shade" />
+
+                  {isActive && (
+                    <div className="slide-player" onClick={(e) => e.stopPropagation()}>
+                      {/* Center controls: skip -15, play/pause, skip +15 */}
+                      <div className="sp-center">
+                        <button
+                          type="button"
+                          className="sp-btn sp-skip"
+                          aria-label="Rewind 15 seconds"
+                          onClick={() => skip(-15)}
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M12 5V2L7 6l5 4V7a6 6 0 11-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                            <text x="12" y="16" textAnchor="middle" fontSize="7" fontWeight="700" fill="currentColor">15</text>
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          className={`sp-btn sp-play${isPlaying ? " playing" : ""}`}
+                          aria-label={isPlaying ? "Pause" : "Play"}
+                          onClick={togglePlay}
+                        >
+                          {isPlaying ? (
+                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                              <rect x="6" y="5" width="4" height="14" rx="1.2" />
+                              <rect x="14" y="5" width="4" height="14" rx="1.2" />
+                            </svg>
+                          ) : (
+                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                              <path d="M8 5v14l11-7z" />
+                            </svg>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          className="sp-btn sp-skip"
+                          aria-label="Forward 15 seconds"
+                          onClick={() => skip(15)}
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M12 5V2l5 4-5 4V7a6 6 0 106 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                            <text x="12" y="16" textAnchor="middle" fontSize="7" fontWeight="700" fill="currentColor">15</text>
+                          </svg>
+                        </button>
+                      </div>
+
+                      {/* Top-right: hide details */}
+                      <button
+                        type="button"
+                        className="sp-btn sp-corner sp-toggle-text"
+                        aria-label={textHidden ? "Show details" : "Hide details"}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setTextHidden((t) => !t);
+                          showControls();
+                        }}
+                      >
+                        {textHidden ? (
+                          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" stroke="currentColor" strokeWidth="1.8" />
+                            <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.8" />
+                          </svg>
+                        ) : (
+                          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M3 3l18 18M10.6 6.1A9.7 9.7 0 0112 6c6.5 0 10 7 10 7a15.3 15.3 0 01-3.4 4M6.1 6.1C3.5 8 2 12 2 12s3.5 7 10 7c1.7 0 3.2-.4 4.5-1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                          </svg>
+                        )}
+                      </button>
+
+                      {/* Bottom bar: mute + seek + time */}
+                      <div className="sp-bar">
+                        <button
+                          type="button"
+                          className="sp-btn sp-mini"
+                          aria-label={isMuted ? "Unmute" : "Mute"}
+                          onClick={toggleMute}
+                        >
+                          {isMuted ? (
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                              <path d="M4 9v6h4l5 4V5L8 9H4zM16 9l6 6M22 9l-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                            </svg>
+                          ) : (
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                              <path d="M4 9v6h4l5 4V5L8 9H4zM16 8a5 5 0 010 8M19 5a9 9 0 010 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                            </svg>
+                          )}
+                        </button>
+                        <input
+                          ref={seekRef}
+                          type="range"
+                          min={0}
+                          max={100}
+                          step={0.1}
+                          defaultValue={0}
+                          onChange={onSeek}
+                          className="sp-seek"
+                          aria-label="Seek"
+                        />
+                        <span className="sp-time">
+                          <span ref={timeRef}>0:00</span> / {videoDurations[i] ?? "0:00"}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+
+                  <span className="slide-counter">{count}</span>
+                  <div className="slide-body">
+                    <span className="slide-tag">{v.tag}</span>
+                    <h3 className="slide-title">{v.title}</h3>
+                    <p className="slide-desc">{v.description}</p>
+                    <div className="slide-foot">
+                      <span>◷ {videoDurations[i] ?? "—"}</span>
+                      <span className="dot">|</span>
+                      <span>▤ {v.client}</span>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="videos-controls">
+          <button
+            className="videos-arrow videos-arrow-prev"
+            aria-label="Previous film"
+            onClick={goPrev}
+          >
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M19 12H5M11 6l-6 6 6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+          <div className="videos-dots" role="group" aria-label="Select film">
+            {VIDEOS.map((v, i) => (
+              <button
+                key={v.title}
+                aria-label={v.title}
+                aria-current={i === videoIndex}
+                onClick={() => goTo(i)}
+              />
+            ))}
+          </div>
+          <button
+            className="videos-arrow"
+            aria-label="Next film"
+            onClick={goNext}
+          >
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Index() {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState("home");
 
   // Scroll reveal + section spy + reduced motion handling
   useEffect(() => {
@@ -222,6 +498,7 @@ function Index() {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const items = document.querySelectorAll<HTMLElement>("[data-reveal]");
 
+    let revealObserver: IntersectionObserver | null = null;
     if (reduced || !("IntersectionObserver" in window)) {
       items.forEach((el) => el.classList.add("revealed"));
     } else {
@@ -251,6 +528,7 @@ function Index() {
         { threshold: 0.15, rootMargin: "0px 0px -8% 0px" },
       );
       items.forEach((el) => observer.observe(el));
+      revealObserver = observer;
     }
 
     // Section spy
@@ -280,6 +558,7 @@ function Index() {
     window.addEventListener("scroll", onScroll, { passive: true });
 
     return () => {
+      revealObserver?.disconnect();
       spy?.disconnect();
       window.removeEventListener("scroll", onScroll);
     };
@@ -316,7 +595,7 @@ function Index() {
             ))}
           </ul>
           <a href="#home" className="brand" aria-label="Ahmed Mekki — home">
-            <span className="brand-mark">AM</span>
+            <img className="brand-mark" src={logoMark} alt="Ahmed Mekki logo" width={38} height={38} />
             <span className="brand-word">MEKKI</span>
           </a>
           <ul className="nav-links nav-right">
@@ -371,8 +650,11 @@ function Index() {
               <div className="hero-circle load-3" aria-hidden="true"></div>
               <img
                 className="hero-photo load-4"
-                src={ahmedHero.url}
+                src={ahmedHero}
                 alt="Ahmed Mekki"
+                width={750}
+                height={1690}
+                fetchPriority="high"
               />
 
               <figure className="hero-note hero-quote load-5">
@@ -397,7 +679,7 @@ function Index() {
               </div>
 
               <div className="glass-cta load-6">
-                <a className="btn btn-primary" href="#work">
+                <a className="btn btn-primary" href="#videos">
                   See My Work
                   <svg className="arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path d="M7 17L17 7M17 7H9M17 7v8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
@@ -467,234 +749,7 @@ function Index() {
         </section>
 
         {/* ══════════ VIDEOS ══════════ */}
-        <section className="section dark" id="videos">
-          <div className="container">
-            <div className="videos-hero" data-reveal>
-              <h2>
-                Every <span className="accent">film</span> starts with an <span className="accent">idea.</span>
-              </h2>
-              <p>Script, direction, AI production, edit.</p>
-            </div>
-
-            <div
-              className={`videos-stage${textHidden ? " text-hidden" : ""}`}
-              data-reveal
-              onTouchStart={onTouchStart}
-              onTouchEnd={onTouchEnd}
-            >
-              <div className="videos-track">
-                {VIDEOS.map((v, i) => {
-                  const pos = getSlidePos(i);
-                  const isActive = pos === "0";
-                  const count = `${(i + 1).toString().padStart(2, "0")} / ${VIDEOS.length.toString().padStart(2, "0")}`;
-                  return (
-                    <article
-                      key={v.title}
-                      className={`video-slide${isActive && isPlaying ? " is-playing" : ""}${isActive && controlsVisible ? " show-controls" : ""}`}
-                      data-pos={pos}
-                      aria-hidden={pos === "hidden"}
-                      onMouseMove={isActive ? showControls : undefined}
-                      onMouseLeave={isActive && isPlaying ? () => { setControlsVisible(false); clearHideTimer(); } : undefined}
-                    >
-                      {v.src && (
-                        <video
-                          ref={(el) => {
-                            videoRefs.current[i] = el;
-                          }}
-                          src={isActive || Math.abs(i - videoIndex) <= 1 ? v.src : undefined}
-                          poster={v.poster}
-                          muted={!isActive || isMuted}
-                          playsInline
-                          loop
-                          preload={isActive ? "metadata" : "none"}
-                          onClick={() => {
-                            if (!isActive) goTo(i);
-                            else onSlideTap();
-                          }}
-                          onPlay={() => isActive && setIsPlaying(true)}
-                          onPause={() => isActive && setIsPlaying(false)}
-                          onTimeUpdate={(e) => {
-                            if (!isActive) return;
-                            const el = e.currentTarget;
-                            if (el.duration) {
-                              setProgress((el.currentTime / el.duration) * 100);
-                              setCurrentTime(el.currentTime);
-                            }
-                          }}
-                          onLoadedMetadata={(e) => {
-                            const d = e.currentTarget.duration;
-                            if (!isNaN(d)) {
-                              setVideoDurations((prev) =>
-                                prev[i] ? prev : { ...prev, [i]: formatTime(d) },
-                              );
-                            }
-                          }}
-                        />
-                      )}
-                      {!isActive && (
-                        <button
-                          type="button"
-                          className="slide-clickcatch"
-                          aria-label={`Show ${v.title}`}
-                          onClick={() => goTo(i)}
-                        />
-                      )}
-                      <div className="slide-shade" />
-
-                      {isActive && (
-                        <div className="slide-player" onClick={(e) => e.stopPropagation()}>
-                          {/* Center controls: skip -15, play/pause, skip +15 */}
-                          <div className="sp-center">
-                            <button
-                              type="button"
-                              className="sp-btn sp-skip"
-                              aria-label="Rewind 15 seconds"
-                              onClick={() => skip(-15)}
-                            >
-                              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                <path d="M12 5V2L7 6l5 4V7a6 6 0 11-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                                <text x="12" y="16" textAnchor="middle" fontSize="7" fontWeight="700" fill="currentColor">15</text>
-                              </svg>
-                            </button>
-                            <button
-                              type="button"
-                              className={`sp-btn sp-play${isPlaying ? " playing" : ""}`}
-                              aria-label={isPlaying ? "Pause" : "Play"}
-                              onClick={togglePlay}
-                            >
-                              {isPlaying ? (
-                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                  <rect x="6" y="5" width="4" height="14" rx="1.2" />
-                                  <rect x="14" y="5" width="4" height="14" rx="1.2" />
-                                </svg>
-                              ) : (
-                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                  <path d="M8 5v14l11-7z" />
-                                </svg>
-                              )}
-                            </button>
-                            <button
-                              type="button"
-                              className="sp-btn sp-skip"
-                              aria-label="Forward 15 seconds"
-                              onClick={() => skip(15)}
-                            >
-                              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                <path d="M12 5V2l5 4-5 4V7a6 6 0 106 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                                <text x="12" y="16" textAnchor="middle" fontSize="7" fontWeight="700" fill="currentColor">15</text>
-                              </svg>
-                            </button>
-                          </div>
-
-                          {/* Top-right: hide details */}
-                          <button
-                            type="button"
-                            className="sp-btn sp-corner sp-toggle-text"
-                            aria-label={textHidden ? "Show details" : "Hide details"}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setTextHidden((t) => !t);
-                              showControls();
-                            }}
-                          >
-                            {textHidden ? (
-                              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" stroke="currentColor" strokeWidth="1.8" />
-                                <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.8" />
-                              </svg>
-                            ) : (
-                              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                <path d="M3 3l18 18M10.6 6.1A9.7 9.7 0 0112 6c6.5 0 10 7 10 7a15.3 15.3 0 01-3.4 4M6.1 6.1C3.5 8 2 12 2 12s3.5 7 10 7c1.7 0 3.2-.4 4.5-1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                              </svg>
-                            )}
-                          </button>
-
-                          {/* Bottom bar: mute + seek + time */}
-                          <div className="sp-bar">
-                            <button
-                              type="button"
-                              className="sp-btn sp-mini"
-                              aria-label={isMuted ? "Unmute" : "Mute"}
-                              onClick={toggleMute}
-                            >
-                              {isMuted ? (
-                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                  <path d="M4 9v6h4l5 4V5L8 9H4zM16 9l6 6M22 9l-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                                </svg>
-                              ) : (
-                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                  <path d="M4 9v6h4l5 4V5L8 9H4zM16 8a5 5 0 010 8M19 5a9 9 0 010 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                                </svg>
-                              )}
-                            </button>
-                            <input
-                              type="range"
-                              min={0}
-                              max={100}
-                              step={0.1}
-                              value={progress}
-                              onChange={onSeek}
-                              className="sp-seek"
-                              style={{ ["--p" as string]: `${progress}%` }}
-                              aria-label="Seek"
-                            />
-                            <span className="sp-time">
-                              {formatTime(currentTime)} / {videoDurations[i] ?? "0:00"}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-
-
-                      <span className="slide-counter">{count}</span>
-                      <div className="slide-body">
-                        <span className="slide-tag">{v.tag}</span>
-                        <h3 className="slide-title">{v.title}</h3>
-                        <p className="slide-desc">{v.description}</p>
-                        <div className="slide-foot">
-                          <span>◷ {videoDurations[i] ?? "—"}</span>
-                          <span className="dot">|</span>
-                          <span>▤ {v.client}</span>
-                        </div>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="videos-controls">
-              <button
-                className="videos-arrow videos-arrow-prev"
-                aria-label="Previous film"
-                onClick={goPrev}
-              >
-                <svg viewBox="0 0 24 24" fill="none">
-                  <path d="M19 12H5M11 6l-6 6 6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-              <div className="videos-dots" role="tablist" aria-label="Select film">
-                {VIDEOS.map((v, i) => (
-                  <button
-                    key={v.title}
-                    aria-label={v.title}
-                    aria-current={i === videoIndex}
-                    onClick={() => goTo(i)}
-                  />
-                ))}
-              </div>
-              <button
-                className="videos-arrow"
-                aria-label="Next film"
-                onClick={goNext}
-              >
-                <svg viewBox="0 0 24 24" fill="none">
-                  <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </section>
+        <VideosSection />
 
 
         {/* ══════════ ABOUT ══════════ */}
@@ -731,12 +786,12 @@ function Index() {
             </div>
             <div className="cards-grid work-grid">
               {[
-                { tag: "Rebranding", period: "Menswear", title: "Demo Star", body: "Repositioned a 1998 garment factory into a consumer menswear brand: a teardown of six local labels, the campaign line \u201CPresent For Your Day. Ready For Every Day.\u201D, and a 150-idea content catalog." },
-                { tag: "AI Film", period: "Legal / IP", title: "Easy Way", body: "\u201CThe Thief Who Stole the Name\u201D — a cinematic AI reel produced end to end: script, character sheets, Veo shots, voice-over, final edit. Plus a 24-idea post bank covering all eight services." },
-                { tag: "AI Film", period: "Sports Club", title: "Golf City Club", body: "\u201CAll the Games in One Place\u201D — a vertical cinematic sports film cut from Veo 3.1 clips with morph transitions, plus 20 scripted reel concepts for a club with 188K followers." },
-                { tag: "Brand Foundation", period: "Manufacturing", title: "Como Tech", body: "Full foundation for a new wiring-devices maker: identity, tone of voice, a teardown of a 57-year incumbent, a 3-month funnel strategy, and a 60-idea catalog in consumer and B2B editions." },
-                { tag: "Insight & Ideas", period: "Automotive", title: "M.A. Motors", body: "One insight carried the account: buyers fear the \u201Chow much do you earn?\u201D question more than the price. Twenty scored concepts built on \u201Cno employment check\u201D, plus a 15-second AI reel." },
-                { tag: "Content Engine", period: "Agency · Egypt & KSA", title: "Renew Media", body: "The agency's own engine: a 150-idea catalog for 2026 and two AI stop-motion films, \u201CThe Story You Remember\u201D for Egypt and \u201CStar of the Party\u201D written in Saudi dialect." },
+                { tag: "Rebranding", period: "Menswear", title: "Demo Star", body: "Repositioned a 1998 garment factory into a consumer menswear brand: a teardown of six local labels, the campaign line “Present For Your Day. Ready For Every Day.”, and a 150-idea content catalog." },
+                { tag: "AI Film", period: "Legal / IP", title: "Easy Way", body: "“The Thief Who Stole the Name” — a cinematic AI reel produced end to end: script, character sheets, Veo shots, voice-over, final edit. Plus a 24-idea post bank covering all eight services." },
+                { tag: "AI Film", period: "Sports Club", title: "Golf City Club", body: "“All Sports in One Place” — a vertical cinematic sports film cut from Veo 3.1 clips with morph transitions, plus 20 scripted reel concepts for a club with 188K followers." },
+                { tag: "Brand Foundation", period: "Manufacturing", title: "Como Tech", body: "Full foundation for a new wiring-devices maker: identity, tone of voice, a teardown of a 57-year incumbent, a 3-month content strategy, and a 60-idea catalog in consumer and B2B editions." },
+                { tag: "Insight & Ideas", period: "Automotive", title: "M.A. Motors", body: "One insight carried the account: buyers fear the “how much do you earn?” question more than the price. Twenty scored concepts built on “no employment check”, plus a 15-second AI reel." },
+                { tag: "Content Engine", period: "Agency · Egypt & KSA", title: "Renew Media", body: "The agency's own engine: a 150-idea catalog for 2026 and two AI stop-motion films, “The Story You Remember” for Egypt and “Star of the Party” written in Saudi dialect." },
               ].map((w) => (
                 <article className="card work-card" data-reveal key={w.title}>
                   <div className="work-meta">
@@ -801,7 +856,7 @@ function Index() {
           </div>
           <footer className="footer container">
             <a href="#home" className="brand brand-footer">
-              <span className="brand-mark">AM</span>
+              <img className="brand-mark" src={logoMark} alt="Ahmed Mekki logo" width={38} height={38} />
               <span className="brand-word">MEKKI</span>
             </a>
             <p>© 2026 Ahmed Mekki — built by directing the same tools I use for clients.</p>

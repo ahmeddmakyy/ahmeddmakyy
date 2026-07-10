@@ -95,16 +95,11 @@ ul, ol { list-style: none; }
   padding: 0 18px;
 }
 .brand-mark {
-  display: grid;
-  place-items: center;
+  display: block;
   width: 38px;
   height: 38px;
   border-radius: 11px;
-  background: var(--orange);
-  color: #fff;
-  font-weight: 800;
-  font-size: 15px;
-  letter-spacing: 0.02em;
+  object-fit: contain;
 }
 .brand-word {
   color: #fff;
@@ -217,6 +212,9 @@ ul, ol { list-style: none; }
   transform: translateX(-50%);
   height: 128%;
   width: auto;
+  /* the global img max-width:100% would squeeze the tall photo on
+     narrow viewports and detach it from the circle — never cap it */
+  max-width: none;
   z-index: 2;
 }
 
@@ -818,6 +816,8 @@ html.js [data-reveal].revealed {
   letter-spacing: 0.14em;
   color: rgba(255,255,255,0.85);
   z-index: 2;
+  /* text overlays must never swallow taps meant for the video */
+  pointer-events: none;
   transition: opacity 0.3s var(--ease);
 }
 .video-slide .slide-body {
@@ -826,6 +826,7 @@ html.js [data-reveal].revealed {
   padding: 24px 26px 28px;
   color: #fff;
   z-index: 2;
+  pointer-events: none;
   transition: opacity 0.3s var(--ease);
 }
 .video-slide .slide-tag {
@@ -966,11 +967,11 @@ html.js [data-reveal].revealed {
 .sp-btn:hover { background: rgba(255,255,255,0.18); transform: scale(1.04); }
 .sp-btn:active { transform: scale(0.96); }
 
-.sp-skip { width: 52px; height: 52px; }
-.sp-skip svg { width: 26px; height: 26px; }
+.sp-skip { width: 46px; height: 46px; }
+.sp-skip svg { width: 22px; height: 22px; }
 
-.sp-play { width: 78px; height: 78px; }
-.sp-play svg { width: 34px; height: 34px; margin-left: 3px; }
+.sp-play { width: 60px; height: 60px; }
+.sp-play svg { width: 26px; height: 26px; margin-left: 3px; }
 .sp-play.playing svg { margin-left: 0; }
 
 /* Top-right corner button */
@@ -1013,26 +1014,37 @@ html.js [data-reveal].revealed {
 .sp-mini:hover { background: rgba(255,255,255,0.14); transform: none; }
 .sp-mini svg { width: 20px; height: 20px; }
 
+/* 4px visual track inside a 28px hit area so it is grabbable on touch */
 .sp-seek {
   flex: 1;
   -webkit-appearance: none;
   appearance: none;
-  height: 4px;
-  border-radius: 999px;
-  background: linear-gradient(to right, var(--orange) 0%, var(--orange) var(--p, 0%), rgba(255,255,255,0.25) var(--p, 0%), rgba(255,255,255,0.25) 100%);
+  height: 28px;
+  background: transparent;
   outline: none;
   cursor: pointer;
 }
+.sp-seek::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(to right, var(--orange) 0%, var(--orange) var(--p, 0%), rgba(255,255,255,0.25) var(--p, 0%), rgba(255,255,255,0.25) 100%);
+}
 .sp-seek::-webkit-slider-thumb {
   -webkit-appearance: none; appearance: none;
-  width: 14px; height: 14px;
+  width: 18px; height: 18px;
+  margin-top: -7px;
   border-radius: 50%;
   background: #fff;
   border: 2px solid var(--orange);
   cursor: pointer;
 }
+.sp-seek::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(to right, var(--orange) 0%, var(--orange) var(--p, 0%), rgba(255,255,255,0.25) var(--p, 0%), rgba(255,255,255,0.25) 100%);
+}
 .sp-seek::-moz-range-thumb {
-  width: 14px; height: 14px;
+  width: 18px; height: 18px;
   border-radius: 50%;
   background: #fff;
   border: 2px solid var(--orange);
@@ -1102,8 +1114,11 @@ html.js [data-reveal].revealed {
   .videos-stage { height: 560px; perspective: none; margin-top: 8px; }
   .video-slide {
     width: min(78vw, 300px);
-    height: 78vh;
-    max-height: 540px;
+    /* ratio-driven height: vh units jump when the mobile browser
+       toolbar collapses; svh + aspect-ratio stay stable */
+    aspect-ratio: 9 / 16;
+    height: auto;
+    max-height: min(74svh, 540px);
     margin: 0;
     top: 50%;
     left: 50%;
@@ -1120,12 +1135,13 @@ html.js [data-reveal].revealed {
     pointer-events: none;
     filter: none;
   }
-  .sp-play { width: 68px; height: 68px; }
-  .sp-play svg { width: 30px; height: 30px; }
-  .sp-skip { width: 46px; height: 46px; }
+  .sp-play { width: 54px; height: 54px; }
+  .sp-play svg { width: 24px; height: 24px; }
+  .sp-skip { width: 44px; height: 44px; }
   .sp-skip svg { width: 22px; height: 22px; }
   .sp-center { gap: 16px; }
-  .sp-corner { top: 12px; right: 12px; width: 38px; height: 38px; }
+  /* 44px is the minimum comfortable touch target */
+  .sp-corner { top: 12px; right: 12px; width: 44px; height: 44px; }
   .sp-bar { left: 10px; right: 10px; bottom: 10px; padding: 6px 12px; gap: 8px; }
   .sp-time { font-size: 11px; }
   .videos-arrow { width: 44px; height: 44px; }
