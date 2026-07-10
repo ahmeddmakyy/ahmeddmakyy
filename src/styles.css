@@ -27,7 +27,24 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-html { scroll-behavior: smooth; overflow-x: hidden; }
+/* scroll-padding clears the fixed nav so anchored/focused targets aren't hidden under it */
+html { scroll-behavior: smooth; overflow-x: hidden; scroll-padding-top: 96px; }
+
+/* Skip link — visually hidden until keyboard focus */
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 200;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  font-weight: 600;
+  transform: translateY(-160%);
+  transition: transform 0.25s var(--ease);
+}
+.skip-link:focus-visible { transform: translateY(0); }
 
 body {
   font-family: 'Urbanist', 'Segoe UI', sans-serif;
@@ -302,6 +319,10 @@ ul, ol { list-style: none; }
   border: 1.5px solid rgba(255, 255, 255, 0.28);
 }
 .btn-outline:hover { border-color: var(--orange); }
+
+/* WhatsApp CTA — intentionally NOT green; inherits the outline/white identity */
+.btn .wa-icon { width: 20px; height: 20px; }
+.btn-whatsapp:hover { border-color: var(--orange); color: var(--orange); }
 
 /* ══════════ MARQUEE ══════════ */
 .marquee {
@@ -645,7 +666,9 @@ ul, ol { list-style: none; }
   animation: riseIn 0.8s var(--ease) both;
 }
 .load-1 { animation-delay: 0.05s; }
-.load-2 { animation-delay: 0.18s; }
+/* H1 is an LCP candidate: slide it in but keep it painted (opacity 1) so LCP
+   registers immediately instead of waiting on the fade/delay */
+.load-2 { animation-name: riseInHold; animation-delay: 0.18s; }
 .load-3 { animation-name: circleIn; animation-delay: 0.4s; animation-duration: 0.9s; }
 .load-4 { animation-delay: 0.55s; }
 .load-5 { animation-delay: 0.85s; }
@@ -655,14 +678,19 @@ ul, ol { list-style: none; }
   from { opacity: 0; transform: translateY(30px); }
   to { opacity: 1; transform: translateY(0); }
 }
+@keyframes riseInHold {
+  from { transform: translateY(24px); }
+  to { transform: translateY(0); }
+}
 
-/* keep centering transforms intact */
+/* keep centering transforms intact — hero photo is the likely LCP element,
+   so it stays opaque and only slides (no opacity gate on LCP) */
 .hero-photo.load-4 {
   animation-name: photoIn;
 }
 @keyframes photoIn {
-  from { opacity: 0; transform: translateX(-50%) translateY(36px); }
-  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+  from { transform: translateX(-50%) translateY(28px); }
+  to { transform: translateX(-50%) translateY(0); }
 }
 .hero-circle.load-3 { transform-origin: bottom center; }
 @keyframes circleIn {
@@ -738,6 +766,8 @@ html.js [data-reveal].revealed {
   .blob { animation: none; }
   html.js [data-reveal] { opacity: 1; transform: none; transition: none; }
   .card, .btn, .step { transition: none; }
+  /* the 3D carousel still slides/rotates under reduced-motion — quiet it too */
+  .video-slide, .videos-track, .sp-center, .sp-bar, .slide-shade { transition: none !important; }
 }
 
 /* ══════════ VIDEOS — 3D CAROUSEL ══════════ */
@@ -786,11 +816,14 @@ html.js [data-reveal].revealed {
   background: #0d0d0d;
   border: 1px solid #1f1f1f;
   transition: transform 0.7s var(--ease), opacity 0.7s var(--ease), filter 0.7s var(--ease), box-shadow 0.7s var(--ease);
-  will-change: transform;
   cursor: pointer;
   transform-style: preserve-3d;
   backface-visibility: hidden;
 }
+/* Promote only the on-stage slides — not the hidden ones — to a GPU layer */
+.video-slide[data-pos="0"],
+.video-slide[data-pos="-1"],
+.video-slide[data-pos="1"] { will-change: transform; }
 .video-slide video {
   position: absolute;
   inset: 0;
@@ -932,6 +965,14 @@ html.js [data-reveal].revealed {
 .video-slide.is-playing:not(.show-controls) .slide-body,
 .video-slide.is-playing:not(.show-controls) .slide-counter { opacity: 0; }
 
+/* While playing with controls hidden, the glass panels are invisible but
+   backdrop-filter would still blur the moving video every frame — drop it. */
+.video-slide.is-playing:not(.show-controls) .sp-btn,
+.video-slide.is-playing:not(.show-controls) .sp-bar {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
 /* Hide text state (eye toggle) */
 .videos-stage.text-hidden .video-slide[data-pos="0"] .slide-body,
 .videos-stage.text-hidden .video-slide[data-pos="0"] .slide-counter,
@@ -1021,8 +1062,8 @@ html.js [data-reveal].revealed {
   appearance: none;
   height: 28px;
   background: transparent;
-  outline: none;
   cursor: pointer;
+  /* no outline:none here — the global :focus-visible ring must stay for keyboard users */
 }
 .sp-seek::-webkit-slider-runnable-track {
   height: 4px;
@@ -1066,18 +1107,27 @@ html.js [data-reveal].revealed {
   gap: 22px;
   margin-top: 20px;
 }
-.videos-dots { display: flex; gap: 10px; }
+.videos-dots { display: flex; gap: 4px; }
+/* 24px hit area (WCAG 2.5.8) with the visible 8px pill drawn via ::before */
 .videos-dots button {
+  width: 24px;
+  height: 24px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  display: grid;
+  place-items: center;
+}
+.videos-dots button::before {
+  content: "";
   width: 8px;
   height: 8px;
   border-radius: 999px;
-  border: 0;
   background: rgba(255,255,255,0.25);
-  cursor: pointer;
-  padding: 0;
   transition: background 0.3s var(--ease), width 0.3s var(--ease);
 }
-.videos-dots button[aria-current="true"] { background: var(--orange); width: 26px; }
+.videos-dots button[aria-current="true"]::before { background: var(--orange); width: 26px; }
 
 .videos-arrow {
   width: 52px;
@@ -1125,6 +1175,8 @@ html.js [data-reveal].revealed {
     border-radius: 28px;
     transform: translate(-50%, -50%) !important;
     transition: opacity 0.4s var(--ease);
+    /* no 3D transform on mobile — don't hold a GPU layer per slide */
+    will-change: auto;
   }
   .video-slide[data-pos="0"] {
     box-shadow: 0 30px 60px -20px rgba(0,0,0,0.7);

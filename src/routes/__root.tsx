@@ -35,9 +35,9 @@ function NotFoundComponent() {
 }
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
-  console.error(error);
   const router = useRouter();
   useEffect(() => {
+    if (import.meta.env.DEV) console.error(error);
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
 
@@ -84,19 +84,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: SITE_TITLE },
       { name: "description", content: SITE_DESC },
       { name: "author", content: "Ahmed Mekki" },
+      { property: "og:site_name", content: "Ahmed Mekki" },
       { property: "og:title", content: SITE_TITLE },
       { property: "og:description", content: SITE_DESC },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-      { title: "Reels With Maki | Content Creator & AI Video Director" },
-      { property: "og:title", content: "Reels With Maki | Content Creator & AI Video Director" },
-      { name: "twitter:title", content: "Reels With Maki | Content Creator & AI Video Director" },
-      { name: "description", content: "AI-native video director creating scroll-stopping short-form content for brands. From concept and scripting to AI production, editing, and final delivery." },
-      { property: "og:description", content: "AI-native video director creating scroll-stopping short-form content for brands. From concept and scripting to AI production, editing, and final delivery." },
-      { name: "twitter:description", content: "AI-native video director creating scroll-stopping short-form content for brands. From concept and scripting to AI production, editing, and final delivery." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/kBYrN7AScPVPxk5LcflXYJzXNIJ2/social-images/social-1783643425130-ChatGPT_Image_Jul_10,_2026,_03_30_14_AM.webp" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/kBYrN7AScPVPxk5LcflXYJzXNIJ2/social-images/social-1783643425130-ChatGPT_Image_Jul_10,_2026,_03_30_14_AM.webp" },
+      { property: "og:type", content: "profile" },
+      { property: "profile:first_name", content: "Ahmed" },
+      { property: "profile:last_name", content: "Mekki" },
+      { property: "og:locale", content: "en_US" },
       { property: "og:url", content: "https://ahmeddmakyy.lovable.app/" },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/kBYrN7AScPVPxk5LcflXYJzXNIJ2/social-images/social-1783643425130-ChatGPT_Image_Jul_10,_2026,_03_30_14_AM.webp" },
+      { property: "og:image:alt", content: "Ahmed Mekki — AI-native content creator" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: SITE_TITLE },
+      { name: "twitter:description", content: SITE_DESC },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/kBYrN7AScPVPxk5LcflXYJzXNIJ2/social-images/social-1783643425130-ChatGPT_Image_Jul_10,_2026,_03_30_14_AM.webp" },
+      { name: "twitter:image:alt", content: "Ahmed Mekki — AI-native content creator" },
     ],
     links: [
       { rel: "canonical", href: "https://ahmeddmakyy.lovable.app/" },
@@ -106,6 +108,34 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800&display=swap",
+      },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "ProfilePage",
+          mainEntity: {
+            "@type": "Person",
+            name: "Ahmed Mekki",
+            jobTitle: "AI-Native Content Creator",
+            url: "https://ahmeddmakyy.lovable.app/",
+            email: "ahmeddmakyy@gmail.com",
+            address: {
+              "@type": "PostalAddress",
+              addressLocality: "Cairo",
+              addressCountry: "EG",
+            },
+            worksFor: { "@type": "Organization", name: "Renew Media" },
+            knowsAbout: [
+              "AI video production",
+              "Brand strategy",
+              "Copywriting",
+              "Content strategy",
+            ],
+          },
+        }),
       },
     ],
   }),

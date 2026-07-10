@@ -8,6 +8,12 @@ import demoStarVideo from "@/assets/videos/demo-star-ui-animation.mp4";
 import quickLoanVideo from "@/assets/videos/quick-loan-ui-animation.mp4";
 import ahmedHero from "@/assets/ahmed-hero-cropped.webp";
 import logoMark from "@/assets/logo-mark.webp";
+import easyWayPoster from "@/assets/posters/easy_way.webp";
+import golfCityPoster from "@/assets/posters/golf_city.webp";
+import renewStoryPoster from "@/assets/posters/renew_story.webp";
+import renewStarPoster from "@/assets/posters/renew_star.webp";
+import demoStarPoster from "@/assets/posters/demo_star.webp";
+import quickLoanPoster from "@/assets/posters/quick_loan.webp";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -35,6 +41,7 @@ const VIDEOS: Video[] = [
     description:
       "Cinematic AI reel produced end to end: script, character sheets, Veo shots, Arabic voice-over, final edit.",
     src: easyWayAsset.url,
+    poster: easyWayPoster,
     orientation: "vertical",
   },
   {
@@ -44,6 +51,7 @@ const VIDEOS: Video[] = [
     description:
       "Vertical cinematic sports film cut from Veo 3.1 clips with morph transitions for a club with 188K followers.",
     src: golfCityAsset.url,
+    poster: golfCityPoster,
     orientation: "vertical",
   },
   {
@@ -53,6 +61,7 @@ const VIDEOS: Video[] = [
     description:
       "AI stop-motion film for the agency's own 2026 slate — nostalgic Egyptian storytelling, hand-directed shot by shot.",
     src: renewStoryAsset.url,
+    poster: renewStoryPoster,
     orientation: "vertical",
   },
   {
@@ -62,6 +71,7 @@ const VIDEOS: Video[] = [
     description:
       "AI stop-motion film written in Saudi dialect, cut to a VO-first edit — the same system, a new voice.",
     src: renewStarAsset.url,
+    poster: renewStarPoster,
     orientation: "vertical",
   },
   {
@@ -71,6 +81,7 @@ const VIDEOS: Video[] = [
     description:
       "A product showcase animated entirely in code — HTML, CSS and JS directed with AI, rendered as a vertical fashion reel for the menswear brand.",
     src: demoStarVideo,
+    poster: demoStarPoster,
     orientation: "vertical",
   },
   {
@@ -80,6 +91,7 @@ const VIDEOS: Video[] = [
     description:
       "A UI animation reel for a car showroom and financing brand — designed and animated entirely in code from the brand's own assets.",
     src: quickLoanVideo,
+    poster: quickLoanPoster,
     orientation: "vertical",
   },
 ];
@@ -295,12 +307,14 @@ function VideosSection() {
                       ref={(el) => {
                         videoRefs.current[i] = el;
                       }}
-                      src={circDist(i) <= 1 ? `${v.src}#t=0.001` : undefined}
+                      // Idle slides carry a src but load nothing (preload="none");
+                      // the poster covers them, so no decode until a slide is active.
+                      src={circDist(i) <= 1 ? v.src : undefined}
                       poster={v.poster}
                       muted={!isActive || isMuted}
                       playsInline
                       loop
-                      preload={circDist(i) <= 1 ? "metadata" : "none"}
+                      preload={isActive ? "metadata" : "none"}
                       onPlay={() => isActive && setIsPlaying(true)}
                       onPause={() => isActive && setIsPlaying(false)}
                       onTimeUpdate={(e) => {
@@ -325,6 +339,8 @@ function VideosSection() {
                       type="button"
                       className="slide-clickcatch"
                       aria-label={`Show ${v.title}`}
+                      aria-hidden={pos === "hidden" || undefined}
+                      tabIndex={pos === "hidden" ? -1 : undefined}
                       onClick={() => goTo(i)}
                     />
                   )}
@@ -454,6 +470,7 @@ function VideosSection() {
 
         <div className="videos-controls">
           <button
+            type="button"
             className="videos-arrow videos-arrow-prev"
             aria-label="Previous film"
             onClick={goPrev}
@@ -465,6 +482,7 @@ function VideosSection() {
           <div className="videos-dots" role="group" aria-label="Select film">
             {VIDEOS.map((v, i) => (
               <button
+                type="button"
                 key={v.title}
                 aria-label={v.title}
                 aria-current={i === videoIndex}
@@ -473,6 +491,7 @@ function VideosSection() {
             ))}
           </div>
           <button
+            type="button"
             className="videos-arrow"
             aria-label="Next film"
             onClick={goNext}
@@ -550,17 +569,26 @@ function Index() {
       sections.forEach((section) => spy!.observe(section));
     }
 
-    const onScroll = () => {
-      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 4) {
-        setActiveSection("contact");
-      }
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
+    // The short contact section can slip under the spy's mid-viewport band,
+    // so watch the footer directly instead of reading layout on every scroll.
+    let bottomSpy: IntersectionObserver | null = null;
+    const footer = document.querySelector(".footer");
+    if (footer && "IntersectionObserver" in window) {
+      bottomSpy = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) setActiveSection("contact");
+          });
+        },
+        { rootMargin: "0px 0px -10% 0px" },
+      );
+      bottomSpy.observe(footer);
+    }
 
     return () => {
       revealObserver?.disconnect();
       spy?.disconnect();
-      window.removeEventListener("scroll", onScroll);
+      bottomSpy?.disconnect();
     };
   }, []);
 
@@ -578,6 +606,7 @@ function Index() {
     <a
       href={`#${id}`}
       className={`nav-link${activeSection === id ? " active" : ""}${extra ? " " + extra : ""}`}
+      aria-current={activeSection === id ? "location" : undefined}
       onClick={() => setMobileOpen(false)}
     >
       {label}
@@ -586,6 +615,7 @@ function Index() {
 
   return (
     <>
+      <a href="#main" className="skip-link">Skip to content</a>
       {/* ══════════ NAV ══════════ */}
       <header className={`nav-wrap${mobileOpen ? " open" : ""}`}>
         <nav className="nav container" aria-label="Main">
@@ -604,6 +634,7 @@ function Index() {
             ))}
           </ul>
           <button
+            type="button"
             className="nav-toggle"
             aria-label="Menu"
             aria-expanded={mobileOpen}
@@ -621,7 +652,7 @@ function Index() {
         </div>
       </header>
 
-      <main>
+      <main id="main">
         {/* ══════════ HERO ══════════ */}
         <section className="hero" id="home">
           <div className="container hero-inner">
@@ -651,7 +682,7 @@ function Index() {
               <img
                 className="hero-photo load-4"
                 src={ahmedHero}
-                alt="Ahmed Mekki"
+                alt="Ahmed Mekki, AI-native content creator and AI video director"
                 width={750}
                 height={1690}
                 fetchPriority="high"
@@ -850,7 +881,18 @@ function Index() {
                   <path d="M7 17L17 7M17 7H9M17 7v8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </a>
-              <a className="btn btn-outline" href="tel:+201069989951">+20 106 998 9951</a>
+              <a
+                className="btn btn-outline btn-whatsapp"
+                href="https://wa.me/201069989951"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Message Ahmed on WhatsApp"
+              >
+                <svg className="wa-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M17.47 14.38c-.3-.15-1.74-.86-2.01-.96-.27-.1-.47-.15-.66.15-.2.3-.76.96-.93 1.15-.17.2-.34.22-.63.08-.3-.15-1.24-.46-2.37-1.46-.88-.78-1.47-1.75-1.64-2.05-.17-.3-.02-.46.13-.6.13-.13.3-.34.44-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.66-1.6-.9-2.19-.24-.57-.48-.5-.66-.5l-.57-.01c-.2 0-.52.07-.79.37-.27.3-1.03 1.01-1.03 2.46 0 1.45 1.06 2.85 1.2 3.05.15.2 2.08 3.18 5.05 4.46.7.3 1.26.48 1.69.62.71.22 1.36.2 1.87.12.57-.09 1.74-.71 1.99-1.4.24-.69.24-1.28.17-1.4-.07-.13-.27-.2-.57-.35zM12.02 3.5a8.48 8.48 0 0 0-7.22 12.96l-.95 3.47 3.55-.93a8.48 8.48 0 1 0 4.62-15.5zm0 15.55a7.06 7.06 0 0 1-3.6-.99l-.26-.15-2.66.7.71-2.6-.17-.27a7.06 7.06 0 1 1 5.98 3.31z" />
+                </svg>
+                WhatsApp
+              </a>
             </div>
             <p className="contact-loc">Cairo, Egypt · Working across Egypt &amp; KSA</p>
           </div>
