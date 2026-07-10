@@ -615,8 +615,9 @@ ul, ol { list-style: none; }
    page + MRZ. All sizes are in cqw (1% of the card's width) so the whole card
    scales fluidly while the absolute layout stays pinned. Design width = 500px,
    so 1cqw = 5px at design scale (px × 0.2 = cqw). */
-.about-visual { display: flex; justify-content: center; }
-.passport-wrap { perspective: 1200px; width: min(430px, 90vw); }
+.about-visual { display: flex; justify-content: center; padding: 14px 0 26px; }
+/* resting tilt like the reference; hover adds a springy scale (framer-motion) */
+.passport-wrap { perspective: 1200px; width: min(430px, 90vw); transform: rotate(7deg); }
 
 .passport {
   position: relative;
@@ -657,7 +658,7 @@ ul, ol { list-style: none; }
 .pp-stamp {
   position: absolute;
   mix-blend-mode: multiply;
-  opacity: 0.85;
+  opacity: 0.95;
   filter: url(#pp-grunge);
 }
 .pp-stamp svg { display: block; width: 100%; height: auto; overflow: visible; }
@@ -667,9 +668,9 @@ ul, ol { list-style: none; }
   font-weight: 700;
   fill: currentColor;
 }
-.bl { color: #4a6b9c; }
-.rd { color: #b0413e; }
-.gr { color: #6b8e5a; }
+.bl { color: #40608f; }
+.rd { color: #a63936; }
+.gr { color: #5f8350; }
 
 .pp-s1 { left: 7.6cqw; top: 9.2cqw; width: 30.4cqw; }
 .pp-s2 { left: 12cqw; top: 18.4cqw; width: 24cqw; }
@@ -692,14 +693,20 @@ ul, ol { list-style: none; }
   font-weight: 700;
   letter-spacing: 0.18em;
 }
-.pp-chip {
+.pp-flag {
   position: absolute;
   right: 4.8cqw;
   top: 75.6cqw;
-  width: 8.8cqw;
-  color: #4a6b9c;
+  width: 9.6cqw;
+  aspect-ratio: 3 / 2;
+  border-radius: 0.6cqw;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
 }
-.pp-chip svg { width: 100%; height: auto; display: block; }
+.pp-flag i { flex: 1; display: grid; place-items: center; }
+.pp-flag svg { width: 60%; height: auto; display: block; }
 
 .pp-photo {
   position: absolute;
@@ -762,9 +769,9 @@ ul, ol { list-style: none; }
   right: 4cqw;
   top: 104cqw;
   width: 30cqw;
-  color: #4a6b9c;
+  color: #40608f;
   mix-blend-mode: multiply;
-  opacity: 0.8;
+  opacity: 0.9;
   filter: url(#pp-grunge);
   transform: rotate(-5deg);
 }
@@ -784,6 +791,11 @@ ul, ol { list-style: none; }
   color: #3a3934;
   white-space: nowrap;
   overflow: hidden;
+}
+
+/* smaller tilt on narrow screens so the rotated corners stay inside the viewport */
+@media (max-width: 700px) {
+  .passport-wrap { transform: rotate(4deg); width: min(430px, 84vw); }
 }
 
 /* ══════════ SOCIAL LINKS ══════════ */

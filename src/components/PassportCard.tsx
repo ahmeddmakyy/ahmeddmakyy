@@ -35,7 +35,7 @@ function Stamp({ className, rest, delay, reduce, children }: StampProps) {
     <motion.div
       className={className}
       initial={{ opacity: 0, scale: 1.6, rotate: rest * 0.3 }}
-      whileInView={{ opacity: 0.85, scale: 1, rotate: rest }}
+      whileInView={{ opacity: 0.95, scale: 1, rotate: rest }}
       viewport={{ once: true, margin: "0px 0px -8% 0px" }}
       transition={{ delay, type: "spring", stiffness: 240, damping: 13, mass: 0.7 }}
     >
@@ -71,7 +71,8 @@ export default function PassportCard() {
       <svg width="0" height="0" aria-hidden="true" style={{ position: "absolute" }}>
         <filter id="pp-grunge">
           <feTurbulence type="fractalNoise" baseFrequency="0.11 0.13" numOctaves="3" seed="6" result="n" />
-          <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.5 1.15" result="m" />
+          {/* lighter erosion than before so the stamps read clearly */}
+          <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.3 1.2" result="m" />
           <feComposite in="SourceGraphic" in2="m" operator="in" result="e" />
           <feDisplacementMap in="e" in2="n" scale="1.7" xChannelSelector="R" yChannelSelector="G" />
         </filter>
@@ -84,6 +85,11 @@ export default function PassportCard() {
         onPointerLeave={reduce ? undefined : onLeave}
         initial={reduce ? false : { opacity: 0, y: 30 }}
         whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+        whileHover={
+          reduce
+            ? undefined
+            : { scale: 1.05, transition: { type: "spring", stiffness: 260, damping: 18 } }
+        }
         viewport={{ once: true, margin: "0px 0px -8% 0px" }}
         transition={{ duration: 0.6, ease: [0.22, 0.8, 0.3, 1] }}
       >
@@ -99,7 +105,8 @@ export default function PassportCard() {
               <path d="M96 14 h44 v30 h-44 z" fill="none" stroke="currentColor" strokeWidth="1.6" />
               <path d="M104 34 l30 -14 -6 12 6 2 -30 8 z" fill="currentColor" />
               <path d="M22 58 h26 M22 58 l7 -6 M22 58 l7 6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-              <text x="80" y="80" textAnchor="middle" fontSize="12" letterSpacing="1">DEPARTURE · 2024</text>
+              <text x="80" y="72" textAnchor="middle" fontSize="12" letterSpacing="1">MAKE REELS</text>
+              <text x="80" y="85" textAnchor="middle" fontSize="8" letterSpacing="1.5">&amp; TELL STORIES</text>
             </svg>
           </Stamp>
 
@@ -108,9 +115,9 @@ export default function PassportCard() {
               <path d="M60 8 L112 100 L8 100 Z" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" />
               <path d="M60 20 L104 96 L16 96 Z" fill="none" stroke="currentColor" strokeWidth="1" />
               <path d="M40 50 l34 -10 -7 9 6 2 -33 8 z" fill="currentColor" />
-              <text x="60" y="66" textAnchor="middle" fontSize="8">· ARRIVED ·</text>
+              <text x="60" y="66" textAnchor="middle" fontSize="7.5">I HELP BRANDS</text>
               <line x1="30" y1="72" x2="90" y2="72" stroke="currentColor" strokeWidth="1" />
-              <text x="60" y="90" textAnchor="middle" fontSize="13" letterSpacing="1">CAIRO</text>
+              <text x="60" y="88" textAnchor="middle" fontSize="9.5" letterSpacing=".5">FIND THEIR VOICE</text>
             </svg>
           </Stamp>
 
@@ -119,22 +126,22 @@ export default function PassportCard() {
               <defs><path id="pp-hex" d="M66 6 L124 34 L124 84 L66 112 L8 84 L8 34 Z" fill="none" /></defs>
               <text fontSize="7" letterSpacing="1"><textPath href="#pp-hex" startOffset="0">012301230123012301230123012301230123</textPath></text>
               <path d="M66 14 L116 38 L116 80 L66 104 L16 80 L16 38 Z" fill="none" stroke="currentColor" strokeWidth="2.4" />
-              <text x="66" y="42" textAnchor="middle" fontSize="14" letterSpacing="1">RIYADH</text>
+              <text x="66" y="42" textAnchor="middle" fontSize="14" letterSpacing="1">AI FILMS</text>
               <path d="M50 50 l34 -8 -7 8 6 2 -33 7 z" fill="currentColor" />
-              <text x="66" y="78" textAnchor="middle" fontSize="12">28-06-2024</text>
-              <text x="66" y="92" textAnchor="middle" fontSize="8">0123 · KSA</text>
+              <text x="66" y="78" textAnchor="middle" fontSize="12">DIRECTED</text>
+              <text x="66" y="92" textAnchor="middle" fontSize="8">VEO · FLUX</text>
             </svg>
           </Stamp>
 
           <Stamp className="pp-stamp pp-s4 bl" rest={-4} delay={0.19} reduce={reduce}>
             <svg viewBox="0 0 96 130">
               <rect x="3" y="3" width="90" height="124" fill="none" stroke="currentColor" strokeWidth="2.2" />
-              <text x="48" y="24" textAnchor="middle" fontSize="13" letterSpacing="1">KSA</text>
-              <text x="48" y="40" textAnchor="middle" fontSize="11" letterSpacing="1">VISA</text>
+              <text x="48" y="24" textAnchor="middle" fontSize="12" letterSpacing="1">CONTENT</text>
+              <text x="48" y="40" textAnchor="middle" fontSize="11" letterSpacing="1">PLAN</text>
               <line x1="12" y1="50" x2="84" y2="50" stroke="currentColor" strokeWidth="1" />
-              <text x="48" y="72" textAnchor="middle" fontSize="10">ARRIVAL</text>
-              <text x="48" y="90" textAnchor="middle" fontSize="12">21 JUN</text>
-              <text x="48" y="106" textAnchor="middle" fontSize="12">2023</text>
+              <text x="48" y="72" textAnchor="middle" fontSize="10">90 DAYS</text>
+              <text x="48" y="90" textAnchor="middle" fontSize="12">150</text>
+              <text x="48" y="106" textAnchor="middle" fontSize="12">IDEAS</text>
               <path d="M30 116 h36 M30 116 l6 -5 M30 116 l6 5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </Stamp>
@@ -156,9 +163,9 @@ export default function PassportCard() {
               <rect x="3" y="3" width="98" height="78" fill="none" stroke="currentColor" strokeWidth="2" />
               <g fill="currentColor"><circle cx="16" cy="16" r="1.2" /><circle cx="24" cy="13" r="1.2" /><circle cx="32" cy="12" r="1.2" /><circle cx="40" cy="13" r="1.2" /><circle cx="48" cy="16" r="1.2" /></g>
               <path d="M14 44 h30 M14 44 l7 -6 M14 44 l7 6" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-              <text x="52" y="40" textAnchor="middle" fontSize="10">28.06.2023</text>
-              <text x="52" y="60" textAnchor="middle" fontSize="13" letterSpacing="1">DUBAI</text>
-              <text x="52" y="73" textAnchor="middle" fontSize="8">U.A.E</text>
+              <text x="52" y="40" textAnchor="middle" fontSize="9">2 MARKETS</text>
+              <text x="52" y="60" textAnchor="middle" fontSize="11.5" letterSpacing=".5">EGY · KSA</text>
+              <text x="52" y="73" textAnchor="middle" fontSize="8">SINCE 2024</text>
             </svg>
           </Stamp>
 
@@ -178,9 +185,9 @@ export default function PassportCard() {
           <Stamp className="pp-stamp pp-s8 rd" rest={2} delay={0.37} reduce={reduce}>
             <svg viewBox="0 0 100 78">
               <rect x="3" y="3" width="94" height="72" fill="none" stroke="currentColor" strokeWidth="1.4" strokeDasharray="3 3" />
-              <text x="50" y="26" textAnchor="middle" fontSize="12" letterSpacing="1">JEDDAH</text>
-              <text x="50" y="42" textAnchor="middle" fontSize="8">AEROPORTO</text>
-              <text x="50" y="58" textAnchor="middle" fontSize="9">28 JUN 2023</text>
+              <text x="50" y="26" textAnchor="middle" fontSize="12" letterSpacing="1">HOOKS</text>
+              <text x="50" y="42" textAnchor="middle" fontSize="8">THAT STOP</text>
+              <text x="50" y="58" textAnchor="middle" fontSize="9">THE SCROLL</text>
             </svg>
           </Stamp>
 
@@ -188,8 +195,8 @@ export default function PassportCard() {
             <svg viewBox="0 0 98 96">
               <path d="M49 6 L92 34 L78 90 L20 90 L6 34 Z" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" />
               <path d="M30 40 l30 -8 -6 7 5 2 -29 7 z" fill="currentColor" />
-              <text x="49" y="60" textAnchor="middle" fontSize="11">ARRIVAL</text>
-              <text x="49" y="76" textAnchor="middle" fontSize="7">IMMIGRATION</text>
+              <text x="49" y="60" textAnchor="middle" fontSize="9.5">HUMANIZED</text>
+              <text x="49" y="76" textAnchor="middle" fontSize="8">ARABIC</text>
             </svg>
           </Stamp>
 
@@ -207,23 +214,29 @@ export default function PassportCard() {
           <Stamp className="pp-stamp pp-s11 bl" rest={-2} delay={0.49} reduce={reduce}>
             <svg viewBox="0 0 112 70">
               <rect x="3" y="3" width="106" height="64" rx="2" fill="none" stroke="currentColor" strokeWidth="2.2" />
-              <text x="56" y="22" textAnchor="middle" fontSize="7.5" letterSpacing="1">★ ARRIVAL · 2024 ★</text>
+              <text x="56" y="22" textAnchor="middle" fontSize="7.5" letterSpacing="1">★ SINCE 2024 ★</text>
               <line x1="12" y1="28" x2="100" y2="28" stroke="currentColor" strokeWidth="1" />
-              <text x="56" y="46" textAnchor="middle" fontSize="14" letterSpacing="1">LONDON</text>
-              <text x="56" y="60" textAnchor="middle" fontSize="8">AIRPORT</text>
+              <text x="56" y="46" textAnchor="middle" fontSize="12.5" letterSpacing=".5">15+ BRANDS</text>
+              <text x="56" y="60" textAnchor="middle" fontSize="8">10 INDUSTRIES</text>
             </svg>
           </Stamp>
         </div>
 
         {/* ── data page ── */}
         <div className="pp-pass-lbl">PASSPORT</div>
-        <div className="pp-chip" aria-hidden="true">
-          <svg viewBox="0 0 44 30">
-            <rect x="1" y="1" width="42" height="28" rx="4" fill="none" stroke="currentColor" strokeWidth="2" />
-            <rect x="14" y="8" width="16" height="14" rx="2" fill="none" stroke="currentColor" strokeWidth="2" />
-            <path d="M22 8 v14 M14 15 h16" stroke="currentColor" strokeWidth="1.6" />
-            <path d="M30 11 a5 5 0 0 1 0 8" fill="none" stroke="currentColor" strokeWidth="1.6" />
-          </svg>
+        {/* Egyptian flag: red/white/black bands + gold eagle mark */}
+        <div className="pp-flag" aria-hidden="true">
+          <i style={{ background: "#ce1126" }} />
+          <i style={{ background: "#fff" }}>
+            <svg viewBox="0 0 24 16">
+              <path
+                d="M12 1.2 C10.7 3.4 8.5 4.5 5.6 4.5 C7.5 5.8 9.8 6 11 5.5 L9.8 11.5 H14.2 L13 5.5 C14.2 6 16.5 5.8 18.4 4.5 C15.5 4.5 13.3 3.4 12 1.2 Z"
+                fill="#c09300"
+              />
+              <rect x="9.2" y="12.2" width="5.6" height="1.7" fill="#c09300" />
+            </svg>
+          </i>
+          <i style={{ background: "#141414" }} />
         </div>
 
         <div className="pp-photo">
