@@ -88,10 +88,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:description", content: SITE_DESC },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { title: "Reels With Maki | Content Creator & AI Video Director" },
+      { property: "og:title", content: "Reels With Maki | Content Creator & AI Video Director" },
+      { name: "twitter:title", content: "Reels With Maki | Content Creator & AI Video Director" },
+      { name: "description", content: "AI-native video director creating scroll-stopping short-form content for brands. From concept and scripting to AI production, editing, and final delivery." },
+      { property: "og:description", content: "AI-native video director creating scroll-stopping short-form content for brands. From concept and scripting to AI production, editing, and final delivery." },
+      { name: "twitter:description", content: "AI-native video director creating scroll-stopping short-form content for brands. From concept and scripting to AI production, editing, and final delivery." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/kBYrN7AScPVPxk5LcflXYJzXNIJ2/social-images/social-1783643425130-ChatGPT_Image_Jul_10,_2026,_03_30_14_AM.webp" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/kBYrN7AScPVPxk5LcflXYJzXNIJ2/social-images/social-1783643425130-ChatGPT_Image_Jul_10,_2026,_03_30_14_AM.webp" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
