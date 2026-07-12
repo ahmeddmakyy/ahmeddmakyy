@@ -10,7 +10,7 @@ export type Rich = { t: string; accent?: boolean }[];
 
 export interface SiteContent {
   dir: "ltr" | "rtl";
-  a11y: { skip: string; menu: string };
+  a11y: { skip: string; menu: string; close: string };
   nav: {
     home: string;
     services: string;
@@ -19,6 +19,7 @@ export interface SiteContent {
     work: string;
     process: string;
     contact: string;
+    talk: string;
   };
   hero: {
     hello: string;
@@ -36,6 +37,9 @@ export interface SiteContent {
   services: { title: Rich; lede: string; cards: { title: string; body: string }[] };
   videosSection: {
     head: Rich;
+    // Words the first accent slot morphs through (cycle[0] must equal head's
+    // first accent word so SSR/first paint matches).
+    cycle: string[];
     sub: string;
     prev: string;
     next: string;
@@ -69,6 +73,7 @@ export interface SiteContent {
     cards: { tag: string; period: string; title: string; body: string }[];
     more: string;
   };
+  midCta: { text: string; button: string };
   process: { title: Rich; lede: string; steps: { n: string; t: string; b: string }[] };
   contact: { eyebrow: string; title: Rich; lede: string; whatsapp: string; loc: string };
   footer: string;
@@ -76,7 +81,7 @@ export interface SiteContent {
 
 const en: SiteContent = {
   dir: "ltr",
-  a11y: { skip: "Skip to content", menu: "Menu" },
+  a11y: { skip: "Skip to content", menu: "Menu", close: "Close" },
   nav: {
     home: "Home",
     services: "Services",
@@ -85,6 +90,7 @@ const en: SiteContent = {
     work: "Work",
     process: "Process",
     contact: "Contact",
+    talk: "Let's talk",
   },
   hero: {
     hello: "Hello!",
@@ -97,7 +103,7 @@ const en: SiteContent = {
     ratingNum: "15+",
     ratingLabel: "Clients Served",
     ctaWork: "See My Work",
-    ctaHire: "Hire Me",
+    ctaHire: "Let's talk",
     photoAlt: "Ahmed Mekki, AI-native content creator and AI video director",
   },
   services: {
@@ -106,7 +112,7 @@ const en: SiteContent = {
     cards: [
       {
         title: "Brand Strategy & Content Planning",
-        body: "Competitor teardowns, one owned proposition per brand, weighted content pillars, and 3-month plans with 60–150 fully specified ideas.",
+        body: "Competitor teardowns, one owned proposition per brand, weighted content pillars, and content plans sized to the brand and budget — from a single month to a multi-month catalog of fully specified ideas.",
       },
       {
         title: "AI Video Production",
@@ -125,6 +131,7 @@ const en: SiteContent = {
       { t: " starts with an " },
       { t: "idea.", accent: true },
     ],
+    cycle: ["film", "reel", "story", "spot", "ad"],
     sub: "Script, direction, AI production, edit.",
     prev: "Previous film",
     next: "Next film",
@@ -184,7 +191,7 @@ const en: SiteContent = {
       tag: "UI Animation",
       client: "Car Showroom",
       description:
-        "A concept financing app animated entirely in code: a welcome screen, a Toyota Fortuner, one tap on “Finance it” — and instant approval.",
+        "A light, playful UI-animation concept for a car showroom that sells new and used cars on easy installments — not a real app. The lineup scrolls, one tap on “Finance it” under a Toyota Fortuner, and instant approval: the whole pitch as a smooth in-app flow, built entirely in code.",
     },
     {
       title: "Mohamed Abbas Motors — Ask ChatGPT",
@@ -239,7 +246,7 @@ const en: SiteContent = {
         tag: "Brand Foundation",
         period: "Manufacturing",
         title: "Como Tech",
-        body: "Full foundation for a new wiring-devices maker: identity, tone of voice, a teardown of a 57-year incumbent, a 3-month content strategy, and a 60-idea catalog in consumer and B2B editions.",
+        body: "Full foundation for a new wiring-devices maker: identity, tone of voice, a teardown of a 57-year incumbent, a content strategy, and a 60-idea catalog in consumer and B2B editions.",
       },
       {
         tag: "Insight & Ideas",
@@ -256,13 +263,14 @@ const en: SiteContent = {
     ],
     more: "…plus Geroland, Quick Loan, Trust Motors, Access Laptop, and more across 10 industries.",
   },
+  midCta: { text: "Seen enough? Tell me what you're building.", button: "Let's talk" },
   process: {
     title: [{ t: "How I " }, { t: "Work", accent: true }],
     lede: "A full content system, not one-off posts: research, strategy, ideas, and production — the same way for every brand.",
     steps: [
       { n: "01", t: "Research & insight", b: "Market, competitors, and audience first. I dig for the one real insight a brand can build on — before a single idea." },
       { n: "02", t: "Strategy & pillars", b: "One proposition the brand can own and weighted content pillars, so the feed has a direction instead of random posts." },
-      { n: "03", t: "Ideas & content plan", b: "A 3-month plan with 60–150 fully specified ideas: the hook, the format, the shot, and the caption — ready to shoot." },
+      { n: "03", t: "Ideas & content plan", b: "A content plan sized to the brand and budget — a month or several — with fully specified ideas: the hook, the format, the shot, and the caption — ready to shoot." },
       { n: "04", t: "Production", b: "From shoot lists to AI films. I direct the tools (Veo, FLUX, Gemini) and the camera the same way: idea, references, and final call are mine." },
       { n: "05", t: "Humanize & QA", b: "Review passes until nothing reads as AI — copy, pronunciation, and Arabic letter by letter, in real Egyptian dialect." },
       { n: "06", t: "Deliver & iterate", b: "Staged revisions, organized folders, nothing deleted — then read the numbers and sharpen the next batch." },
@@ -281,7 +289,7 @@ const en: SiteContent = {
 const ar: SiteContent = {
   // Layout stays LTR in Arabic too (by request) — see i18n.tsx.
   dir: "ltr",
-  a11y: { skip: "تخطَّ إلى المحتوى", menu: "القائمة" },
+  a11y: { skip: "تخطَّ إلى المحتوى", menu: "القائمة", close: "إغلاق" },
   nav: {
     home: "الرئيسية",
     services: "الخدمات",
@@ -290,6 +298,7 @@ const ar: SiteContent = {
     work: "أعمالي",
     process: "المنهجية",
     contact: "تواصل",
+    talk: "لنتحدث",
   },
   hero: {
     hello: "مرحبًا!",
@@ -302,7 +311,7 @@ const ar: SiteContent = {
     ratingNum: "+15",
     ratingLabel: "عميل خدمتُهم",
     ctaWork: "شاهد أعمالي",
-    ctaHire: "وظّفني",
+    ctaHire: "لنتحدث",
     photoAlt: "أحمد مكي، صانع محتوى ومخرج فيديو بالذكاء الاصطناعي",
   },
   services: {
@@ -311,7 +320,7 @@ const ar: SiteContent = {
     cards: [
       {
         title: "استراتيجية العلامة وتخطيط المحتوى",
-        body: "تحليل المنافسين، وطرح واحد تمتلكه كل علامة، وركائز محتوى موزونة، وخطط لثلاثة أشهر تضمّ 60–150 فكرة محدَّدة بالكامل.",
+        body: "تحليل المنافسين، وطرح واحد تمتلكه كل علامة، وركائز محتوى موزونة، وخطط محتوى على مقاس العلامة والميزانية — من شهر واحد إلى كتالوج لعدة أشهر من الأفكار المحدَّدة بالكامل.",
       },
       {
         title: "إنتاج الفيديو بالذكاء الاصطناعي",
@@ -330,6 +339,7 @@ const ar: SiteContent = {
       { t: " يبدأ بـ" },
       { t: "فكرة.", accent: true },
     ],
+    cycle: ["فيلم", "ريّل", "حكاية", "لقطة", "إعلان"],
     sub: "سيناريو، وإخراج، وإنتاج بالذكاء الاصطناعي، ومونتاج.",
     prev: "الفيلم السابق",
     next: "الفيلم التالي",
@@ -389,7 +399,7 @@ const ar: SiteContent = {
       tag: "أنيميشن واجهات",
       client: "معرض سيارات",
       description:
-        "تطبيق تمويل تخيّلي متحرّك بالكامل بالكود: شاشة ترحيب، وتويوتا فورتشنر، وضغطة واحدة على «قسّطها» — فموافقة فورية.",
+        "فكرة أنيميشن واجهات خفيفة ولذيذة لمعرض سيارات بيبيع جديد ومستعمل بالتقسيط — مش تطبيق حقيقي. السيارات بتعدّي، وضغطة على «قسّطها» تحت تويوتا فورتشنر، فموافقة فورية: العرض كله في شكل واجهة تطبيق، متعمِل بالكامل بالكود.",
     },
     {
       title: "محمد عباس موتورز — اسأل ChatGPT",
@@ -444,7 +454,7 @@ const ar: SiteContent = {
         tag: "تأسيس علامة",
         period: "تصنيع",
         title: "Como Tech",
-        body: "تأسيس كامل لمُصنّع أجهزة توصيلات جديد: هوية، ونبرة صوت، وتحليل لمنافس عمره 57 عامًا، واستراتيجية محتوى لثلاثة أشهر، وكتالوج من 60 فكرة بنسختين استهلاكية وB2B.",
+        body: "تأسيس كامل لمُصنّع أجهزة توصيلات جديد: هوية، ونبرة صوت، وتحليل لمنافس عمره 57 عامًا، واستراتيجية محتوى، وكتالوج من 60 فكرة بنسختين استهلاكية وB2B.",
       },
       {
         tag: "رؤى وأفكار",
@@ -461,13 +471,14 @@ const ar: SiteContent = {
     ],
     more: "…بالإضافة إلى Geroland وQuick Loan وTrust Motors وAccess Laptop، وغيرها عبر 10 مجالات.",
   },
+  midCta: { text: "رأيت ما يكفي؟ أخبرني بما تبنيه.", button: "لنتحدث" },
   process: {
     title: [{ t: "طريقة " }, { t: "عملي", accent: true }],
     lede: "نظام محتوى متكامل، لا منشورات متفرّقة: بحث، واستراتيجية، وأفكار، وإنتاج — بالطريقة نفسها لكل علامة.",
     steps: [
       { n: "01", t: "البحث والرؤية", b: "السوق والمنافسون والجمهور أولًا. أُنقّب عن الرؤية الحقيقية الواحدة التي تبني عليها العلامة — قبل أي فكرة." },
       { n: "02", t: "الاستراتيجية والركائز", b: "طرح واحد تمتلكه العلامة وركائز محتوى موزونة، ليكون للحساب اتجاه بدل منشورات عشوائية." },
-      { n: "03", t: "الأفكار وخطة المحتوى", b: "خطة لثلاثة أشهر بـ60–150 فكرة محدَّدة بالكامل: الخطّاف، والقالب، واللقطة، والكابشن — جاهزة للتصوير." },
+      { n: "03", t: "الأفكار وخطة المحتوى", b: "خطة محتوى على مقاس العلامة والميزانية — شهر أو أكثر — بأفكار محدَّدة بالكامل: الخطّاف، والقالب، واللقطة، والكابشن — جاهزة للتصوير." },
       { n: "04", t: "الإنتاج", b: "من قوائم التصوير إلى أفلام الذكاء الاصطناعي. أُوجّه الأدوات (Veo وFLUX وGemini) والكاميرا بالطريقة نفسها: الفكرة والمراجع والقرار النهائي لي." },
       { n: "05", t: "الأنسنة والمراجعة", b: "جولات مراجعة حتى لا يبدو أي شيء آليًا — النص والنطق والعربية حرفًا حرفًا، بالعامية المصرية الحقيقية." },
       { n: "06", t: "التسليم والتحسين", b: "مراجعات على مراحل، ومجلدات منظّمة، ولا شيء يُحذف — ثم أقرأ الأرقام وأُحسّن الدفعة التالية." },

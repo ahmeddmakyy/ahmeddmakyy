@@ -1,4 +1,5 @@
-import { motion, useReducedMotion } from "framer-motion";
+import { useRef } from "react";
+import { motion, useMotionValue, useReducedMotion, useSpring } from "framer-motion";
 
 // Brand glyphs (simple-icons, single-path, currentColor).
 const IG =
@@ -7,41 +8,76 @@ const LINKEDIN =
   "M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z";
 
 const LINKS = [
-  {
-    name: "Instagram",
-    href: "https://www.instagram.com/reelswithmaki/",
-    path: IG,
-  },
-  {
-    name: "LinkedIn",
-    href: "https://www.linkedin.com/in/ahmeddmakyy11",
-    path: LINKEDIN,
-  },
+  { name: "Instagram", href: "https://www.instagram.com/reelswithmaki/", path: IG, handle: "@reelswithmaki" },
+  { name: "LinkedIn", href: "https://www.linkedin.com/in/ahmeddmakyy11", path: LINKEDIN, handle: "in/ahmeddmakyy11" },
 ];
 
-export default function SocialLinks({ className }: { className?: string }) {
+type Link = (typeof LINKS)[number];
+
+// The visible link is pure CSS on hover/focus (pill reveal, gradient fill, icon
+// flip) so nothing here fights the magnetic transform. Framer only drives the
+// scroll-in and the magnetic x/y spring on the wrapping slot.
+function Pill({ link, index }: { link: Link; index: number }) {
   const reduce = useReducedMotion();
+  const ref = useRef<HTMLSpanElement>(null);
+  const mx = useMotionValue(0);
+  const my = useMotionValue(0);
+  const x = useSpring(mx, { stiffness: 220, damping: 16, mass: 0.4 });
+  const y = useSpring(my, { stiffness: 220, damping: 16, mass: 0.4 });
+
+  const onMove = (e: React.PointerEvent<HTMLSpanElement>) => {
+    if (!ref.current) return;
+    const r = ref.current.getBoundingClientRect();
+    mx.set((e.clientX - (r.left + r.width / 2)) * 0.35);
+    my.set((e.clientY - (r.top + r.height / 2)) * 0.35);
+  };
+  const reset = () => {
+    mx.set(0);
+    my.set(0);
+  };
+
+  const anchor = (
+    <a
+      href={link.href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="social-link"
+      aria-label={`${link.name} — ${link.handle}`}
+    >
+      <span className="social-fill" aria-hidden="true" />
+      <span className="social-ico" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d={link.path} />
+        </svg>
+      </span>
+      <span className="social-handle">{link.handle}</span>
+    </a>
+  );
+
+  if (reduce) return <span className="social-slot">{anchor}</span>;
+
+  return (
+    <motion.span
+      ref={ref}
+      className="social-slot"
+      style={{ x, y }}
+      onPointerMove={onMove}
+      onPointerLeave={reset}
+      initial={{ opacity: 0, scale: 0.85 }}
+      whileInView={{ opacity: 1, scale: 1 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.45, delay: index * 0.09, ease: [0.22, 1, 0.3, 1] }}
+    >
+      {anchor}
+    </motion.span>
+  );
+}
+
+export default function SocialLinks({ className }: { className?: string }) {
   return (
     <div className={`social-links${className ? " " + className : ""}`}>
       {LINKS.map((l, i) => (
-        <motion.a
-          key={l.name}
-          href={l.href}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="social-link"
-          aria-label={l.name}
-          initial={reduce ? false : { opacity: 0, y: 12 }}
-          whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.4, delay: i * 0.08 }}
-          whileHover={reduce ? undefined : { y: -5, scale: 1.12 }}
-          whileTap={reduce ? undefined : { scale: 0.92 }}
-        >
-          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d={l.path} />
-          </svg>
-        </motion.a>
+        <Pill key={l.name} link={l} index={i} />
       ))}
     </div>
   );

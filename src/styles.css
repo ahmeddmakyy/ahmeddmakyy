@@ -105,6 +105,24 @@ ul, ol { list-style: none; }
 .nav-link:hover { background: rgba(255, 255, 255, 0.1); }
 .nav-link.active { background: var(--orange); }
 
+/* Nav contact CTA (replaces the plain Contact link) */
+.nav-cta {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 20px;
+  border-radius: 999px;
+  background: var(--orange);
+  color: #fff;
+  font-size: 15.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: background 0.3s var(--ease), transform 0.3s var(--ease);
+}
+.nav-cta:hover { background: var(--orange-deep); transform: translateY(-1px); }
+.nav-cta.active { background: var(--orange-deep); }
+.nav-cta-mobile { display: block; margin-top: 6px; }
+.nav-cta-mobile .nav-cta { justify-content: center; }
+
 .brand {
   display: flex;
   align-items: center;
@@ -120,10 +138,23 @@ ul, ol { list-style: none; }
 }
 .brand-word {
   color: #fff;
-  font-weight: 800;
-  font-size: 17px;
-  letter-spacing: 0.14em;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.005em;
 }
+
+/* Nav animations: entrance drop-in, hover lift, click press, logo tilt */
+.nav { animation: navDrop 0.7s var(--ease) both; }
+@keyframes navDrop {
+  from { opacity: 0; transform: translateY(-18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.nav-link { transition: background 0.3s var(--ease), color 0.3s var(--ease), transform 0.16s var(--ease); }
+.nav-link:hover { transform: translateY(-1px); }
+.nav-link:active, .nav-cta:active { transform: scale(0.93); }
+.brand-mark { transition: transform 0.45s var(--ease); }
+.brand:hover .brand-mark { transform: rotate(-8deg) scale(1.06); }
+.brand:active .brand-mark { transform: scale(0.94); }
 
 .nav-toggle {
   display: none;
@@ -237,6 +268,53 @@ ul, ol { list-style: none; }
   z-index: 2;
 }
 
+/* ── Hero portrait: spotlight-reveal (B&W base → colour under the cursor) ──
+   The wrap sits exactly where .hero-photo did (absolute, bottom, centred,
+   height 113%). The base <img> drives the width via height:100%/width:auto, so
+   the box keeps the portrait's aspect and the reveal layer overlays 1:1. */
+.hero-spot {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 113%;
+  z-index: 2;
+}
+.hero-spot .spotlight-base,
+.hero-spot .spotlight-reveal img {
+  display: block;
+  height: 100%;
+  width: auto;
+  max-width: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.hero-spot .spotlight-reveal {
+  position: absolute;
+  inset: 0;
+  -webkit-mask-image: radial-gradient(circle var(--r, 0px) at var(--mx, 50%) var(--my, 50%),
+      #000 0%, #000 42%, rgba(0, 0, 0, 0.55) 66%, rgba(0, 0, 0, 0.12) 84%, transparent 100%);
+          mask-image: radial-gradient(circle var(--r, 0px) at var(--mx, 50%) var(--my, 50%),
+      #000 0%, #000 42%, rgba(0, 0, 0, 0.55) 66%, rgba(0, 0, 0, 0.12) 84%, transparent 100%);
+  -webkit-mask-repeat: no-repeat;
+          mask-repeat: no-repeat;
+  will-change: -webkit-mask-image, mask-image;
+}
+.hero-spot .spotlight-reveal img { width: 100%; height: 100%; }
+/* orange director's-loupe ring that rides the cursor */
+.hero-spot .spotlight-ring {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(calc(var(--mx, 50%) - 56px), calc(var(--my, 50%) - 56px));
+  opacity: 0;
+  pointer-events: none;
+  z-index: 3;
+  filter: drop-shadow(0 0 6px rgba(253, 111, 0, 0.35));
+}
+/* keep the centring transform during the load-in slide (mirror .hero-photo) */
+.hero-spot.load-4 { animation-name: photoIn; }
+
 .hero-note { position: absolute; z-index: 2; }
 
 .hero-quote {
@@ -322,13 +400,74 @@ ul, ol { list-style: none; }
 }
 .btn-outline:hover { border-color: var(--orange); }
 
-/* WhatsApp CTA — intentionally NOT green; inherits the outline/white identity */
+/* WhatsApp CTA — intentionally NOT green; uses the brand orange primary fill. */
 .btn .wa-icon { width: 20px; height: 20px; }
-.btn-whatsapp:hover { border-color: var(--orange); color: var(--orange); }
 
 /* Dark solid button (for the light About section) + CV download */
 .btn-dark { background: var(--ink); color: #fff; }
 .btn-dark:hover { background: #000; }
+
+/* Mid-page CTA band (between Work and Process) — maroon so it pops as an ask */
+.cta-band { background: var(--maroon); padding: clamp(28px, 5vw, 52px) 0; }
+.cta-band-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.cta-band-text {
+  margin: 0;
+  max-width: 24ch;
+  font-size: clamp(22px, 3vw, 33px);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+.btn-cta-band { background: #fff; color: var(--maroon); flex-shrink: 0; }
+.btn-cta-band:hover { background: #efe7e6; }
+.btn-cta-band .arrow { width: 17px; }
+
+/* Contact morph buttons — collapse to an icon circle, reveal the label on
+   hover/focus (desktop, NON-magnetic). Stay expanded on touch + reduced motion. */
+.morph-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 54px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 16px;
+  white-space: nowrap;
+  transition: background 0.3s var(--ease), border-color 0.3s var(--ease), box-shadow 0.3s var(--ease), transform 0.2s var(--ease);
+}
+.morph-btn:active { transform: scale(0.96); }
+.morph-btn .mb-ico { display: grid; place-items: center; width: 22px; height: 22px; flex: none; }
+.morph-btn .mb-ico svg { width: 22px; height: 22px; }
+.morph-btn .mb-label {
+  max-width: 0;
+  opacity: 0;
+  margin-left: 0;
+  overflow: hidden;
+  transition: max-width 0.5s var(--ease), opacity 0.35s var(--ease), margin-left 0.5s var(--ease);
+}
+.morph-btn-primary { background: var(--orange); color: #fff; box-shadow: 0 12px 26px -10px rgba(253, 111, 0, 0.6); }
+.morph-btn-primary:hover, .morph-btn-primary:focus-visible { background: var(--orange-deep); }
+.morph-btn-outline { color: #fff; border: 1.5px solid rgba(255, 255, 255, 0.3); }
+.morph-btn-outline:hover, .morph-btn-outline:focus-visible { border-color: var(--orange); }
+@media (hover: hover) {
+  .morph-btn:hover .mb-label,
+  .morph-btn:focus-visible .mb-label { max-width: 24ch; opacity: 1; margin-left: 11px; }
+}
+@media (hover: none) {
+  .morph-btn .mb-label { max-width: 24ch; opacity: 1; margin-left: 11px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .morph-btn .mb-label { max-width: 24ch; opacity: 1; margin-left: 11px; transition: none; }
+}
 .btn .dl-icon { width: 18px; height: 18px; transition: transform 0.3s var(--ease); }
 .btn-dark:hover .dl-icon { transform: translateY(2px); }
 .about-cta { margin-top: 30px; }
@@ -793,21 +932,138 @@ ul, ol { list-style: none; }
   .passport-wrap { transform: rotate(4deg); width: min(430px, 84vw); }
 }
 
-/* ══════════ SOCIAL LINKS ══════════ */
-.social-links { display: flex; gap: 14px; justify-content: center; margin-top: 26px; }
+/* ══════════ SOCIAL LINKS (morph pill) ══════════ */
+.social-links { display: flex; gap: 16px; justify-content: center; align-items: center; margin-top: 26px; flex-wrap: wrap; }
+.social-slot { display: inline-flex; will-change: transform; }
 .social-link {
-  width: 46px;
-  height: 46px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 48px;
+  padding: 0 14px;                 /* 14 + 20 icon + 14 = 48 → circle when collapsed */
+  border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.18);
   background: rgba(255, 255, 255, 0.04);
   color: #fff;
-  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  overflow: hidden;
+  isolation: isolate;
+  perspective: 600px;
+  transition: border-color 0.35s var(--ease), box-shadow 0.35s var(--ease);
 }
-.social-link svg { width: 20px; height: 20px; }
-.social-link:hover { background: var(--orange); border-color: transparent; color: #fff; }
+/* brand gradient that wipes in behind the icon on hover/focus */
+.social-fill {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(120deg, var(--maroon) 0%, var(--orange) 100%);
+  opacity: 0;
+  transform: scale(0.55);
+  transition: opacity 0.35s var(--ease), transform 0.5s var(--ease);
+}
+.social-ico {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  transform-style: preserve-3d;
+  transition: transform 0.6s var(--ease);
+}
+.social-ico svg { width: 20px; height: 20px; }
+.social-handle {
+  display: inline-block;
+  max-width: 0;
+  margin-left: 0;
+  opacity: 0;
+  white-space: nowrap;
+  font-weight: 700;
+  font-size: 14.5px;
+  overflow: hidden;
+  transition: max-width 0.45s var(--ease), opacity 0.3s var(--ease), margin-left 0.45s var(--ease);
+}
+.social-link:hover,
+.social-link:focus-visible {
+  border-color: transparent;
+  box-shadow: 0 16px 34px -12px rgba(130, 21, 19, 0.7);
+}
+.social-link:hover .social-fill,
+.social-link:focus-visible .social-fill { opacity: 1; transform: scale(1); }
+.social-link:hover .social-ico,
+.social-link:focus-visible .social-ico { transform: rotateY(360deg); }
+.social-link:hover .social-handle,
+.social-link:focus-visible .social-handle { max-width: 13ch; opacity: 1; margin-left: 10px; }
+
+/* ══════════ MORPH CARDS (Services + Work) ══════════ */
+/* Collapsed card is a real <button>; strip the UA button chrome. */
+.mc-trigger {
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  width: 100%;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  will-change: transform;
+}
+.mc-trigger:hover .card-arrow,
+.mc-trigger:focus-visible .card-arrow {
+  background: var(--orange);
+  border-color: var(--orange);
+  color: #fff;
+}
+.mc-teaser {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+/* Scrim + the focused, morphed-open panel (framer owns the box transform). */
+.morph-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background: rgba(5, 5, 5, 0.62);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+.card.morph-open {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(560px, calc(100% - 40px));
+  max-height: min(82vh, 660px);
+  min-height: 0;
+  overflow: auto;
+  z-index: 121;
+  cursor: default;
+  border-color: var(--orange);
+  box-shadow: 0 40px 90px -30px rgba(0, 0, 0, 0.7);
+}
+.card.morph-open h3 { font-size: clamp(26px, 4vw, 32px); padding-right: 0; margin-bottom: 16px; }
+.card.morph-open .mc-teaser { -webkit-line-clamp: unset; line-clamp: unset; display: block; }
+.card.morph-open p { font-size: 16.5px; line-height: 1.6; margin-bottom: 26px; }
+.morph-close {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  background: var(--orange);
+  color: #fff;
+  padding: 11px 22px;
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.25s var(--ease);
+}
+.morph-close:hover { background: var(--orange-deep); }
+
+/* ══════════ MORPH WORD (cycling accent word) ══════════ */
+.morph-word { display: inline-grid; vertical-align: baseline; text-align: center; }
+.morph-word > .mw-item { grid-area: 1 / 1; will-change: transform, opacity; }
 
 /* ══════════ PROCESS ══════════ */
 .process-grid {
@@ -932,6 +1188,23 @@ ul, ol { list-style: none; }
 
 @keyframes drawIn { to { stroke-dashoffset: 0; } }
 
+/* Headline word-by-word rise. Opacity stays 1 (LCP-safe); only position moves. */
+.hero-title-cascade .hw {
+  display: inline-block;
+  animation: hwRise 0.6s var(--ease) both;
+  animation-delay: calc(var(--wi) * 0.06s + 0.15s);
+}
+@keyframes hwRise {
+  from { transform: translateY(0.4em); }
+  to { transform: translateY(0); }
+}
+
+/* Magnetic pill: the spring drives transform per-frame, so drop the CSS
+   transform transition (keep colour/border transitions for hover). */
+.btn-magnetic {
+  transition: background 0.3s var(--ease), border-color 0.3s var(--ease), color 0.3s var(--ease);
+}
+
 /* ══════════ SCROLL REVEAL ══════════ */
 html.js [data-reveal] {
   opacity: 0;
@@ -965,6 +1238,7 @@ html.js [data-reveal].revealed {
   .hero-stage { height: clamp(400px, 110vw, 520px); margin-top: 26px; }
   .hero-circle { width: min(86vw, 420px); }
   .hero-photo { height: 114%; }
+  .hero-spot { height: 114%; }
 
   .section-head { flex-direction: column; align-items: flex-start; gap: 16px; }
 
@@ -988,6 +1262,11 @@ html.js [data-reveal].revealed {
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .load-1, .load-2, .load-3, .load-4, .load-5, .load-6 { animation: none; }
+  .nav { animation: none; }
+  .hero-title-cascade .hw { animation: none; transform: none; }
+  /* social pill: keep the handle reveal (useful) but drop the motion */
+  .social-fill, .social-ico, .social-handle { transition: none; }
+  .social-link:hover .social-ico, .social-link:focus-visible .social-ico { transform: none; }
   .draw { animation: none; stroke-dashoffset: 0; }
   .marquee-group { animation: none; }
   .blob { animation: none; }
@@ -1216,23 +1495,43 @@ html.js [data-reveal].revealed {
   transition: opacity 0.3s var(--ease), transform 0.3s var(--ease);
 }
 
-/* Liquid glass button base */
+/* Liquid glass button base — frosted refraction + specular gloss + rim light */
 .sp-btn {
+  position: relative;
   display: grid;
   place-items: center;
   color: #fff;
   border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.22);
-  background: rgba(255,255,255,0.10);
-  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255,255,255,0.3);
+  /* smoked glass: a dark tint + slightly darkened backdrop keeps the white
+     icon readable over BOTH dark and bright/white video frames */
+  background: linear-gradient(140deg, rgba(255,255,255,0.16), rgba(8,8,12,0.44) 68%);
+  backdrop-filter: blur(16px) saturate(180%) brightness(0.86);
+  -webkit-backdrop-filter: blur(16px) saturate(180%) brightness(0.86);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.35),
-    inset 0 -1px 0 rgba(0,0,0,0.25),
-    0 8px 24px rgba(0,0,0,0.35);
+    inset 0 1px 1px rgba(255,255,255,0.5),
+    inset 0 -2px 4px rgba(0,0,0,0.3),
+    0 10px 26px rgba(0,0,0,0.5);
   cursor: pointer;
-  transition: background 0.25s var(--ease), transform 0.25s var(--ease), border-color 0.25s var(--ease);
+  transition: background 0.25s var(--ease), transform 0.25s var(--ease), border-color 0.25s var(--ease), box-shadow 0.25s var(--ease);
 }
-.sp-btn:hover { background: rgba(255,255,255,0.18); transform: scale(1.04); }
+/* specular gloss (clipped by its own border-radius; no overflow:hidden so the
+   keyboard focus ring is never clipped) */
+.sp-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(140deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.08) 34%, rgba(255,255,255,0) 58%);
+  pointer-events: none;
+}
+/* icon above the gloss, with a soft dark edge so it reads on any background */
+.sp-btn > svg { position: relative; z-index: 1; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.55)); }
+.sp-btn:hover {
+  background: linear-gradient(140deg, rgba(255,255,255,0.32), rgba(255,255,255,0.1) 62%);
+  border-color: rgba(255,255,255,0.42);
+  transform: scale(1.05);
+}
 .sp-btn:active { transform: scale(0.96); }
 
 .sp-skip { width: 46px; height: 46px; }
@@ -1258,7 +1557,7 @@ html.js [data-reveal].revealed {
 }
 .sp-corner-btn svg { width: 20px; height: 20px; }
 
-/* Bottom bar */
+/* Bottom bar — liquid-glass capsule */
 .sp-bar {
   position: absolute;
   left: 14px;
@@ -1269,13 +1568,31 @@ html.js [data-reveal].revealed {
   gap: 12px;
   padding: 8px 14px;
   border-radius: 999px;
-  background: rgba(20,20,20,0.35);
-  backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255,255,255,0.18);
+  background: linear-gradient(180deg, rgba(42,42,42,0.4), rgba(14,14,14,0.5));
+  backdrop-filter: blur(18px) saturate(200%) brightness(1.05);
+  -webkit-backdrop-filter: blur(18px) saturate(200%) brightness(1.05);
+  border: 1px solid rgba(255,255,255,0.2);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.25),
-    0 8px 20px rgba(0,0,0,0.35);
+    inset 0 1px 1px rgba(255,255,255,0.3),
+    inset 0 -1px 2px rgba(0,0,0,0.3),
+    0 10px 24px rgba(0,0,0,0.42);
   transition: opacity 0.3s var(--ease), transform 0.3s var(--ease);
+}
+.sp-bar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0) 42%);
+  pointer-events: none;
+}
+.sp-bar > * { position: relative; z-index: 1; }   /* controls above the gloss */
+
+/* Liquid refraction of the backdrop — Chromium-only enhancement; where SVG
+   backdrop filters aren't supported the frosted glass above stays intact. */
+@supports (backdrop-filter: url("#lg-refract")) {
+  .sp-btn { backdrop-filter: blur(13px) saturate(180%) brightness(0.86) url("#lg-refract"); }
+  .sp-bar { backdrop-filter: blur(15px) saturate(190%) brightness(0.96) url("#lg-refract"); }
 }
 .sp-mini {
   width: 34px; height: 34px;

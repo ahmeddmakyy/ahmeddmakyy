@@ -73,9 +73,11 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
-const SITE_TITLE = "Reels With Maki | Content Creator & AI Video Director";
+const SITE_TITLE = "Ahmed Mekki — AI Content Creator & Creative Strategist | Reels With Maki";
 const SITE_DESC =
-  "Reels With Maki — AI-native content creator & social media specialist. Content strategy, brand campaigns, and AI video production for 15+ brands across Egypt & KSA.";
+  "Ahmed Mekki (Reels With Maki) directs Veo, FLUX & Gemini to give brands a voice — content strategy, brand campaigns & AI video. 15+ brands across Egypt & KSA.";
+const OG_IMAGE =
+  "https://storage.googleapis.com/gpt-engineer-file-uploads/kBYrN7AScPVPxk5LcflXYJzXNIJ2/social-images/social-1783643425130-ChatGPT_Image_Jul_10,_2026,_03_30_14_AM.webp";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
@@ -92,13 +94,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "profile:first_name", content: "Ahmed" },
       { property: "profile:last_name", content: "Mekki" },
       { property: "og:locale", content: "en_US" },
+      { property: "og:locale:alternate", content: "ar_EG" },
       { property: "og:url", content: "https://ahmeddmakyy.lovable.app/" },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/kBYrN7AScPVPxk5LcflXYJzXNIJ2/social-images/social-1783643425130-ChatGPT_Image_Jul_10,_2026,_03_30_14_AM.webp" },
+      { property: "og:image", content: OG_IMAGE },
       { property: "og:image:alt", content: "Ahmed Mekki — AI-native content creator" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: SITE_TITLE },
       { name: "twitter:description", content: SITE_DESC },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/kBYrN7AScPVPxk5LcflXYJzXNIJ2/social-images/social-1783643425130-ChatGPT_Image_Jul_10,_2026,_03_30_14_AM.webp" },
+      { name: "twitter:image", content: OG_IMAGE },
       { name: "twitter:image:alt", content: "Ahmed Mekki — AI-native content creator" },
     ],
     links: [
@@ -124,17 +127,34 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
             jobTitle: "AI-Native Content Creator",
             url: "https://ahmeddmakyy.lovable.app/",
             email: "ahmeddmakyy@gmail.com",
+            image: OG_IMAGE,
+            sameAs: [
+              "https://www.instagram.com/reelswithmaki/",
+              "https://www.linkedin.com/in/ahmeddmakyy11",
+            ],
             address: {
               "@type": "PostalAddress",
               addressLocality: "Cairo",
+              addressRegion: "Cairo",
               addressCountry: "EG",
             },
             worksFor: { "@type": "Organization", name: "Renew Media" },
+            alumniOf: { "@type": "CollegeOrUniversity", name: "Ain Shams University" },
+            knowsLanguage: ["ar", "en"],
+            hasOccupation: {
+              "@type": "Occupation",
+              name: "AI-Native Content Creator",
+            },
             knowsAbout: [
               "AI video production",
               "Brand strategy",
               "Copywriting",
               "Content strategy",
+            ],
+            makesOffer: [
+              { "@type": "Offer", itemOffered: { "@type": "Service", name: "Brand Strategy & Content Planning" } },
+              { "@type": "Offer", itemOffered: { "@type": "Service", name: "AI Video Production" } },
+              { "@type": "Offer", itemOffered: { "@type": "Service", name: "Copywriting & Brand Voice" } },
             ],
           },
         }),
