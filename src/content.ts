@@ -145,20 +145,6 @@ const en: SiteContent = {
   },
   videos: [
     {
-      title: "Easy Way — The Thief Who Stole the Name",
-      tag: "AI Film",
-      client: "Legal / IP",
-      description:
-        "Cinematic AI reel produced end to end: script, character sheets, Veo shots, Arabic voice-over, final edit.",
-    },
-    {
-      title: "Golf City Club — All Sports in One Place",
-      tag: "AI Film",
-      client: "Sports Club",
-      description:
-        "Vertical cinematic sports film cut from Veo 3.1 clips with morph transitions for a club with 188K followers.",
-    },
-    {
       title: "Renew Media — The Story You Remember",
       tag: "Stop-Motion",
       client: "Agency · Egypt",
@@ -173,11 +159,39 @@ const en: SiteContent = {
         "AI stop-motion film written in Saudi dialect, cut to a VO-first edit — the same system, a new voice.",
     },
     {
-      title: "Demo Star — Men's Fashion Experience",
-      tag: "UI Animation",
-      client: "Menswear",
+      title: "Easy Way — The Thief Who Stole the Name",
+      tag: "AI Film",
+      client: "Legal / IP",
       description:
-        "A product showcase animated entirely in code — HTML, CSS and JS directed with AI, rendered as a vertical fashion reel for the menswear brand.",
+        "Cinematic AI reel produced end to end: script, character sheets, Veo shots, Arabic voice-over, final edit.",
+    },
+    {
+      title: "Golf City Club — All Sports in One Place",
+      tag: "AI Film",
+      client: "Sports Club",
+      description:
+        "Vertical cinematic sports film cut from Veo 3.1 clips with morph transitions for a club with 188K followers.",
+    },
+    {
+      title: "Reels With Maki — Portfolio in Motion",
+      tag: "Hyperframe",
+      client: "Personal Brand",
+      description:
+        "This very website turned into an animated film with Hyperframes — sections, tools, and selected work rebuilt as motion graphics from the site's own design.",
+    },
+    {
+      title: "Mohamed Abbas Motors — Finance It",
+      tag: "UI Animation",
+      client: "Car Showroom",
+      description:
+        "A concept financing app animated entirely in code: a welcome screen, a Toyota Fortuner, one tap on “Finance it” — and instant approval.",
+    },
+    {
+      title: "Mohamed Abbas Motors — Ask ChatGPT",
+      tag: "UI Animation",
+      client: "Car Showroom",
+      description:
+        "A scroll-stopping hook built as a pixel-perfect ChatGPT recreation: ask for Egypt's best car-installment showroom — the answer reveals the brand.",
     },
     {
       title: "Quick Loan — Cars & Financing",
@@ -336,20 +350,6 @@ const ar: SiteContent = {
   },
   videos: [
     {
-      title: "Easy Way — اللص الذي سرق الاسم",
-      tag: "فيلم AI",
-      client: "قانوني / ملكية فكرية",
-      description:
-        "ريّل سينمائي بالذكاء الاصطناعي من البداية إلى النهاية: سيناريو، وأوراق شخصيات، ولقطات Veo، وتعليق صوتي عربي، ومونتاج نهائي.",
-    },
-    {
-      title: "Golf City Club — كل الرياضات في مكان واحد",
-      tag: "فيلم AI",
-      client: "نادٍ رياضي",
-      description:
-        "فيلم رياضي سينمائي عمودي مُجمَّع من لقطات Veo 3.1 بانتقالات تحوّلية، لنادٍ يتابعه 188 ألف شخص.",
-    },
-    {
       title: "Renew Media — الحكاية التي تتذكّرها",
       tag: "ستوب موشن",
       client: "وكالة · مصر",
@@ -364,11 +364,39 @@ const ar: SiteContent = {
         "فيلم ستوب موشن بالذكاء الاصطناعي مكتوب باللهجة السعودية، بمونتاج يقوده التعليق الصوتي — النظام نفسه بصوت جديد.",
     },
     {
-      title: "Demo Star — تجربة أزياء رجالية",
-      tag: "أنيميشن واجهات",
-      client: "أزياء رجالية",
+      title: "Easy Way — اللص الذي سرق الاسم",
+      tag: "فيلم AI",
+      client: "قانوني / ملكية فكرية",
       description:
-        "عرض منتج متحرّك بالكامل بالكود — HTML وCSS وJS بتوجيه الذكاء الاصطناعي، كريّل أزياء عمودي للعلامة.",
+        "ريّل سينمائي بالذكاء الاصطناعي من البداية إلى النهاية: سيناريو، وأوراق شخصيات، ولقطات Veo، وتعليق صوتي عربي، ومونتاج نهائي.",
+    },
+    {
+      title: "Golf City Club — كل الرياضات في مكان واحد",
+      tag: "فيلم AI",
+      client: "نادٍ رياضي",
+      description:
+        "فيلم رياضي سينمائي عمودي مُجمَّع من لقطات Veo 3.1 بانتقالات تحوّلية، لنادٍ يتابعه 188 ألف شخص.",
+    },
+    {
+      title: "Reels With Maki — الموقع يتحرّك",
+      tag: "هايبرفريم",
+      client: "علامة شخصية",
+      description:
+        "هذا الموقع نفسه تحوّل إلى فيلم متحرّك بتقنية Hyperframes — الأقسام والأدوات والأعمال المختارة أُعيد بناؤها موشن جرافيك من تصميم الموقع ذاته.",
+    },
+    {
+      title: "محمد عباس موتورز — قسّطها",
+      tag: "أنيميشن واجهات",
+      client: "معرض سيارات",
+      description:
+        "تطبيق تمويل تخيّلي متحرّك بالكامل بالكود: شاشة ترحيب، وتويوتا فورتشنر، وضغطة واحدة على «قسّطها» — فموافقة فورية.",
+    },
+    {
+      title: "محمد عباس موتورز — اسأل ChatGPT",
+      tag: "أنيميشن واجهات",
+      client: "معرض سيارات",
+      description:
+        "خُطّاف يوقف التمرير بإعادة بناء دقيقة لواجهة ChatGPT: اسأل عن أفضل معرض تقسيط سيارات في مصر — فيأتي الجواب كاشفًا عن العلامة.",
     },
     {
       title: "Quick Loan — سيارات وتمويل",

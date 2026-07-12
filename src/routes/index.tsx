@@ -4,16 +4,20 @@ import easyWayAsset from "@/assets/videos/easy_way.mp4.asset.json";
 import golfCityAsset from "@/assets/videos/golf_city.mp4.asset.json";
 import renewStoryAsset from "@/assets/videos/renew_story.mp4.asset.json";
 import renewStarAsset from "@/assets/videos/renew_star.mp4.asset.json";
-import demoStarVideo from "@/assets/videos/demo-star-ui-animation.mp4";
 import quickLoanVideo from "@/assets/videos/quick-loan-ui-animation.mp4";
+import hyperframeVideo from "@/assets/videos/portfolio-hyperframe.mp4";
+import abbasAppVideo from "@/assets/videos/abbas-motors-installments-app.mp4";
+import abbasChatVideo from "@/assets/videos/abbas-motors-chatgpt-ad.mp4";
 import ahmedHero from "@/assets/ahmed-hero-cropped.webp";
 import logoMark from "@/assets/logo-mark.webp";
 import easyWayPoster from "@/assets/posters/easy_way.webp";
 import golfCityPoster from "@/assets/posters/golf_city.webp";
 import renewStoryPoster from "@/assets/posters/renew_story.webp";
 import renewStarPoster from "@/assets/posters/renew_star.webp";
-import demoStarPoster from "@/assets/posters/demo_star.webp";
 import quickLoanPoster from "@/assets/posters/quick_loan.webp";
+import hyperframePoster from "@/assets/posters/hyperframe.webp";
+import abbasAppPoster from "@/assets/posters/abbas_app.webp";
+import abbasChatPoster from "@/assets/posters/abbas_chatgpt.webp";
 import BrandMarquee from "@/components/BrandMarquee";
 import AnimatedStats from "@/components/AnimatedStats";
 import RevealCard from "@/components/RevealCard";
@@ -33,12 +37,15 @@ const LOVABLE_CDN = "https://ahmeddmakyy.lovable.app";
 const cdn = (u: string) => (u.startsWith("/") ? LOVABLE_CDN + u : u);
 
 // Media only — the localized title/tag/client/description come from CONTENT[lang].
+// Order MUST match CONTENT[lang].videos.
 const VIDEO_MEDIA = [
-  { src: cdn(easyWayAsset.url), poster: easyWayPoster },
-  { src: cdn(golfCityAsset.url), poster: golfCityPoster },
   { src: cdn(renewStoryAsset.url), poster: renewStoryPoster },
   { src: cdn(renewStarAsset.url), poster: renewStarPoster },
-  { src: demoStarVideo, poster: demoStarPoster },
+  { src: cdn(easyWayAsset.url), poster: easyWayPoster },
+  { src: cdn(golfCityAsset.url), poster: golfCityPoster },
+  { src: hyperframeVideo, poster: hyperframePoster },
+  { src: abbasAppVideo, poster: abbasAppPoster },
+  { src: abbasChatVideo, poster: abbasChatPoster },
   { src: quickLoanVideo, poster: quickLoanPoster },
 ];
 
