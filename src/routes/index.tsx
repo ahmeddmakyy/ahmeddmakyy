@@ -101,7 +101,9 @@ function MagneticLink({
   const x = useSpring(mx, { stiffness: 220, damping: 18, mass: 0.4 });
   const y = useSpring(my, { stiffness: 220, damping: 18, mass: 0.4 });
   const onMove = (e: React.PointerEvent<HTMLAnchorElement>) => {
-    if (reduce || !ref.current) return;
+    // Mouse-only: a touch finger dragging over the button shouldn't drive the
+    // magnetic spring (it jitters and fights scrolling on mobile).
+    if (reduce || !ref.current || e.pointerType !== "mouse") return;
     const r = ref.current.getBoundingClientRect();
     mx.set((e.clientX - (r.left + r.width / 2)) * strength);
     my.set((e.clientY - (r.top + r.height / 2)) * strength);
@@ -596,7 +598,7 @@ function VideosSection() {
             aria-label={c.videosSection.prev}
             onClick={goPrev}
           >
-            <svg viewBox="0 0 24 24" fill="none">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M19 12H5M11 6l-6 6 6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
@@ -617,7 +619,7 @@ function VideosSection() {
             aria-label={c.videosSection.next}
             onClick={goNext}
           >
-            <svg viewBox="0 0 24 24" fill="none">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>

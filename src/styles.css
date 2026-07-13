@@ -742,6 +742,8 @@ ul, ol { list-style: none; }
   letter-spacing: -0.02em;
   color: var(--heading);
   line-height: 1.1;
+  /* fixed-width digits so the count-up animation doesn't jitter its own width */
+  font-variant-numeric: tabular-nums;
 }
 .stats-row dd {
   font-size: 14.5px;
@@ -994,6 +996,16 @@ ul, ol { list-style: none; }
 .social-link:hover .social-handle,
 .social-link:focus-visible .social-handle { max-width: 13ch; opacity: 1; margin-left: 10px; }
 
+/* Touch polish: remove the grey tap-flash rectangle and the 300ms double-tap
+   zoom delay on interactive controls (feedback comes from :focus-visible +
+   framer whileTap). */
+a,
+button,
+[role="button"] {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
 /* ══════════ MORPH CARDS (Services + Work) ══════════ */
 /* Collapsed card is a real <button>; strip the UA button chrome. */
 .mc-trigger {
@@ -1020,6 +1032,24 @@ ul, ol { list-style: none; }
   overflow: hidden;
 }
 /* Scrim + the focused, morphed-open panel (framer owns the box transform). */
+/* The layer is a fixed, viewport-centred flex box that OWNS positioning. It is
+   always mounted, click-through (pointer-events:none) so outside-clicks fall to
+   the scrim, and gives the panel a centred layout WITHOUT a CSS transform —
+   framer-motion needs to own the panel's transform for the shared-layout morph.
+   (Centring the panel itself with translate(-50%,-50%) was overwritten by
+   framer and left it anchored by its top-left corner → clipped off-screen on
+   mobile.) */
+.morph-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right))
+           max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+  pointer-events: none;
+}
 .morph-scrim {
   position: fixed;
   inset: 0;
@@ -1027,20 +1057,21 @@ ul, ol { list-style: none; }
   background: rgba(5, 5, 5, 0.62);
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
+  overscroll-behavior: contain;
+  pointer-events: auto;
 }
 .card.morph-open {
-  position: fixed;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: min(560px, calc(100% - 40px));
+  position: relative;
+  width: min(560px, 100%);
   max-height: min(82vh, 660px);
   min-height: 0;
   overflow: auto;
+  overscroll-behavior: contain;
   z-index: 121;
   cursor: default;
   border-color: var(--orange);
   box-shadow: 0 40px 90px -30px rgba(0, 0, 0, 0.7);
+  pointer-events: auto;
 }
 .card.morph-open h3 { font-size: clamp(26px, 4vw, 32px); padding-right: 0; margin-bottom: 16px; }
 .card.morph-open .mc-teaser { -webkit-line-clamp: unset; line-clamp: unset; display: block; }
@@ -1760,12 +1791,41 @@ html.js [data-reveal].revealed {
   /* Lighter blur across the board on mobile */
   .glass-cta { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
   .sp-btn, .sp-bar { backdrop-filter: blur(14px) saturate(160%); -webkit-backdrop-filter: blur(14px) saturate(160%); }
+  /* The card morphs open on a compositor transform; don't ALSO transition its
+     border-colour + 90px-blur shadow on the same frames (full paint each frame). */
+  .card.morph-open { transition: none; }
 }
 
 @media (hover: none) {
   /* No hover to reveal — rely on tap/show-controls state */
   .video-slide.is-playing:hover .sp-center,
   .video-slide.is-playing:hover .sp-bar { opacity: 0; }
+
+  /* ── Touch-only perf: release GPU work reserved for cursor/hover effects that
+     can never fire on a touch device. ── */
+  /* A full-viewport backdrop blur re-rasterised every frame while a card morphs
+     is the single worst open-card jank source — swap it for a darker solid tint
+     (near-identical dimming, no per-frame blur). */
+  .morph-scrim {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(5, 5, 5, 0.82);
+  }
+  /* These transforms/masks only ever animate on cursor/hover, so the standing
+     will-change layers are pure memory pressure on mobile GPUs. */
+  .mc-trigger,
+  .social-slot,
+  .passport,
+  .morph-word > .mw-item { will-change: auto; }
+  /* The loupe is disabled on touch (the hero shows full colour), so the reveal
+     mask is fully open — dropping it is visually identical but frees the masked,
+     will-change'd double-image layer on the LCP hero. */
+  .hero-spot .spotlight-reveal {
+    -webkit-mask-image: none;
+    mask-image: none;
+    will-change: auto;
+  }
+  .hero-spot .spotlight-ring { display: none; }
 }
 
 /* ══════════ LANGUAGE TOGGLE ══════════ */

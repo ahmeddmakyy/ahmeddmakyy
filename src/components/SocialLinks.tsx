@@ -26,7 +26,8 @@ function Pill({ link, index }: { link: Link; index: number }) {
   const y = useSpring(my, { stiffness: 220, damping: 16, mass: 0.4 });
 
   const onMove = (e: React.PointerEvent<HTMLSpanElement>) => {
-    if (!ref.current) return;
+    // Mouse-only so touch-dragging over the pill doesn't run the magnetic spring.
+    if (!ref.current || e.pointerType !== "mouse") return;
     const r = ref.current.getBoundingClientRect();
     mx.set((e.clientX - (r.left + r.width / 2)) * 0.35);
     my.set((e.clientY - (r.top + r.height / 2)) * 0.35);

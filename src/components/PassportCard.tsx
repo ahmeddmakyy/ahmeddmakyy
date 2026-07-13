@@ -58,6 +58,9 @@ export default function PassportCard() {
   const rotateX = useSpring(useTransform(my, [-0.5, 0.5], [6, -6]), spring);
 
   function onMove(e: PointerEvent<HTMLDivElement>) {
+    // Mouse-only: keep touch-scrolling over the card from driving the 3D-tilt
+    // springs (which re-blend 11 filtered SVG stamps per frame on mobile).
+    if (e.pointerType !== "mouse") return;
     const r = e.currentTarget.getBoundingClientRect();
     mx.set((e.clientX - r.left) / r.width - 0.5);
     my.set((e.clientY - r.top) / r.height - 0.5);

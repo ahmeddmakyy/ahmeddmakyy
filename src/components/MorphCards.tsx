@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { ReactNode } from "react";
+import type { ReactNode, KeyboardEvent as ReactKeyboardEvent } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 export type MorphCardItem = {
@@ -60,14 +60,40 @@ export default function MorphCards({
     }
   };
 
+  // aria-modal="true" promises a focus trap; keep Tab/Shift+Tab cycling inside
+  // the panel instead of escaping to the still-present page behind the scrim.
+  const onDialogKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== "Tab") return;
+    const focusables = e.currentTarget.querySelectorAll<HTMLElement>(
+      'a[href],button:not([disabled]),input,select,textarea,[tabindex]:not([tabindex="-1"])',
+    );
+    if (focusables.length === 0) return;
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
+
   useEffect(() => {
     if (!openId) return;
     closeRef.current?.focus();
+    // Lock background scroll so the page can't drift/scroll behind the panel on
+    // mobile while the dialog is open.
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") close();
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openId]);
 
@@ -122,50 +148,59 @@ export default function MorphCards({
         ))}
       </div>
 
-      <AnimatePresence>
-        {active && (
-          <>
-            <motion.div
-              className="morph-scrim"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={close}
-            />
-            <motion.div
-              layoutId={`mc-${active.id}`}
-              className={`${cardClassName} morph-open`}
-              role="dialog"
-              aria-modal="true"
-              aria-label={active.title}
-            >
-              {meta(active)}
-              <motion.h3 layoutId={`mct-${active.id}`}>{active.title}</motion.h3>
-              <motion.p
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0, transition: { delay: 0.12, duration: 0.34 } }}
-                exit={{ opacity: 0, transition: { duration: 0.12 } }}
-              >
-                {active.body}
-              </motion.p>
-              <motion.button
-                ref={closeRef}
-                type="button"
-                className="morph-close"
-                onClick={close}
+      {/* A fixed, viewport-centred layer owns positioning and WRAPS
+          AnimatePresence (so scrim + panel stay its two direct children and the
+          morph/exit animations are untouched). The panel inside carries no CSS
+          transform, leaving framer free to own the panel's transform for the
+          shared-layout morph — the previous `translate(-50%,-50%)` centering was
+          clobbered by framer and pushed the panel off-screen on mobile. */}
+      <div className="morph-layer">
+        <AnimatePresence>
+          {active && (
+            <>
+              <motion.div
+                className="morph-scrim"
                 initial={{ opacity: 0 }}
-                animate={{ opacity: 1, transition: { delay: 0.14 } }}
-                exit={{ opacity: 0, transition: { duration: 0.12 } }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={close}
+              />
+              <motion.div
+                layoutId={`mc-${active.id}`}
+                className={`${cardClassName} morph-open`}
+                role="dialog"
+                aria-modal="true"
+                aria-label={active.title}
+                onKeyDown={onDialogKeyDown}
               >
-                {closeLabel}
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
-                  <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-              </motion.button>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+                {meta(active)}
+                <motion.h3 layoutId={`mct-${active.id}`}>{active.title}</motion.h3>
+                <motion.p
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0, transition: { delay: 0.12, duration: 0.34 } }}
+                  exit={{ opacity: 0, transition: { duration: 0.12 } }}
+                >
+                  {active.body}
+                </motion.p>
+                <motion.button
+                  ref={closeRef}
+                  type="button"
+                  className="morph-close"
+                  onClick={close}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1, transition: { delay: 0.14 } }}
+                  exit={{ opacity: 0, transition: { duration: 0.12 } }}
+                >
+                  {closeLabel}
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
+                    <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  </svg>
+                </motion.button>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      </div>
     </>
   );
 }
