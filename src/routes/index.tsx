@@ -9,6 +9,8 @@ import quickLoanVideo from "@/assets/videos/quick-loan-ui-animation.mp4";
 import hyperframeVideo from "@/assets/videos/portfolio-hyperframe.mp4";
 import abbasAppVideo from "@/assets/videos/abbas-motors-installments-app.mp4";
 import abbasChatVideo from "@/assets/videos/abbas-motors-chatgpt-ad.mp4";
+import textMotionVideo from "@/assets/videos/text-motion.mp4";
+import letsGoBigVideo from "@/assets/videos/lets-go-big.mp4";
 import ahmedHero from "@/assets/ahmed-hero-cropped.webp";
 import ahmedHeroBw from "@/assets/ahmed-hero-bw.webp";
 import logoMark from "@/assets/logo-mark.webp";
@@ -20,6 +22,8 @@ import quickLoanPoster from "@/assets/posters/quick_loan.webp";
 import hyperframePoster from "@/assets/posters/hyperframe.webp";
 import abbasAppPoster from "@/assets/posters/abbas_app.webp";
 import abbasChatPoster from "@/assets/posters/abbas_chatgpt.webp";
+import textMotionPoster from "@/assets/posters/text_motion.webp";
+import letsGoBigPoster from "@/assets/posters/lets_go_big.webp";
 import BrandMarquee from "@/components/BrandMarquee";
 import AnimatedStats from "@/components/AnimatedStats";
 import MorphCards from "@/components/MorphCards";
@@ -58,6 +62,8 @@ const VIDEO_MEDIA = [
   { src: cdn(renewStarAsset.url), poster: renewStarPoster },
   { src: cdn(easyWayAsset.url), poster: easyWayPoster },
   { src: cdn(golfCityAsset.url), poster: golfCityPoster },
+  { src: textMotionVideo, poster: textMotionPoster },
+  { src: letsGoBigVideo, poster: letsGoBigPoster },
   { src: hyperframeVideo, poster: hyperframePoster },
   { src: abbasAppVideo, poster: abbasAppPoster },
   { src: abbasChatVideo, poster: abbasChatPoster },

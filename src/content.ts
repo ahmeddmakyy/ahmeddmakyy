@@ -180,6 +180,20 @@ const en: SiteContent = {
         "Vertical cinematic sports film cut from Veo 3.1 clips with morph transitions for a club with 188K followers.",
     },
     {
+      title: "Reels With Maki — It's a Story Problem",
+      tag: "Kinetic Type",
+      client: "Personal Brand",
+      description:
+        "A kinetic-typography pitch film for my own brand: the case for story over just “more content” — I don't hold the camera, I direct the idea, then point AI at it until it's a film.",
+    },
+    {
+      title: "Reels With Maki — Let's Go Big",
+      tag: "Motion Graphics",
+      client: "Personal Brand",
+      description:
+        "A pure motion-graphics promo built in my own orange system — equalizer bars, nodes, and kinetic shapes on one message: stop playing small, AI means no big budget, let's go big.",
+    },
+    {
       title: "Reels With Maki — Portfolio in Motion",
       tag: "Hyperframe",
       client: "Personal Brand",
@@ -386,6 +400,20 @@ const ar: SiteContent = {
       client: "نادٍ رياضي",
       description:
         "فيلم رياضي سينمائي عمودي مُجمَّع من لقطات Veo 3.1 بانتقالات تحوّلية، لنادٍ يتابعه 188 ألف شخص.",
+    },
+    {
+      title: "Reels With Maki — إنها مشكلة حكاية",
+      tag: "تايبوغرافي متحرّكة",
+      client: "علامة شخصية",
+      description:
+        "فيلم تايبوغرافي متحرّك صنعتُه لعلامتي الشخصية: الحجّة أن المشكلة حكاية لا مجرّد «محتوى أكثر» — لا أُمسك الكاميرا، بل أُوجّه الفكرة ثم أُصوّبها بالذكاء الاصطناعي حتى تصير فيلمًا.",
+    },
+    {
+      title: "Reels With Maki — لِنُفكّر بحجم أكبر",
+      tag: "موشن جرافيك",
+      client: "علامة شخصية",
+      description:
+        "فيلم موشن جرافيك خالص بنظام الألوان البرتقالي الخاص بي — أشرطة إيكولايزر وعُقَد وأشكال متحرّكة تحمل رسالة واحدة: كُفَّ عن اللعب على الصغير، فالذكاء الاصطناعي يعني ألّا حاجة لميزانية ضخمة… لِنَبدأ كبيرًا.",
     },
     {
       title: "Reels With Maki — الموقع يتحرّك",
