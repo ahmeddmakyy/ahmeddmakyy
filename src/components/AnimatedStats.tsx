@@ -14,7 +14,7 @@ function StatNumber({ value }: { value: string }) {
   }, [value]);
 
   const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true, margin: "0px 0px -12% 0px" });
+  const inView = useInView(ref, { once: false, margin: "0px 0px -12% 0px", amount: 0.3 });
   const reduce = useReducedMotion();
   const [display, setDisplay] = useState<number | null>(
     parsed ? parsed.target : null,

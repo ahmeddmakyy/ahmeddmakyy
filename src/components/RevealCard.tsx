@@ -23,7 +23,7 @@ export default function RevealCard({
       className={className}
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "0px 0px -8% 0px" }}
+      viewport={{ once: false, margin: "0px 0px -8% 0px", amount: 0.2 }}
       transition={{ duration: 0.5, delay: (index % 3) * 0.08, ease: [0.22, 0.8, 0.3, 1] }}
       whileHover={{ y: -6, transition: { type: "spring", stiffness: 300, damping: 20 } }}
     >

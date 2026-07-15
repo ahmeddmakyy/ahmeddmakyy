@@ -659,18 +659,16 @@ function Index() {
         groups.set(parent, index + 1);
       });
 
+      // Replay on every scroll-in: add the class when entering the viewport,
+      // remove it when leaving so the CSS transition runs in reverse too.
       const observer = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
+            const el = entry.target as HTMLElement;
             if (entry.isIntersecting) {
-              const el = entry.target as HTMLElement;
               el.classList.add("revealed");
-              observer.unobserve(el);
-              const delay = parseFloat(el.style.getPropertyValue("--d")) || 0;
-              window.setTimeout(() => {
-                el.removeAttribute("data-reveal");
-                el.style.removeProperty("--d");
-              }, delay * 1000 + 850);
+            } else {
+              el.classList.remove("revealed");
             }
           });
         },
