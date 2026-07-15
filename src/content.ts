@@ -41,6 +41,8 @@ export interface SiteContent {
     // first accent word so SSR/first paint matches).
     cycle: string[];
     sub: string;
+    // One label per video group — order MUST match VIDEO_GROUPS in index.tsx.
+    groups: string[];
     prev: string;
     next: string;
     selectFilm: string;
@@ -133,6 +135,7 @@ const en: SiteContent = {
     ],
     cycle: ["film", "reel", "story", "spot", "ad"],
     sub: "Script, direction, AI production, edit.",
+    groups: ["Cinematic AI Films", "Motion Graphics & Type", "UI Animation"],
     prev: "Previous film",
     next: "Next film",
     selectFilm: "Select film",
@@ -355,6 +358,7 @@ const ar: SiteContent = {
     ],
     cycle: ["فيلم", "ريّل", "حكاية", "لقطة", "إعلان"],
     sub: "سيناريو، وإخراج، وإنتاج بالذكاء الاصطناعي، ومونتاج.",
+    groups: ["أفلام سينمائية بالذكاء الاصطناعي", "موشن جرافيك وتايبوغرافي", "أنيميشن واجهات"],
     prev: "الفيلم السابق",
     next: "الفيلم التالي",
     selectFilm: "اختر فيلمًا",

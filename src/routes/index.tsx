@@ -70,6 +70,18 @@ const VIDEO_MEDIA = [
   { src: quickLoanVideo, poster: quickLoanPoster },
 ];
 
+// The single carousel is split into labelled groups by video type. Each entry is
+// the list of indices (into VIDEO_MEDIA / CONTENT[lang].videos) shown in that
+// group's own carousel. Order MUST match CONTENT[lang].videosSection.groups.
+//   0 Renew Story · 1 Renew Star · 2 Easy Way · 3 Golf City
+//   4 It's a Story Problem · 5 Let's Go Big · 6 Portfolio in Motion
+//   7 Abbas App · 8 Abbas Chat · 9 Quick Loan
+const VIDEO_GROUPS: number[][] = [
+  [0, 1, 2, 3], // Cinematic AI Films
+  [4, 5, 6],    // Motion Graphics & Type
+  [7, 8, 9],    // UI Animation
+];
+
 // Render a Rich[] headline, marking the accent segments.
 function Rich({ parts }: { parts: RichText }) {
   return (
@@ -179,7 +191,9 @@ function HeroTitle({
 }
 
 // Isolated so per-frame playback updates never re-render the rest of the page.
-function VideosSection() {
+// One independent 3D carousel for a single video group. Owns all of its own
+// playback state so multiple carousels on the page never fight each other.
+function VideoCarousel({ indices, label }: { indices: number[]; label: string }) {
   const { content: c } = useLang();
   const [videoIndex, setVideoIndex] = useState(0);
   const [videoDurations, setVideoDurations] = useState<Record<number, string>>({});
@@ -194,7 +208,7 @@ function VideosSection() {
   const touchStartY = useRef<number | null>(null);
   const hideTimer = useRef<number | null>(null);
 
-  const N = VIDEO_MEDIA.length;
+  const N = indices.length;
 
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
@@ -370,38 +384,20 @@ function VideosSection() {
   };
 
   return (
-    <section className="section dark" id="videos">
-      {/* Liquid-glass refraction filter for the player controls (referenced by
-          backdrop-filter: url(#lg-refract) in styles.css, Chromium only). */}
-      <svg aria-hidden="true" width="0" height="0" style={{ position: "absolute" }}>
-        <filter id="lg-refract" x="-20%" y="-20%" width="140%" height="140%" colorInterpolationFilters="sRGB">
-          <feTurbulence type="fractalNoise" baseFrequency="0.009 0.013" numOctaves={2} seed={7} result="n" />
-          <feGaussianBlur in="n" stdDeviation="1.4" result="nb" />
-          <feDisplacementMap in="SourceGraphic" in2="nb" scale={11} xChannelSelector="R" yChannelSelector="G" />
-        </filter>
-      </svg>
-      <div className="container">
-        <div className="videos-hero" data-reveal>
-          <h2>
-            {c.videosSection.head[0].t}
-            <MorphWord words={c.videosSection.cycle} className="accent" />
-            {c.videosSection.head[2].t}
-            <span className="accent">{c.videosSection.head[3].t}</span>
-          </h2>
-          <p>{c.videosSection.sub}</p>
-        </div>
+    <div className="videos-group" data-reveal>
+      <h3 className="videos-group-title">{label}</h3>
 
-        {/* the 3D carousel is a symmetric visual, kept LTR in both languages */}
-        <div
-          className={`videos-stage${textHidden ? " text-hidden" : ""}`}
-          data-reveal
-          dir="ltr"
-          onTouchStart={onTouchStart}
-          onTouchEnd={onTouchEnd}
-        >
-          <div className="videos-track">
-            {VIDEO_MEDIA.map((media, i) => {
-              const v = c.videos[i];
+      {/* the 3D carousel is a symmetric visual, kept LTR in both languages */}
+      <div
+        className={`videos-stage${textHidden ? " text-hidden" : ""}`}
+        dir="ltr"
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
+        <div className="videos-track">
+          {indices.map((gi, i) => {
+              const media = VIDEO_MEDIA[gi];
+              const v = c.videos[gi];
               const pos = getSlidePos(i);
               const isActive = pos === "0";
               const count = `${(i + 1).toString().padStart(2, "0")} / ${N.toString().padStart(2, "0")}`;
@@ -609,11 +605,11 @@ function VideosSection() {
             </svg>
           </button>
           <div className="videos-dots" role="group" aria-label={c.videosSection.selectFilm}>
-            {VIDEO_MEDIA.map((_, i) => (
+            {indices.map((gi, i) => (
               <button
                 type="button"
                 key={i}
-                aria-label={c.videos[i].title}
+                aria-label={c.videos[gi].title}
                 aria-current={i === videoIndex}
                 onClick={() => goTo(i)}
               />
@@ -630,6 +626,45 @@ function VideosSection() {
             </svg>
           </button>
         </div>
+      </div>
+  );
+}
+
+// The Videos section: the animated intro headline once, then one labelled
+// carousel per video group (Cinematic AI Films / Motion Graphics & Type / UI
+// Animation). The liquid-glass refraction filter lives here once so every
+// group's player controls can reference url(#lg-refract).
+function VideosSection() {
+  const { content: c } = useLang();
+  return (
+    <section className="section dark" id="videos">
+      {/* Liquid-glass refraction filter for the player controls (referenced by
+          backdrop-filter: url(#lg-refract) in styles.css, Chromium only). */}
+      <svg aria-hidden="true" width="0" height="0" style={{ position: "absolute" }}>
+        <filter id="lg-refract" x="-20%" y="-20%" width="140%" height="140%" colorInterpolationFilters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="0.009 0.013" numOctaves={2} seed={7} result="n" />
+          <feGaussianBlur in="n" stdDeviation="1.4" result="nb" />
+          <feDisplacementMap in="SourceGraphic" in2="nb" scale={11} xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+      </svg>
+      <div className="container">
+        <div className="videos-hero" data-reveal>
+          <h2>
+            {c.videosSection.head[0].t}
+            <MorphWord words={c.videosSection.cycle} className="accent" />
+            {c.videosSection.head[2].t}
+            <span className="accent">{c.videosSection.head[3].t}</span>
+          </h2>
+          <p>{c.videosSection.sub}</p>
+        </div>
+
+        {VIDEO_GROUPS.map((indices, gi) => (
+          <VideoCarousel
+            key={gi}
+            indices={indices}
+            label={c.videosSection.groups[gi]}
+          />
+        ))}
       </div>
     </section>
   );
