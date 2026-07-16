@@ -28,7 +28,10 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 /* scroll-padding clears the fixed nav so anchored/focused targets aren't hidden under it */
-html { scroll-behavior: smooth; overflow-x: hidden; scroll-padding-top: 96px; }
+/* overflow-x: clip (not hidden) — hidden turns body into a scroll container in
+   Chromium, which silently kills position:sticky (the stacking cards). clip
+   crops the same without creating a scroll container. */
+html { scroll-behavior: smooth; overflow-x: hidden; overflow-x: clip; scroll-padding-top: 96px; }
 
 /* Skip link — visually hidden until keyboard focus */
 .skip-link {
@@ -47,12 +50,13 @@ html { scroll-behavior: smooth; overflow-x: hidden; scroll-padding-top: 96px; }
 .skip-link:focus-visible { transform: translateY(0); }
 
 body {
-  font-family: 'Urbanist', 'Segoe UI', sans-serif;
+  font-family: 'Bricolage Grotesque', 'Segoe UI', sans-serif;
   background: var(--paper);
   color: var(--heading);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  overflow-x: clip;
 }
 
 img { max-width: 100%; display: block; }
@@ -686,7 +690,51 @@ ul, ol { list-style: none; }
   66% { border-radius: 40% 60% 54% 46% / 58% 46% 54% 42%; }
 }
 
-/* work */
+/* work — stacking deck (after the Meeko/Webflow "Stacking Cards" system):
+   a flex column of sticky slots; each card pins below the nav with a staggered
+   top (a 14px lip of every buried card stays visible), and framer-motion scales
+   pinned cards back as the next one covers them. transform-origin sits at top
+   centre so a shrinking card recedes without its visible lip moving. */
+.stacking-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+.stack-slot {
+  position: sticky; /* top comes inline from StackSlot (staggered per index) */
+  transform-origin: 50% 0;
+  will-change: transform;
+}
+/* deck cards are full-width and roomier than the old 3-up grid tiles
+   (keyed on the container, not the slot, so the reduced-motion flat column
+   keeps the same card look) */
+.stacking-cards .work-card {
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 44px 48px;
+}
+.stacking-cards .work-card h3 { font-size: 30px; max-width: 720px; }
+.stacking-cards .work-card .mc-teaser { max-width: 720px; font-size: 16.5px; }
+/* cards cover each other — they must stay opaque even while hovered */
+.stacking-cards .card { background: var(--card); }
+
+/* the deck is OFF on phones, on short/landscape viewports (a pinned 800px
+   card on a 390px-tall screen is unusable), and under reduced motion:
+   plain column, no pinning, framer's inline scale neutralised, and the
+   standing will-change released (it is pure GPU memory pressure here) */
+@media (max-width: 760px), (max-height: 520px) {
+  .stack-slot { position: static; transform: none !important; will-change: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stack-slot { position: static; transform: none !important; will-change: auto; }
+}
+@media (max-width: 760px) {
+  .stacking-cards .work-card { min-height: 0; padding: 30px; }
+  .stacking-cards .work-card h3 { font-size: 23px; }
+}
+
 .work-card { min-height: 230px; }
 
 .work-meta {
@@ -1359,6 +1407,28 @@ html.js [data-reveal].revealed {
   background: linear-gradient(90deg, var(--orange), transparent);
 }
 
+/* deck mode: each labelled carousel becomes an opaque card so it can cover
+   the pinned one behind it (a transparent group would ghost through). The
+   sticky/scale mechanics come from .stack-slot + StackingCards. */
+.videos-stack { margin-top: 8px; }
+.videos-stack .videos-group {
+  margin-top: 0;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-card);
+  padding: 30px 24px 16px;
+}
+@media (max-width: 760px) {
+  /* phones: deck is off (slots go static) — restore the flat spaced look */
+  .videos-stack { gap: 64px; }
+  .videos-stack .videos-group {
+    background: none;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+  }
+}
+
 .videos-stage {
   position: relative;
   height: 680px;
@@ -1873,7 +1943,7 @@ html.js [data-reveal].revealed {
   border-radius: 999px;
   padding: 7px 13px;
   color: rgba(255, 255, 255, 0.55);
-  font-family: 'Urbanist', 'Segoe UI', sans-serif;
+  font-family: 'Bricolage Grotesque', 'Segoe UI', sans-serif;
   font-weight: 700;
   font-size: 13px;
   line-height: 1;
@@ -1898,13 +1968,13 @@ html[lang="ar"] .btn,
 html[lang="ar"] .nav-link,
 html[lang="ar"] input,
 html[lang="ar"] textarea {
-  font-family: 'Tajawal', 'Segoe UI', Tahoma, sans-serif;
+  font-family: 'IBM Plex Sans Arabic', 'Tajawal', 'Segoe UI', Tahoma, sans-serif;
 }
 /* Latin lockups keep the Latin face + tracking even in Arabic mode */
 html[lang="ar"] .brand-word,
 html[lang="ar"] .tool-chip,
 html[lang="ar"] .lang-toggle,
-html[lang="ar"] .sp-time { font-family: 'Urbanist', 'Segoe UI', sans-serif; }
+html[lang="ar"] .sp-time { font-family: 'Bricolage Grotesque', 'Segoe UI', sans-serif; }
 /* letter-spacing breaks Arabic glyph joining — drop it on Arabic-bearing bits */
 html[lang="ar"] .eyebrow,
 html[lang="ar"] .tag,

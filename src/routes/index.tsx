@@ -27,6 +27,7 @@ import letsGoBigPoster from "@/assets/posters/lets_go_big.webp";
 import BrandMarquee from "@/components/BrandMarquee";
 import AnimatedStats from "@/components/AnimatedStats";
 import MorphCards from "@/components/MorphCards";
+import StackingCards from "@/components/StackingCards";
 import MorphWord from "@/components/MorphWord";
 import PassportCard from "@/components/PassportCard";
 import SocialLinks from "@/components/SocialLinks";
@@ -658,13 +659,19 @@ function VideosSection() {
           <p>{c.videosSection.sub}</p>
         </div>
 
-        {VIDEO_GROUPS.map((indices, gi) => (
-          <VideoCarousel
-            key={gi}
-            indices={indices}
-            label={c.videosSection.groups[gi]}
-          />
-        ))}
+        {/* The three labelled carousels stack Meeko-style: each group pins and
+            the next one scrolls up to cover it. Wider scale step than the work
+            deck (3 cards → 0.90 / 0.95 / 1, the Webflow original's ratios);
+            topBase 100 buys tall carousel cards room under the nav. */}
+        <StackingCards className="stacking-cards videos-stack" scaleStep={0.05} topBase={100}>
+          {VIDEO_GROUPS.map((indices, gi) => (
+            <VideoCarousel
+              key={gi}
+              indices={indices}
+              label={c.videosSection.groups[gi]}
+            />
+          ))}
+        </StackingCards>
       </div>
     </section>
   );
@@ -963,10 +970,11 @@ function Index() {
               <p className="section-lede">{c.work.lede}</p>
             </div>
             <MorphCards
-              gridClassName="cards-grid work-grid"
+              gridClassName="stacking-cards"
               cardClassName="card work-card"
               closeLabel={c.a11y.close}
               showTeaser
+              stacking
               items={c.work.cards.map((w, i) => ({
                 id: `wrk-${i}`,
                 title: w.title,

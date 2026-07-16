@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode, KeyboardEvent as ReactKeyboardEvent } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import StackingCards from "./StackingCards";
 
 export type MorphCardItem = {
   id: string;
@@ -29,6 +30,8 @@ const CardArrow = () => (
  *   closes on Esc / scrim click, and returns focus to the card it came from.
  * - Reduced motion: renders plain, fully-expanded cards — no morph, all content
  *   visible.
+ * - `stacking`: sticky deck layout — cards pin under the nav and each new card
+ *   scrolls up to cover the previous one, which scales back (Meeko pattern).
  */
 export default function MorphCards({
   items,
@@ -36,6 +39,7 @@ export default function MorphCards({
   cardClassName,
   closeLabel,
   showTeaser = false,
+  stacking = false,
   renderBlob,
 }: {
   items: MorphCardItem[];
@@ -43,6 +47,7 @@ export default function MorphCards({
   cardClassName: string;
   closeLabel: string;
   showTeaser?: boolean;
+  stacking?: boolean;
   renderBlob?: (i: number) => ReactNode;
 }) {
   const [openId, setOpenId] = useState<string | null>(null);
@@ -83,16 +88,21 @@ export default function MorphCards({
     if (!openId) return;
     closeRef.current?.focus();
     // Lock background scroll so the page can't drift/scroll behind the panel on
-    // mobile while the dialog is open.
-    const prevOverflow = document.body.style.overflow;
+    // mobile while the dialog is open. Locked on <html>, not just <body>: html
+    // carries overflow-x:clip (for the sticky decks), which stops body overflow
+    // from propagating to the viewport — a body-only lock no longer locks.
+    const prevBodyOverflow = document.body.style.overflow;
+    const prevRootOverflow = document.documentElement.style.overflow;
     document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") close();
     };
     window.addEventListener("keydown", onKey);
     return () => {
       window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevOverflow;
+      document.body.style.overflow = prevBodyOverflow;
+      document.documentElement.style.overflow = prevRootOverflow;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openId]);
@@ -121,32 +131,36 @@ export default function MorphCards({
     );
   }
 
+  const cards = items.map((it, i) => (
+    <motion.button
+      type="button"
+      key={it.id}
+      layoutId={`mc-${it.id}`}
+      data-mc-trigger={it.id}
+      className={`${cardClassName} mc-trigger`}
+      onClick={() => setOpenId(it.id)}
+      aria-haspopup="dialog"
+      aria-expanded={openId === it.id}
+      whileHover={{ y: -6, transition: { type: "spring", stiffness: 300, damping: 20 } }}
+      whileTap={{ scale: 0.985 }}
+    >
+      {/* the corner arrow is the Services affordance; Work already has a
+          tag/period row up top, so it would collide there */}
+      {!it.tag && <CardArrow />}
+      {meta(it)}
+      <motion.h3 layoutId={`mct-${it.id}`}>{it.title}</motion.h3>
+      {showTeaser ? <p className="mc-teaser">{it.body}</p> : null}
+      {renderBlob?.(i)}
+    </motion.button>
+  ));
+
   return (
     <>
-      <div className={gridClassName}>
-        {items.map((it, i) => (
-          <motion.button
-            type="button"
-            key={it.id}
-            layoutId={`mc-${it.id}`}
-            data-mc-trigger={it.id}
-            className={`${cardClassName} mc-trigger`}
-            onClick={() => setOpenId(it.id)}
-            aria-haspopup="dialog"
-            aria-expanded={openId === it.id}
-            whileHover={{ y: -6, transition: { type: "spring", stiffness: 300, damping: 20 } }}
-            whileTap={{ scale: 0.985 }}
-          >
-            {/* the corner arrow is the Services affordance; Work already has a
-                tag/period row up top, so it would collide there */}
-            {!it.tag && <CardArrow />}
-            {meta(it)}
-            <motion.h3 layoutId={`mct-${it.id}`}>{it.title}</motion.h3>
-            {showTeaser ? <p className="mc-teaser">{it.body}</p> : null}
-            {renderBlob?.(i)}
-          </motion.button>
-        ))}
-      </div>
+      {stacking ? (
+        <StackingCards className={gridClassName}>{cards}</StackingCards>
+      ) : (
+        <div className={gridClassName}>{cards}</div>
+      )}
 
       {/* A fixed, viewport-centred layer owns positioning and WRAPS
           AnimatePresence (so scrim + panel stay its two direct children and the
