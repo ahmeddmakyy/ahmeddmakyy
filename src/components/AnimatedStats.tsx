@@ -21,11 +21,12 @@ function StatNumber({ value }: { value: string }) {
   );
 
   useEffect(() => {
-    if (!parsed || reduce) return;
-    if (!inView) {
-      setDisplay(0); // hold at 0 until it scrolls into view
-      return;
-    }
+    // Only animate while in view. When out of view we DON'T force 0 — the number
+    // just holds its last value (off-screen, so invisible). animate() sets ~0 on
+    // its first frame, so scrolling back in still replays the count from zero;
+    // and if the observer never fires, the stat rests at its real target rather
+    // than advertising "0 clients".
+    if (!parsed || reduce || !inView) return;
     const controls = animate(0, parsed.target, {
       duration: 1.5,
       ease: [0.22, 0.8, 0.3, 1],

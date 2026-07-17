@@ -27,6 +27,7 @@ import letsGoBigPoster from "@/assets/posters/lets_go_big.webp";
 import BrandMarquee from "@/components/BrandMarquee";
 import AnimatedStats from "@/components/AnimatedStats";
 import MorphCards from "@/components/MorphCards";
+import ServiceIcon from "@/components/ServiceIcon";
 import StackingCards from "@/components/StackingCards";
 import MorphWord from "@/components/MorphWord";
 import PassportCard from "@/components/PassportCard";
@@ -580,7 +581,7 @@ function VideoCarousel({ indices, label }: { indices: number[]; label: string })
                   <span className="slide-counter">{count}</span>
                   <div className="slide-body">
                     <span className="slide-tag">{v.tag}</span>
-                    <h3 className="slide-title">{v.title}</h3>
+                    <h4 className="slide-title">{v.title}</h4>
                     <p className="slide-desc">{v.description}</p>
                     <div className="slide-foot">
                       <span>◷ {videoDurations[i] ?? "—"}</span>
@@ -897,7 +898,7 @@ function Index() {
                     <path d="M7 17L17 7M17 7H9M17 7v8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </MagneticLink>
-                <MagneticLink className="btn btn-ghost" href={MAILTO}>
+                <MagneticLink className="btn btn-ghost" href="#contact">
                   {c.hero.ctaHire}
                 </MagneticLink>
               </div>
@@ -911,7 +912,6 @@ function Index() {
         {/* ══════════ SERVICES ══════════ */}
         <section className="section dark" id="services">
           <div className="container services-wrap">
-            <div className="blob blob-float blob-f1" aria-hidden="true"></div>
             <div className="section-head" data-reveal>
               <h2 className="section-title"><Rich parts={c.services.title} /></h2>
               <p className="section-lede">{c.services.lede}</p>
@@ -925,7 +925,7 @@ function Index() {
                 title: s.title,
                 body: s.body,
               }))}
-              renderBlob={(i) => <div className={`blob blob-${i + 1}`} aria-hidden="true" />}
+              renderBlob={(i) => <ServiceIcon index={i} />}
             />
           </div>
         </section>
