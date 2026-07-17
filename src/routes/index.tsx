@@ -28,6 +28,7 @@ import BrandMarquee from "@/components/BrandMarquee";
 import AnimatedStats from "@/components/AnimatedStats";
 import MorphCards from "@/components/MorphCards";
 import ServiceIcon from "@/components/ServiceIcon";
+import GlassTabBar from "@/components/GlassTabBar";
 import StackingCards from "@/components/StackingCards";
 import MorphWord from "@/components/MorphWord";
 import PassportCard from "@/components/PassportCard";
@@ -634,21 +635,13 @@ function VideoCarousel({ indices, label }: { indices: number[]; label: string })
 
 // The Videos section: the animated intro headline once, then one labelled
 // carousel per video group (Cinematic AI Films / Motion Graphics & Type / UI
-// Animation). The liquid-glass refraction filter lives here once so every
-// group's player controls can reference url(#lg-refract).
+// Animation). The player controls' liquid-glass refraction filter
+// (url(#lg-refract)) is defined at page level in Index — the mobile nav
+// chrome shares it.
 function VideosSection() {
   const { content: c } = useLang();
   return (
     <section className="section dark" id="videos">
-      {/* Liquid-glass refraction filter for the player controls (referenced by
-          backdrop-filter: url(#lg-refract) in styles.css, Chromium only). */}
-      <svg aria-hidden="true" width="0" height="0" style={{ position: "absolute" }}>
-        <filter id="lg-refract" x="-20%" y="-20%" width="140%" height="140%" colorInterpolationFilters="sRGB">
-          <feTurbulence type="fractalNoise" baseFrequency="0.009 0.013" numOctaves={2} seed={7} result="n" />
-          <feGaussianBlur in="n" stdDeviation="1.4" result="nb" />
-          <feDisplacementMap in="SourceGraphic" in2="nb" scale={11} xChannelSelector="R" yChannelSelector="G" />
-        </filter>
-      </svg>
       <div className="container">
         <div className="videos-hero" data-reveal>
           <h2>
@@ -680,7 +673,6 @@ function VideosSection() {
 
 function Index() {
   const { content: c } = useLang();
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
 
   // Scroll reveal + section spy + reduced motion handling
@@ -778,7 +770,6 @@ function Index() {
       href={`#${id}`}
       className={`nav-link${activeSection === id ? " active" : ""}${extra ? " " + extra : ""}`}
       aria-current={activeSection === id ? "location" : undefined}
-      onClick={() => setMobileOpen(false)}
     >
       {label}
     </a>
@@ -791,7 +782,6 @@ function Index() {
       href="#contact"
       className={`nav-cta${activeSection === "contact" ? " active" : ""}`}
       aria-current={activeSection === "contact" ? "location" : undefined}
-      onClick={() => setMobileOpen(false)}
     >
       {c.nav.talk}
     </a>
@@ -800,8 +790,21 @@ function Index() {
   return (
     <>
       <a href="#main" className="skip-link">{c.a11y.skip}</a>
+      {/* Liquid-glass refraction filter — referenced via
+          backdrop-filter: url(#lg-refract) (Chromium only) by the mobile nav
+          chrome AND the video player controls, so it lives at page level. */}
+      <svg aria-hidden="true" width="0" height="0" style={{ position: "absolute" }}>
+        <filter id="lg-refract" x="-20%" y="-20%" width="140%" height="140%" colorInterpolationFilters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="0.009 0.013" numOctaves={2} seed={7} result="n" />
+          <feGaussianBlur in="n" stdDeviation="1.4" result="nb" />
+          <feDisplacementMap in="SourceGraphic" in2="nb" scale={11} xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+      </svg>
       {/* ══════════ NAV ══════════ */}
-      <header className={`nav-wrap${mobileOpen ? " open" : ""}`}>
+      {/* Mobile has no hamburger menu: the top bar slims down to brand + language
+          (liquid glass via CSS ≤980px) and navigation moves to the app-style
+          glass tab bar in the thumb zone below. */}
+      <header className="nav-wrap">
         <nav className="nav container" aria-label="Main">
           <ul className="nav-links nav-left">
             {navItems.slice(0, 3).map((n) => (
@@ -822,25 +825,19 @@ function Index() {
             </li>
           </ul>
           <LangToggle className="lang-toggle-mobile" />
-          <button
-            type="button"
-            className="nav-toggle"
-            aria-label={c.a11y.menu}
-            aria-expanded={mobileOpen}
-            aria-controls="mobile-menu"
-            onClick={() => setMobileOpen((v) => !v)}
-          >
-            <span></span>
-            <span></span>
-          </button>
         </nav>
-        <div className="nav-mobile" id="mobile-menu">
-          {navItems.slice(0, 6).map((n) => (
-            <span key={n.id}>{navLink(n.id, n.label)}</span>
-          ))}
-          <span className="nav-cta-mobile">{navCta}</span>
-        </div>
       </header>
+      <GlassTabBar
+        active={activeSection}
+        labels={{
+          home: c.nav.home,
+          services: c.nav.services,
+          videos: c.nav.videos,
+          work: c.nav.work,
+          talk: c.nav.talk,
+        }}
+        ariaLabel={c.a11y.menu}
+      />
 
       <main id="main">
         {/* ══════════ HERO ══════════ */}

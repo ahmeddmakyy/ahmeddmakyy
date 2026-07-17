@@ -25,7 +25,18 @@ const StrategyIcon = () => (
 );
 
 const VideoIcon = () => (
-  <svg className="svc-ic" viewBox="0 0 120 120" role="img" aria-label="A filmstrip with the directed shot lighting up frame by frame">
+  <svg className="svc-ic" viewBox="0 0 120 120" role="img" aria-label="An AI spark over a filmstrip, the directed shot lighting up frame by frame">
+    {/* the AI spark — four-point star, the shorthand for generative AI */}
+    <path
+      className="av-star"
+      d="M87 11 L89.6 19.4 L98 22 L89.6 24.6 L87 33 L84.4 24.6 L76 22 L84.4 19.4 Z"
+      fill="#fd6f00"
+    />
+    <path
+      className="av-star av-star2"
+      d="M103 23 L104.4 27.6 L109 29 L104.4 30.4 L103 35 L101.6 30.4 L97 29 L101.6 27.6 Z"
+      fill="#ff9a45"
+    />
     <rect x="16" y="36" width="88" height="48" rx="8" fill="none" stroke="#efe6da" strokeWidth="3" />
     <g fill="#efe6da">
       <rect x="24" y="39" width="6" height="4" rx="1.5" />
@@ -50,17 +61,22 @@ const VideoIcon = () => (
 );
 
 const CopyIcon = () => (
-  <svg className="svc-ic" viewBox="0 0 120 120" role="img" aria-label="A brand-voice waveform resolving into lines of copy">
+  <svg className="svc-ic" viewBox="0 0 120 120" role="img" aria-label="A pen writing lines of copy in the brand's voice — the waveform above sets the tone">
     <g fill="#fd6f00">
-      <rect className="cw-bar" x="30" y="34" width="7" height="32" rx="3.5" />
-      <rect className="cw-bar cw-b2" x="42" y="26" width="7" height="48" rx="3.5" />
-      <rect className="cw-bar cw-b3" x="54" y="38" width="7" height="24" rx="3.5" />
-      <rect className="cw-bar cw-b4" x="66" y="22" width="7" height="56" rx="3.5" />
-      <rect className="cw-bar cw-b5" x="78" y="34" width="7" height="32" rx="3.5" />
-      <rect className="cw-bar cw-b6" x="90" y="40" width="7" height="20" rx="3.5" />
+      <rect className="cw-bar" x="30" y="30" width="7" height="26" rx="3.5" />
+      <rect className="cw-bar cw-b2" x="42" y="24" width="7" height="38" rx="3.5" />
+      <rect className="cw-bar cw-b3" x="54" y="33" width="7" height="20" rx="3.5" />
+      <rect className="cw-bar cw-b4" x="66" y="20" width="7" height="46" rx="3.5" />
+      <rect className="cw-bar cw-b5" x="78" y="30" width="7" height="26" rx="3.5" />
+      <rect className="cw-bar cw-b6" x="90" y="35" width="7" height="16" rx="3.5" />
     </g>
-    <rect className="cw-line" x="30" y="86" width="42" height="6" rx="3" fill="#efe6da" />
-    <rect className="cw-line cw-l2" x="30" y="98" width="58" height="6" rx="3" fill="#8a8078" />
+    <rect className="cw-line" x="30" y="82" width="42" height="6" rx="3" fill="#efe6da" />
+    <rect className="cw-line cw-l2" x="30" y="94" width="58" height="6" rx="3" fill="#8a8078" />
+    {/* the pen doing the writing — its nib rides the growing second line */}
+    <g className="cw-pen">
+      <line x1="35" y1="87" x2="46" y2="72" stroke="#efe6da" strokeWidth="7" strokeLinecap="round" />
+      <path d="M30 94 L33.4 84.8 L38.6 88.6 Z" fill="#fd6f00" />
+    </g>
   </svg>
 );
 

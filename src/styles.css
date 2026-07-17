@@ -124,8 +124,6 @@ ul, ol { list-style: none; }
 }
 .nav-cta:hover { background: var(--orange-deep); transform: translateY(-1px); }
 .nav-cta.active { background: var(--orange-deep); }
-.nav-cta-mobile { display: block; margin-top: 6px; }
-.nav-cta-mobile .nav-cta { justify-content: center; }
 
 .brand {
   display: flex;
@@ -160,39 +158,91 @@ ul, ol { list-style: none; }
 .brand:hover .brand-mark { transform: rotate(-8deg) scale(1.06); }
 .brand:active .brand-mark { transform: scale(0.94); }
 
-.nav-toggle {
+/* ── Mobile app chrome: liquid-glass tab bar (≤980px) ──
+   The hamburger menu is gone. Navigation lives in an Apple-style liquid-glass
+   capsule floating in the thumb zone: frosted blur + saturation, specular top
+   light, rim border and — on Chromium — real refraction through the
+   #lg-refract SVG displacement filter (same glass as the video player). */
+.glass-tabbar {
+  position: fixed;
+  left: 50%;
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 110;
   display: none;
-  flex-direction: column;
-  justify-content: center;
-  gap: 6px;
-  background: none;
-  border: 0;
-  padding: 10px;
-  min-height: 44px; /* the only mobile nav control — keep a comfortable hit area */
-  cursor: pointer;
+  align-items: stretch;
+  gap: 2px;
+  padding: 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  /* the smoke is dense on purpose: the bar floats over PAPER sections too, and
+     the 10.5px labels must hold ≥4.5:1 there — alphas below ~0.6 fail AA */
+  background: linear-gradient(150deg, rgba(44, 44, 48, 0.66), rgba(10, 10, 12, 0.85) 70%);
+  backdrop-filter: blur(18px) saturate(190%) brightness(0.84);
+  -webkit-backdrop-filter: blur(18px) saturate(190%) brightness(0.84);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.5),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.35),
+    0 18px 44px rgba(5, 5, 5, 0.5);
+  animation: tabbarRise 0.7s var(--ease) both;
 }
-.nav-toggle span {
-  width: 24px;
-  height: 2.5px;
-  background: #fff;
-  border-radius: 2px;
-  transition: transform 0.3s var(--ease), opacity 0.3s;
+@keyframes tabbarRise {
+  from { opacity: 0; transform: translateX(-50%) translateY(18px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
-.nav-toggle[aria-expanded="true"] span:first-child { transform: translateY(4.2px) rotate(45deg); }
-.nav-toggle[aria-expanded="true"] span:last-child { transform: translateY(-4.2px) rotate(-45deg); }
+/* specular gloss sweep, clipped by the capsule */
+.glass-tabbar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.34) 0%, rgba(255, 255, 255, 0.06) 38%, rgba(255, 255, 255, 0) 60%);
+  pointer-events: none;
+}
+@supports (backdrop-filter: url("#lg-refract")) {
+  .glass-tabbar { backdrop-filter: blur(14px) saturate(190%) brightness(0.84) url("#lg-refract"); }
+}
 
-.nav-mobile {
-  display: none;
+.gt-item {
+  position: relative;
+  z-index: 1; /* above the gloss */
+  display: flex;
   flex-direction: column;
-  gap: 4px;
-  background: var(--ink);
-  border-radius: 18px;
-  margin: 8px auto 0;
-  width: min(1180px, calc(100% - 48px));
-  padding: 12px;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 60px;
+  min-height: 52px;
+  padding: 7px 8px 6px;
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1;
+  transition: color 0.25s var(--ease), background 0.25s var(--ease), transform 0.18s var(--ease);
 }
-.nav-mobile .nav-link { text-align: center; }
-.nav-wrap.open .nav-mobile { display: flex; }
+.gt-item svg { width: 22px; height: 22px; display: block; }
+.gt-label { white-space: nowrap; }
+.gt-item:active { transform: scale(0.9); }
+.gt-item.active {
+  background: var(--orange);
+  color: #fff;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.4), 0 6px 16px rgba(253, 111, 0, 0.4);
+}
+/* the Let's-talk tab reads as the accent action even when idle */
+.gt-cta { color: var(--orange-soft); }
+.gt-cta.active { color: #fff; }
+@media (max-width: 340px) {
+  .gt-item { min-width: 52px; padding-inline: 5px; }
+}
+
+/* Glass needs something to refract — where backdrop-filter doesn't exist fall
+   back to near-solid ink. (The prefers-reduced-transparency fallback lives at
+   the very END of this file: it must out-cascade the ≤980px glass nav rules,
+   which share its specificity and would otherwise win by source order.) */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-tabbar { background: rgba(20, 20, 22, 0.97); }
+}
 
 /* ══════════ HERO ══════════ */
 .hero {
@@ -681,14 +731,41 @@ ul, ol { list-style: none; }
 .cw-b2 { animation-delay: 0.14s; } .cw-b3 { animation-delay: 0.28s; } .cw-b4 { animation-delay: 0.42s; } .cw-b5 { animation-delay: 0.56s; } .cw-b6 { animation-delay: 0.7s; }
 @keyframes cwBar { 0%,100% { transform: scaleY(0.45); } 50% { transform: scaleY(1); } }
 .cw-line { transform-origin: left center; animation: cwLine 3.2s var(--ease) infinite; }
-.cw-l2 { animation-delay: 0.18s; }
+.cw-l2 { animation-delay: 0.18s; animation-fill-mode: backwards; }
 @keyframes cwLine { 0%,18% { transform: scaleX(0); } 38%,100% { transform: scaleX(1); } }
 
+/* the AI spark twinkles over the filmstrip — a 4-point star has 90° symmetry,
+   so ending the loop at rotate(90deg) reads as one continuous slow spin */
+.av-star { transform-origin: center; animation: avStar 2.8s ease-in-out infinite; }
+/* negative delay = starts mid-cycle: antiphase twinkle with NO static flash
+   during a positive-delay window (fill-mode defaults to none) */
+.av-star2 { animation-delay: -1.4s; }
+@keyframes avStar {
+  0% { transform: scale(0.72) rotate(0deg); opacity: 0.8; }
+  50% { transform: scale(1.06) rotate(45deg); opacity: 1; }
+  100% { transform: scale(0.72) rotate(90deg); opacity: 0.8; }
+}
+
+/* the pen's nib rides the tip of the growing second copy line (same 3.2s cycle
+   + 0.18s delay as .cw-l2, same easing → they stay glued). It then RESTS at the
+   end of the finished line for most of the cycle — the pen is what says
+   "copywriting", so it must be on screen at a glance, not just mid-stroke. */
+.cw-pen { animation: cwPen 3.2s var(--ease) 0.18s infinite backwards; }
+@keyframes cwPen {
+  0%, 16% { transform: translate(0, 0); opacity: 0; }
+  18% { transform: translate(0, 0); opacity: 1; }
+  38% { transform: translate(58px, 0); opacity: 1; }
+  88% { transform: translate(58px, 0); opacity: 1; }
+  96%, 100% { transform: translate(58px, -8px); opacity: 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .bs-ring, .bs-lock, .bs-conn, .bs-dot, .av-head, .av-f, .cw-bar, .cw-line { animation: none; }
+  .bs-ring, .bs-lock, .bs-conn, .bs-dot, .av-head, .av-f, .cw-bar, .cw-line, .av-star, .cw-pen { animation: none; }
   .bs-lock { opacity: 0; } .bs-conn { stroke-dashoffset: 0; }
   .av-head { opacity: 0; } .av-f2, .av-f3 { opacity: 0; }
   .cw-line { transform: none; } .cw-bar { transform: scaleY(0.8); }
+  /* pen rests at the end of the finished line */
+  .cw-pen { transform: translate(58px, 0); opacity: 1; }
 }
 
 .blob {
@@ -1165,13 +1242,29 @@ button,
   width: min(560px, 100%);
   max-height: min(82vh, 660px);
   min-height: 0;
-  overflow: auto;
-  overscroll-behavior: contain;
+  /* flex so .morph-body (the only child) is height-constrained and scrolls;
+     an overflow:auto box that is itself scale-morphing repaints every frame,
+     which was the mobile jank — the panel now stays one clean GPU layer */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  will-change: transform;
+  backface-visibility: hidden;
   z-index: 121;
   cursor: default;
   border-color: var(--orange);
   box-shadow: 0 40px 90px -30px rgba(0, 0, 0, 0.7);
   pointer-events: auto;
+}
+/* Scroll container INSIDE the morphing panel. The negative margin + matching
+   padding hand the card's 30px inset to the scroller, so the scrollbar hugs the
+   card edge and content isn't clipped 30px early while scrolling. */
+.morph-body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin: -30px;
+  padding: 30px;
 }
 .card.morph-open h3 { font-size: clamp(26px, 4vw, 32px); padding-right: 0; margin-bottom: 16px; }
 .card.morph-open .mc-teaser { -webkit-line-clamp: unset; line-clamp: unset; display: block; }
@@ -1351,9 +1444,50 @@ html.js [data-reveal].revealed {
 /* ══════════ RESPONSIVE ══════════ */
 @media (max-width: 980px) {
   .nav-links { display: none; }
-  .nav { padding: 8px 14px; }
-  .nav-toggle { display: flex; }
   .brand { padding: 0 4px; }
+
+  /* App chrome: glass tab bar on, top bar slims to brand + language and turns
+     into the same liquid glass (the solid ink block reads website, not app). */
+  .glass-tabbar { display: flex; }
+  /* viewport-fit=cover pulls the layout under the notch — keep the fixed pill
+     and the flowing content inside the horizontal safe area in landscape */
+  .nav-wrap {
+    top: max(10px, env(safe-area-inset-top));
+    left: env(safe-area-inset-left, 0px);
+    right: env(safe-area-inset-right, 0px);
+  }
+  main .container { padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px); }
+  .nav {
+    position: relative;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    /* dense smoke — the white brand word must stay ≥4.5:1 over paper sections */
+    background: linear-gradient(150deg, rgba(40, 40, 44, 0.66), rgba(10, 10, 12, 0.82) 72%);
+    backdrop-filter: blur(16px) saturate(185%) brightness(0.86);
+    -webkit-backdrop-filter: blur(16px) saturate(185%) brightness(0.86);
+    box-shadow:
+      inset 0 1px 1px rgba(255, 255, 255, 0.45),
+      inset 0 -1px 3px rgba(0, 0, 0, 0.3),
+      0 12px 32px rgba(5, 5, 5, 0.35);
+  }
+  .nav::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(150deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.05) 40%, rgba(255, 255, 255, 0) 62%);
+    pointer-events: none;
+  }
+  .nav > * { position: relative; z-index: 1; }
+  @supports (backdrop-filter: url("#lg-refract")) {
+    .nav { backdrop-filter: blur(13px) saturate(185%) brightness(0.86) url("#lg-refract"); }
+  }
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .nav { background: var(--ink); }
+  }
+  /* the last scrollable content must clear the floating tab bar */
+  .footer { padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
 
   .cards-grid { grid-template-columns: repeat(2, 1fr); }
   .process-grid { grid-template-columns: repeat(2, 1fr); }
@@ -1394,6 +1528,7 @@ html.js [data-reveal].revealed {
   html { scroll-behavior: auto; }
   .load-1, .load-2, .load-3, .load-4, .load-5, .load-6 { animation: none; }
   .nav { animation: none; }
+  .glass-tabbar { animation: none; }
   .hero-title-cascade .hw { animation: none; transform: none; }
   /* social pill: keep the handle reveal (useful) but drop the motion */
   .social-fill, .social-ico, .social-handle { transition: none; }
@@ -2051,4 +2186,22 @@ html[lang="ar"] .eyebrow,
 html[lang="ar"] .section-title,
 html[lang="ar"] .section-lede,
 html[lang="ar"] .about-right p { text-align: right; }
+
+/* ══════════ REDUCED TRANSPARENCY ══════════ */
+/* !important on purpose: this is a user accessibility preference, and it must
+   beat the ≤980px glass rules regardless of source order — the build's CSS
+   transform (Lightning) collapses backdrop-filter prefix pairs, which silently
+   demoted an order-based override of the same specificity. */
+@media (prefers-reduced-transparency: reduce) {
+  .glass-tabbar,
+  .nav {
+    /* standard property ONLY — writing the -webkit- twin here makes Lightning
+       merge the pair and emit just the prefixed alias, which loses to the
+       standard declarations in the glass rules */
+    backdrop-filter: none !important;
+    background: var(--ink) !important;
+  }
+  .glass-tabbar::before,
+  .nav::before { content: none; }
+}
 

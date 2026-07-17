@@ -86,7 +86,9 @@ export default function MorphCards({
 
   useEffect(() => {
     if (!openId) return;
-    closeRef.current?.focus();
+    // preventScroll: the close button is the LAST child of the .morph-body
+    // scroller — a plain focus() would scroll long panels open at the bottom.
+    closeRef.current?.focus({ preventScroll: true });
     // Lock background scroll so the page can't drift/scroll behind the panel on
     // mobile while the dialog is open. Locked on <html>, not just <body>: html
     // carries overflow-x:clip (for the sticky decks), which stops body overflow
@@ -187,29 +189,35 @@ export default function MorphCards({
                 aria-label={active.title}
                 onKeyDown={onDialogKeyDown}
               >
-                {meta(active)}
-                <motion.h3 layoutId={`mct-${active.id}`}>{active.title}</motion.h3>
-                <motion.p
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0, transition: { delay: 0.12, duration: 0.34 } }}
-                  exit={{ opacity: 0, transition: { duration: 0.12 } }}
-                >
-                  {active.body}
-                </motion.p>
-                <motion.button
-                  ref={closeRef}
-                  type="button"
-                  className="morph-close"
-                  onClick={close}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1, transition: { delay: 0.14 } }}
-                  exit={{ opacity: 0, transition: { duration: 0.12 } }}
-                >
-                  {closeLabel}
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
-                    <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                  </svg>
-                </motion.button>
+                {/* Scrolling lives on this inner wrapper, NOT on the panel:
+                    an overflow:auto box that is itself scale-morphing forces a
+                    full repaint every frame (the mobile jank). The panel stays
+                    a clean compositor layer; only this child scrolls. */}
+                <div className="morph-body">
+                  {meta(active)}
+                  <motion.h3 layoutId={`mct-${active.id}`}>{active.title}</motion.h3>
+                  <motion.p
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0, transition: { delay: 0.12, duration: 0.34 } }}
+                    exit={{ opacity: 0, transition: { duration: 0.12 } }}
+                  >
+                    {active.body}
+                  </motion.p>
+                  <motion.button
+                    ref={closeRef}
+                    type="button"
+                    className="morph-close"
+                    onClick={close}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1, transition: { delay: 0.14 } }}
+                    exit={{ opacity: 0, transition: { duration: 0.12 } }}
+                  >
+                    {closeLabel}
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
+                      <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                  </motion.button>
+                </div>
               </motion.div>
             </>
           )}
