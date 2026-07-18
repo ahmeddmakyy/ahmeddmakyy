@@ -62,6 +62,7 @@ export interface SiteContent {
   };
   videos: { title: string; tag: string; client: string; description: string }[];
   about: {
+    name: string;
     eyebrow: string;
     title: Rich;
     p1: string;
@@ -247,6 +248,7 @@ const en: SiteContent = {
     },
   ],
   about: {
+    name: "Ahmed Maki",
     eyebrow: "About Me",
     title: [{ t: "Law grad turned " }, { t: "creative", accent: true }],
     p1: "I studied law at Ain Shams, then went where the ideas were. At Renew Media I'm the creative mind behind 15+ brands: I do the research, find the one line a brand can own, and turn it into content plans, campaigns, and films.",
@@ -491,6 +493,7 @@ const ar: SiteContent = {
     },
   ],
   about: {
+    name: "أحمد مكي",
     eyebrow: "نبذة عنّي",
     title: [{ t: "خريج حقوق تحوّل إلى " }, { t: "الإبداع", accent: true }],
     p1: "درستُ الحقوق في جامعة عين شمس، ثم اتجهتُ حيث الأفكار. في Renew Media أنا العقل الإبداعي خلف أكثر من 15 علامة تجارية: أُجري البحث، وأجد الجملة الواحدة التي يمكن أن تمتلكها العلامة، وأحوّلها إلى خطط محتوى وحملات وأفلام.",

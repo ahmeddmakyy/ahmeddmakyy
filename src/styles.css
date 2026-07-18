@@ -170,27 +170,54 @@ ul, ol { list-style: none; }
   @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     .nav {
       position: relative;
-      background: linear-gradient(150deg, rgba(40, 40, 44, 0.66), rgba(10, 10, 12, 0.82) 72%);
-      backdrop-filter: blur(16px) saturate(185%) brightness(0.9);
-      -webkit-backdrop-filter: blur(16px) saturate(185%) brightness(0.9);
-      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 999px; /* full capsule ends — the WWDC liquid-glass silhouette */
+      /* Clearer "liquid glass": a near-uniform translucent tint (no silvery white
+         fill / heavy bevel — those read as brushed metal) so the hero shows
+         THROUGH the bar, refracted below. The glass cues come from the thin
+         bright rim, the dispersion edge, and the refraction — not from a tint
+         gradient. White text stays legible via the dimmed backdrop + link shadow. */
+      background: linear-gradient(180deg, rgba(28, 28, 34, 0.34), rgba(16, 16, 20, 0.42));
+      backdrop-filter: blur(9px) saturate(175%) brightness(0.8);
+      -webkit-backdrop-filter: blur(9px) saturate(175%) brightness(0.8);
+      border: 1px solid rgba(255, 255, 255, 0.24);
       box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.5),    /* crisp bevel top rim */
-        inset 0 3px 8px rgba(255, 255, 255, 0.10),  /* soft inner glow */
-        inset 0 -2px 6px rgba(0, 0, 0, 0.42),
-        0 16px 40px rgba(5, 5, 5, 0.26);
+        inset 0 1px 0.5px rgba(255, 255, 255, 0.55), /* thin bright top rim */
+        inset 0 -6px 13px -8px rgba(0, 0, 0, 0.42), /* faint bottom depth */
+        0 18px 44px rgba(5, 5, 5, 0.3);
     }
+    /* A single soft specular highlight up top — a wet-glass glint, not a sheen. */
     .nav::before {
       content: "";
       position: absolute;
       inset: 0;
       border-radius: inherit;
-      background: linear-gradient(150deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.05) 42%, transparent 64%);
+      background: radial-gradient(110% 70% at 50% -35%, rgba(255, 255, 255, 0.14), transparent 58%);
+      mix-blend-mode: screen;
+      pointer-events: none;
+    }
+    /* Chromatic dispersion at the rim — the prism edge that says "real glass".
+       A 1.2px gradient border (cool → warm) revealed by an xor mask ring. */
+    .nav::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1.2px;
+      background: linear-gradient(125deg, rgba(120, 180, 255, 0.55), rgba(255, 255, 255, 0) 32%, rgba(255, 255, 255, 0) 66%, rgba(255, 150, 90, 0.5));
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      mask-composite: exclude;
       pointer-events: none;
     }
     .nav > * { position: relative; z-index: 1; }
+    .nav .nav-link,
+    .nav .brand-word { text-shadow: 0 1px 2px rgba(0, 0, 0, 0.38); }
+    /* Chromium only: bend the hero THROUGH the glass. Bigger scale + lower noise
+       frequency than the player's filter → a smoother, more lens-like refraction
+       (the desktop bar has the GPU headroom the scroll path can't spare). */
     @supports (backdrop-filter: url("#lg-refract")) {
-      .nav { backdrop-filter: blur(13px) saturate(185%) brightness(0.92) url("#lg-refract"); }
+      .nav { backdrop-filter: blur(7px) saturate(185%) brightness(0.84) url("#lg-refract"); }
     }
   }
 }
@@ -228,13 +255,33 @@ ul, ol { list-style: none; }
   from { opacity: 0; transform: translateX(-50%) translateY(18px); }
   to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
-/* specular gloss sweep, clipped by the capsule */
+/* Specular gloss — same liquid-glass surface as the desktop bar: a bright
+   diagonal streak + a top sheen, screen-blended. (No url(#lg-refract) here — see
+   the note below: SVG refraction re-runs its shader every scroll frame and would
+   reintroduce mobile jank, and iOS doesn't support it anyway.) */
 .glass-tabbar::before {
   content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(150deg, rgba(255, 255, 255, 0.34) 0%, rgba(255, 255, 255, 0.06) 38%, rgba(255, 255, 255, 0) 60%);
+  background:
+    linear-gradient(105deg, transparent 0%, rgba(255, 255, 255, 0.34) 8%, transparent 22%),
+    linear-gradient(150deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.05) 40%, transparent 62%);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+/* Chromatic dispersion rim (the glass prism edge) — matches the desktop nav */
+.glass-tabbar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.2px;
+  background: linear-gradient(125deg, rgba(120, 180, 255, 0.5), rgba(255, 255, 255, 0) 34%, rgba(255, 255, 255, 0) 64%, rgba(255, 150, 90, 0.45));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
   pointer-events: none;
 }
 /* NOTE: refraction (url(#lg-refract)) is intentionally NOT used on the fixed
@@ -338,6 +385,9 @@ ul, ol { list-style: none; }
    horizontal overflow). */
 @media (max-width: 480px) {
   .hero-title { font-size: clamp(30px, 8vw, 42px); }
+  /* the role line grew ("… & Video Editor") → the title now wraps to a third
+     line; give the portrait stage more headroom so that line clears the head. */
+  .hero-stage { margin-top: 22px; }
 }
 
 .hero-stage {
@@ -1438,6 +1488,10 @@ button,
   overflow: hidden;
   will-change: transform;
   backface-visibility: hidden;
+  /* Isolate the panel's layout + paint from the rest of the page so the
+     scale-morph doesn't force a page-wide re-layout/repaint each frame — the
+     main remaining source of dropped frames when a card opens on mobile. */
+  contain: layout paint;
   z-index: 121;
   cursor: default;
   border-color: var(--orange);
@@ -1765,7 +1819,10 @@ html.js [data-reveal].revealed {
      phones. The lighter shadow is visually near-identical at this size. */
   .card.morph-open {
     transition: none;
-    box-shadow: 0 22px 46px -24px rgba(0, 0, 0, 0.62);
+    /* Even smaller blur radius than desktop: the scrim already darkens the page,
+       so a wide soft shadow is invisible yet still re-rasterised every morph
+       frame. A tight shadow keeps the depth cue for pennies of paint. */
+    box-shadow: 0 14px 28px -12px rgba(0, 0, 0, 0.6);
   }
 }
 
@@ -1857,6 +1914,31 @@ html[lang="ar"] .eyebrow,
 html[lang="ar"] .section-title,
 html[lang="ar"] .section-lede,
 html[lang="ar"] .about-right p { text-align: right; }
+
+/* Give every Arabic TEXT block a real RTL context so words + punctuation order
+   correctly. This is what the LTR-only setup was missing: the hero title (and
+   any lockup) renders each word in its own inline span, and in an LTR box those
+   spans lay out left-to-right — reversing the reading order. `direction: rtl`
+   on the text blocks fixes it WITHOUT mirroring the page grid (which stays LTR
+   by design). Latin lockups (brand-word, tool chips, the "Ahmed Maki" name-
+   reveal, passport) are intentionally excluded so they keep Latin LTR flow;
+   Latin runs inside Arabic text are still handled by the Unicode bidi algo. */
+html[lang="ar"] :is(
+    h1, h2, h3, h4, p, li, blockquote, figcaption,
+    .hero-title, .hero-note, .eyebrow, .section-lede, .section-title,
+    .reels-title, .reel-title, .reel-client, .mc-teaser,
+    .reel-lightbox-meta, .contact-title
+  ) {
+  direction: rtl;
+}
+/* The Arabic hero role is longer ("… ومونتير") so the title runs an extra line;
+   push the portrait stage down a touch in Arabic so that last word clears the
+   head and stays readable (the overlap look is kept, just eased). */
+html[lang="ar"] .hero-stage { margin-top: clamp(34px, 4.5vw, 64px); }
+/* The About name-reveal shows the localized name ("أحمد مكي") in Arabic, so it
+   needs an RTL context too — otherwise the flex-start words read left-to-right
+   ("مكي أحمد"). The bracket box measures real rects, so it tracks either way. */
+html[lang="ar"] .name-reveal { direction: rtl; }
 
 /* ══════════ REDUCED TRANSPARENCY ══════════ */
 /* !important on purpose: this is a user accessibility preference, and it must

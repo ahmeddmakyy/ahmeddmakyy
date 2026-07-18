@@ -111,8 +111,14 @@ function ReelsRow({
   const { content: c } = useLang();
   const trackRef = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
-  const paused = useRef(false);
+  // Desktop pauses on mouse hover; touch devices have no hover, so instead we
+  // pause for a short idle window after every user gesture (tap / swipe / arrow)
+  // and auto-resume once the finger's been off the row for IDLE_MS. That gives
+  // mobile the same "get out of the way while I'm interacting" behaviour.
+  const hovering = useRef(false);
+  const lastGesture = useRef(0);
   const inView = useRef(false);
+  const IDLE_MS = 2800;
 
   // Card-to-card distance (card width + gap), read live so it stays correct
   // across the responsive width breakpoints.
@@ -148,9 +154,10 @@ function ReelsRow({
     );
     io.observe(t);
     const id = window.setInterval(() => {
-      if (!paused.current && inView.current && document.visibilityState === "visible") {
-        advance(1);
-      }
+      if (hovering.current) return; // mouse is over the row
+      if (!inView.current || document.visibilityState !== "visible") return;
+      if (Date.now() - lastGesture.current < IDLE_MS) return; // user just touched it
+      advance(1);
     }, 3200);
     return () => {
       io.disconnect();
@@ -159,11 +166,16 @@ function ReelsRow({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reduce]);
 
-  const pause = () => {
-    paused.current = true;
+  // Mouse hover (desktop) pauses indefinitely; touch/keyboard/wheel gestures
+  // pause for IDLE_MS and then let autoplay resume.
+  const onEnter = (e: React.PointerEvent) => {
+    if (e.pointerType === "mouse") hovering.current = true;
   };
-  const resume = () => {
-    paused.current = false;
+  const onLeave = (e: React.PointerEvent) => {
+    if (e.pointerType === "mouse") hovering.current = false;
+  };
+  const nudge = () => {
+    lastGesture.current = Date.now();
   };
 
   return (
@@ -176,7 +188,7 @@ function ReelsRow({
             className="reels-arrow"
             aria-label={c.videosSection.prev}
             onClick={() => {
-              pause();
+              nudge();
               advance(-1);
             }}
           >
@@ -189,7 +201,7 @@ function ReelsRow({
             className="reels-arrow"
             aria-label={c.videosSection.next}
             onClick={() => {
-              pause();
+              nudge();
               advance(1);
             }}
           >
@@ -203,11 +215,18 @@ function ReelsRow({
         className="reels-track"
         ref={trackRef}
         dir="ltr"
-        onPointerEnter={pause}
-        onPointerLeave={resume}
-        onFocusCapture={pause}
-        onBlurCapture={resume}
-        onTouchStart={pause}
+        onPointerEnter={onEnter}
+        onPointerLeave={onLeave}
+        onFocusCapture={() => {
+          hovering.current = true;
+        }}
+        onBlurCapture={() => {
+          hovering.current = false;
+        }}
+        onTouchStart={nudge}
+        onTouchMove={nudge}
+        onWheel={nudge}
+        onPointerDown={nudge}
       >
         {indices.map((idx) => (
           <ReelCard key={idx} gi={idx} onPlay={onPlay} />

@@ -264,18 +264,18 @@ function Index() {
   return (
     <>
       <a href="#main" className="skip-link">{c.a11y.skip}</a>
-      {/* Liquid-glass refraction filter — referenced via
-          backdrop-filter: url(#lg-refract) (Chromium only) by the video player
-          controls, so it lives at page level. It is deliberately NOT applied to
-          the fixed nav / tab bar: an SVG displacement backdrop-filter re-runs its
-          shader every scroll frame over the moving page (the mobile scroll jank).
-          Larger, lower-frequency swells + a softer blur read as a real glass lens
-          bending the video behind the controls, rather than a noisy frost. */}
+      {/* Liquid-glass refraction filter — referenced via backdrop-filter:
+          url(#lg-refract) (Chromium only) by the DESKTOP nav bar, so it lives at
+          page level. Deliberately NOT used on the mobile tab bar: an SVG
+          displacement backdrop-filter re-runs its shader every scroll frame
+          (mobile scroll jank) and iOS doesn't support url() backdrop filters at
+          all. Larger, lower-frequency swells + a soft blur read as a real glass
+          lens bending the page behind the bar, rather than a noisy frost. */}
       <svg aria-hidden="true" width="0" height="0" style={{ position: "absolute" }}>
         <filter id="lg-refract" x="-20%" y="-20%" width="140%" height="140%" colorInterpolationFilters="sRGB">
-          <feTurbulence type="fractalNoise" baseFrequency="0.006 0.009" numOctaves={2} seed={7} result="n" />
-          <feGaussianBlur in="n" stdDeviation="2" result="nb" />
-          <feDisplacementMap in="SourceGraphic" in2="nb" scale={14} xChannelSelector="R" yChannelSelector="G" />
+          <feTurbulence type="fractalNoise" baseFrequency="0.004 0.006" numOctaves={2} seed={7} result="n" />
+          <feGaussianBlur in="n" stdDeviation="2.4" result="nb" />
+          <feDisplacementMap in="SourceGraphic" in2="nb" scale={20} xChannelSelector="R" yChannelSelector="G" />
         </filter>
       </svg>
       {/* ══════════ NAV ══════════ */}
@@ -421,7 +421,7 @@ function Index() {
             </div>
             <div className="about-right" data-reveal>
               <p className="eyebrow"><Doodle shape="sparkle" />{c.about.eyebrow}</p>
-              <NameReveal sentence="Ahmed Maki" className="about-name" pauseBetweenAnimations={2} />
+              <NameReveal key={c.about.name} sentence={c.about.name} className="about-name" pauseBetweenAnimations={2} />
               <h2 className="section-title"><Rich parts={c.about.title} /></h2>
               <p>{c.about.p1}</p>
               <p>{c.about.p2}</p>
