@@ -449,6 +449,47 @@ ul, ol { list-style: none; }
 }
 .hero-rating span { font-size: 14px; color: var(--muted-light); }
 
+/* ── Rotating "sticker" badge — a deliberate nod to the reference's rotating
+   seal (rotate.svg), rebuilt in-brand: an orange ring of Ahmed's words circling
+   a hand-drawn sparkle (the twinkle motif from the reference's doodles). Ties
+   into the hero's existing orange scribble language. Decorative + desktop-only;
+   frozen for reduced motion. ── */
+.rot-badge {
+  position: absolute;
+  width: 106px;
+  height: 106px;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  z-index: 3;
+}
+.rot-badge-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  animation: rotBadgeSpin 20s linear infinite;
+}
+.rot-badge-ring text {
+  font-family: 'Bricolage Grotesque', 'Segoe UI', sans-serif;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 1.3px;
+  fill: var(--orange);
+}
+.rot-badge-spark {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  fill: var(--orange);
+}
+@keyframes rotBadgeSpin { to { transform: rotate(360deg); } }
+/* lower-left of the hero stage — clear of the quote (upper-left), rating
+   (upper-right) and the bottom-centre CTA */
+.hero-badge { left: clamp(0px, 1vw, 8px); bottom: clamp(2px, 3vw, 28px); }
+@media (max-width: 860px) { .rot-badge { display: none; } }
+@media (prefers-reduced-motion: reduce) { .rot-badge-ring { animation: none; } }
+
 .glass-cta {
   position: absolute;
   z-index: 3;

@@ -27,6 +27,7 @@ import MorphWord from "@/components/MorphWord";
 import PassportCard from "@/components/PassportCard";
 import SocialLinks from "@/components/SocialLinks";
 import SpotlightReveal from "@/components/SpotlightReveal";
+import RotatingBadge from "@/components/RotatingBadge";
 import { useLang, LangToggle } from "@/i18n";
 import type { Rich as RichText } from "@/content";
 
@@ -930,6 +931,10 @@ function Index() {
                   {c.hero.ctaHire}
                 </MagneticLink>
               </div>
+
+              {/* deliberate reference nod: a rotating in-brand sticker in the
+                  otherwise-empty lower-left of the stage (desktop only) */}
+              <RotatingBadge className="hero-badge" />
             </div>
           </div>
         </section>
