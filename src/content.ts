@@ -183,6 +183,20 @@ const en: SiteContent = {
         "Vertical cinematic sports film cut from Veo 3.1 clips with morph transitions for a club with 188K followers.",
     },
     {
+      title: "Alwassef Motors — Your Day, Your Car",
+      tag: "AI Film",
+      client: "Car Showroom",
+      description:
+        "A cinematic AI ad film for a car showroom — a day-in-the-life story that carries one driver from his morning coffee to the wheel of his new car, written, directed and produced end to end with AI.",
+    },
+    {
+      title: "Dr. Ahmed ElKashef — Move Without Pain",
+      tag: "AI Film",
+      client: "Spine & Joint Clinic",
+      description:
+        "A cinematic AI brand film for an orthopedic spine-and-joint clinic — a father sidelined by back pain watches life move on without him, before the clinic's mark resolves in a glowing animated spine. Story, shots and logo animation all AI-directed.",
+    },
+    {
       title: "Reels With Maki — It's a Story Problem",
       tag: "Kinetic Type",
       client: "Personal Brand",
@@ -223,6 +237,13 @@ const en: SiteContent = {
       client: "Automotive · Finance",
       description:
         "A UI animation reel for a car showroom and financing brand — designed and animated entirely in code from the brand's own assets.",
+    },
+    {
+      title: "Demo Star — Men's Fashion Experience",
+      tag: "UI Animation",
+      client: "Menswear",
+      description:
+        "A product showcase animated entirely in code — HTML, CSS and JS directed with AI, rendered as a vertical fashion reel for the menswear brand.",
     },
   ],
   about: {
@@ -406,6 +427,20 @@ const ar: SiteContent = {
         "فيلم رياضي سينمائي عمودي مُجمَّع من لقطات Veo 3.1 بانتقالات تحوّلية، لنادٍ يتابعه 188 ألف شخص.",
     },
     {
+      title: "الوصيف موتورز — يومُك… وسيارتُك",
+      tag: "فيلم AI",
+      client: "معرض سيارات",
+      description:
+        "فيلم إعلاني سينمائي بالذكاء الاصطناعي لمعرض سيارات — حكاية يومٍ كامل تُرافق سائقًا من قهوة الصباح حتى مقود سيارته الجديدة، مكتوبةً ومُخرَجةً ومُنتَجةً بالكامل بالذكاء الاصطناعي.",
+    },
+    {
+      title: "د. أحمد الكاشف — حركة بلا ألم",
+      tag: "فيلم AI",
+      client: "عيادة عمود فقري ومفاصل",
+      description:
+        "فيلم علامة سينمائي بالذكاء الاصطناعي لعيادة عظام متخصّصة في العمود الفقري والمفاصل — أبٌ أنهكه ألم الظهر يرى الحياة تتحرّك من دونه، ثم يتجلّى شعار العيادة في رسمٍ متوهّج للعمود الفقري. الحكاية واللقطات وأنيميشن الشعار كلّها بتوجيه الذكاء الاصطناعي.",
+    },
+    {
       title: "Reels With Maki — إنها مشكلة حكاية",
       tag: "تايبوغرافي متحرّكة",
       client: "علامة شخصية",
@@ -446,6 +481,13 @@ const ar: SiteContent = {
       client: "سيارات · تمويل",
       description:
         "ريّل أنيميشن واجهات لمعرض سيارات وشركة تمويل — مُصمَّم ومتحرّك بالكامل بالكود من أصول العلامة نفسها.",
+    },
+    {
+      title: "Demo Star — تجربة أزياء رجالية",
+      tag: "أنيميشن واجهات",
+      client: "أزياء رجالية",
+      description:
+        "عرض منتج متحرّك بالكامل بالكود — HTML وCSS وJS بتوجيه الذكاء الاصطناعي، كريّل أزياء عمودي للعلامة.",
     },
   ],
   about: {

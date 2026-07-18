@@ -181,7 +181,8 @@ ul, ol { list-style: none; }
   backdrop-filter: blur(18px) saturate(190%) brightness(0.84);
   -webkit-backdrop-filter: blur(18px) saturate(190%) brightness(0.84);
   box-shadow:
-    inset 0 1px 1px rgba(255, 255, 255, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.62),   /* crisp bevel top rim */
+    inset 0 3px 6px rgba(255, 255, 255, 0.14),  /* soft inner glow under it */
     inset 0 -2px 5px rgba(0, 0, 0, 0.35),
     0 18px 44px rgba(5, 5, 5, 0.5);
   animation: tabbarRise 0.7s var(--ease) both;
@@ -199,9 +200,12 @@ ul, ol { list-style: none; }
   background: linear-gradient(150deg, rgba(255, 255, 255, 0.34) 0%, rgba(255, 255, 255, 0.06) 38%, rgba(255, 255, 255, 0) 60%);
   pointer-events: none;
 }
-@supports (backdrop-filter: url("#lg-refract")) {
-  .glass-tabbar { backdrop-filter: blur(14px) saturate(190%) brightness(0.84) url("#lg-refract"); }
-}
+/* NOTE: refraction (url(#lg-refract)) is intentionally NOT used on the fixed
+   nav + tab bar. An SVG displacement backdrop-filter re-runs its shader every
+   scroll frame over the moving page — the single biggest mobile scroll-jank
+   source here. The premium look comes from the cheaper CSS layers instead
+   (drifting specular sheen + directional bevel below), which also render on iOS,
+   where url() backdrop filters aren't supported at all. */
 
 .gt-item {
   position: relative;
@@ -526,6 +530,46 @@ ul, ol { list-style: none; }
 }
 .btn .dl-icon { width: 18px; height: 18px; transition: transform 0.3s var(--ease); }
 .btn-dark:hover .dl-icon { transform: translateY(2px); }
+
+/* ── Desktop button motion — gloss sweep on the primary actions ──
+   A quick light band wipes across the button on hover, bringing it "to life"
+   (pairs with the existing magnetic pull + arrow nudge). Gated to a real pointer
+   so it can never fire — or repaint — on touch. The band lives inside the
+   button's own box (background-position, no overflow) so focus rings stay
+   visible, and it sits under the label because the text/icon paint after it. */
+@media (hover: hover) and (pointer: fine) {
+  .btn-primary,
+  .nav-cta,
+  .morph-btn-primary,
+  .btn-cta-band { position: relative; }
+  .btn-primary::after,
+  .nav-cta::after,
+  .morph-btn-primary::after,
+  .btn-cta-band::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(115deg, transparent 42%, rgba(255, 255, 255, 0.5) 50%, transparent 58%);
+    background-size: 220% 100%;
+    background-position: 165% 0;
+    background-repeat: no-repeat;
+    opacity: 0;
+  }
+  /* the pale-on-white band has to darken to show on the white CTA-band button */
+  .btn-cta-band::after {
+    background-image: linear-gradient(115deg, transparent 42%, rgba(130, 21, 19, 0.16) 50%, transparent 58%);
+  }
+  .btn-primary:hover::after,
+  .nav-cta:hover::after,
+  .morph-btn-primary:hover::after,
+  .btn-cta-band:hover::after { animation: btnShine 0.6s var(--ease); }
+}
+@keyframes btnShine {
+  from { background-position: 165% 0; opacity: 1; }
+  to   { background-position: -65% 0; opacity: 1; }
+}
 .about-cta { margin-top: 30px; }
 
 /* ══════════ MARQUEE ══════════ */
@@ -1467,7 +1511,8 @@ html.js [data-reveal].revealed {
     backdrop-filter: blur(16px) saturate(185%) brightness(0.86);
     -webkit-backdrop-filter: blur(16px) saturate(185%) brightness(0.86);
     box-shadow:
-      inset 0 1px 1px rgba(255, 255, 255, 0.45),
+      inset 0 1px 0 rgba(255, 255, 255, 0.56),   /* crisp bevel top rim */
+      inset 0 3px 6px rgba(255, 255, 255, 0.12),  /* soft inner glow under it */
       inset 0 -1px 3px rgba(0, 0, 0, 0.3),
       0 12px 32px rgba(5, 5, 5, 0.35);
   }
@@ -1480,9 +1525,8 @@ html.js [data-reveal].revealed {
     pointer-events: none;
   }
   .nav > * { position: relative; z-index: 1; }
-  @supports (backdrop-filter: url("#lg-refract")) {
-    .nav { backdrop-filter: blur(13px) saturate(185%) brightness(0.86) url("#lg-refract"); }
-  }
+  /* No url(#lg-refract) here on purpose — see the note by .glass-tabbar: an SVG
+     displacement backdrop-filter on this fixed bar repaints every scroll frame. */
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     .nav { background: var(--ink); }
   }
@@ -1915,6 +1959,42 @@ html.js [data-reveal].revealed {
   .sp-btn { backdrop-filter: blur(13px) saturate(180%) brightness(0.86) url("#lg-refract"); }
   .sp-bar { backdrop-filter: blur(15px) saturate(190%) brightness(0.96) url("#lg-refract"); }
 }
+
+/* ── Liquid-glass specular (liquidGL-inspired) ──
+   liquidGL is WebGL + html2canvas and is documented to go unstable once the
+   glass covers >50% of the viewport — exactly our mobile player + tab bar — so
+   its own runtime would fight the very smoothness we just bought. Instead its
+   signature layer, the moving specular highlight, is rebuilt as a light band
+   drifting inside the pane. It rides only the transient, user-focused player
+   controls (not the always-on chrome), stays inside the element's own box (no
+   overflow, so focus rings aren't clipped), and is silenced for reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .sp-play::after,
+  .sp-bar::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 0;                 /* under the icon (z-index:1), over the ::before gloss */
+    background: linear-gradient(115deg, transparent 38%, rgba(255, 255, 255, 0.4) 50%, transparent 62%);
+    background-size: 260% 100%;
+    background-position: 150% 0;
+    background-repeat: no-repeat;
+    animation: lgSpecular 5.5s var(--ease) infinite;
+  }
+  .sp-bar::after {
+    animation-duration: 7.5s;
+    background-image: linear-gradient(115deg, transparent 42%, rgba(255, 255, 255, 0.26) 50%, transparent 58%);
+  }
+}
+/* the band sweeps across, then rests off-frame most of the cycle (a slow glint,
+   not a strobe) */
+@keyframes lgSpecular {
+  0%   { background-position: 150% 0; }
+  45%  { background-position: -60% 0; }
+  100% { background-position: -60% 0; }
+}
 .sp-mini {
   width: 34px; height: 34px;
   background: transparent;
@@ -2087,8 +2167,14 @@ html.js [data-reveal].revealed {
   .glass-cta { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
   .sp-btn, .sp-bar { backdrop-filter: blur(14px) saturate(160%); -webkit-backdrop-filter: blur(14px) saturate(160%); }
   /* The card morphs open on a compositor transform; don't ALSO transition its
-     border-colour + 90px-blur shadow on the same frames (full paint each frame). */
-  .card.morph-open { transition: none; }
+     border-colour + 90px-blur shadow on the same frames (full paint each frame).
+     Also swap the 90px-blur shadow for a far cheaper one: a huge soft shadow is
+     re-rasterised every frame while the panel scales — a real open-card jank on
+     phones. The lighter shadow is visually near-identical at this size. */
+  .card.morph-open {
+    transition: none;
+    box-shadow: 0 22px 46px -24px rgba(0, 0, 0, 0.62);
+  }
 }
 
 @media (hover: none) {

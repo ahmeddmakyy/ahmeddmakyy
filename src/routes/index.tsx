@@ -1,29 +1,22 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { motion, useMotionValue, useSpring, useReducedMotion } from "framer-motion";
-import easyWayAsset from "@/assets/videos/easy_way.mp4.asset.json";
-import golfCityAsset from "@/assets/videos/golf_city.mp4.asset.json";
-import renewStoryAsset from "@/assets/videos/renew_story.mp4.asset.json";
-import renewStarAsset from "@/assets/videos/renew_star.mp4.asset.json";
-import quickLoanVideo from "@/assets/videos/quick-loan-ui-animation.mp4";
-import hyperframeVideo from "@/assets/videos/portfolio-hyperframe.mp4";
-import abbasAppVideo from "@/assets/videos/abbas-motors-installments-app.mp4";
-import abbasChatVideo from "@/assets/videos/abbas-motors-chatgpt-ad.mp4";
-import textMotionVideo from "@/assets/videos/text-motion.mp4";
-import letsGoBigVideo from "@/assets/videos/lets-go-big.mp4";
 import ahmedHero from "@/assets/ahmed-hero-cropped.webp";
 import ahmedHeroBw from "@/assets/ahmed-hero-bw.webp";
 import logoMark from "@/assets/logo-mark.webp";
-import easyWayPoster from "@/assets/posters/easy_way.webp";
-import golfCityPoster from "@/assets/posters/golf_city.webp";
 import renewStoryPoster from "@/assets/posters/renew_story.webp";
 import renewStarPoster from "@/assets/posters/renew_star.webp";
-import quickLoanPoster from "@/assets/posters/quick_loan.webp";
+import easyWayPoster from "@/assets/posters/easy_way.webp";
+import golfCityPoster from "@/assets/posters/golf_city.webp";
+import alwassefPoster from "@/assets/posters/alwassef.webp";
+import drKashefPoster from "@/assets/posters/dr_kashef.webp";
+import textMotionPoster from "@/assets/posters/text_motion.webp";
+import letsGoBigPoster from "@/assets/posters/lets_go_big.webp";
 import hyperframePoster from "@/assets/posters/hyperframe.webp";
 import abbasAppPoster from "@/assets/posters/abbas_app.webp";
 import abbasChatPoster from "@/assets/posters/abbas_chatgpt.webp";
-import textMotionPoster from "@/assets/posters/text_motion.webp";
-import letsGoBigPoster from "@/assets/posters/lets_go_big.webp";
+import quickLoanPoster from "@/assets/posters/quick_loan.webp";
+import demoStarPoster from "@/assets/posters/demo_star.webp";
 import BrandMarquee from "@/components/BrandMarquee";
 import AnimatedStats from "@/components/AnimatedStats";
 import MorphCards from "@/components/MorphCards";
@@ -41,11 +34,12 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-// The four films are hosted on Lovable's CDN. Their asset URLs are root-relative
-// (/__l5e/...), which only resolve on the Lovable host — on Vercel they 404.
-// Prefix the Lovable origin so both deployments load them (CDN allows CORS + range).
-const LOVABLE_CDN = "https://ahmeddmakyy.lovable.app";
-const cdn = (u: string) => (u.startsWith("/") ? LOVABLE_CDN + u : u);
+// Every film is hosted on Cloudinary (cloud "ahmedmakyy") so the source tree
+// carries no video weight — the repo dropped from ~136 MB of bundled mp4s to
+// zero. Cloudinary's CDN answers byte-range requests, so the player's seek /
+// skip still work, and it serves the same URL to both Lovable and Vercel.
+// Posters stay bundled (a few KB of webp each) for an instant first paint.
+const CLOUD = "https://res.cloudinary.com/ahmedmakyy/video/upload";
 
 // Lower-friction contact: prefill the email draft + the WhatsApp message so the
 // first click never lands on a blank compose window.
@@ -59,30 +53,33 @@ const WHATSAPP =
   encodeURIComponent("Hi Ahmed — saw your portfolio, I'd like to talk about a project.");
 
 // Media only — the localized title/tag/client/description come from CONTENT[lang].
-// Order MUST match CONTENT[lang].videos.
+// Order MUST match CONTENT[lang].videos. Each src is a Cloudinary delivery URL.
 const VIDEO_MEDIA = [
-  { src: cdn(renewStoryAsset.url), poster: renewStoryPoster },
-  { src: cdn(renewStarAsset.url), poster: renewStarPoster },
-  { src: cdn(easyWayAsset.url), poster: easyWayPoster },
-  { src: cdn(golfCityAsset.url), poster: golfCityPoster },
-  { src: textMotionVideo, poster: textMotionPoster },
-  { src: letsGoBigVideo, poster: letsGoBigPoster },
-  { src: hyperframeVideo, poster: hyperframePoster },
-  { src: abbasAppVideo, poster: abbasAppPoster },
-  { src: abbasChatVideo, poster: abbasChatPoster },
-  { src: quickLoanVideo, poster: quickLoanPoster },
+  { src: `${CLOUD}/v1784334179/compressO-renew_media_motion_graphic_ybku0x.mp4`, poster: renewStoryPoster },
+  { src: `${CLOUD}/v1784334122/compressO-RENEW_MEDIA_MOTION_KSA_kjlqd8.mp4`, poster: renewStarPoster },
+  { src: `${CLOUD}/v1784335254/easy_way_iwy4h2.mp4`, poster: easyWayPoster },
+  { src: `${CLOUD}/v1784334512/compressO-%D8%AC%D9%88%D9%84%D9%81_%D8%B3%D9%8A%D8%AA%D9%8A_zzudoe.mp4`, poster: golfCityPoster },
+  { src: `${CLOUD}/v1784334088/elwaseef_final_hfkw8g.mp4`, poster: alwassefPoster },
+  { src: `${CLOUD}/v1784335848/0625_1_1_l1vbcl.mp4`, poster: drKashefPoster },
+  { src: `${CLOUD}/v1784334599/text-motion_muphmj.mp4`, poster: textMotionPoster },
+  { src: `${CLOUD}/v1784334583/lets-go-big_jhm6wz.mp4`, poster: letsGoBigPoster },
+  { src: `${CLOUD}/v1784336497/portfolio-hyperframe_ptwnet.mp4`, poster: hyperframePoster },
+  { src: `${CLOUD}/v1784334048/compressO-%D9%85%D8%AD%D9%85%D8%AF_%D8%B9%D8%A8%D8%A7%D8%B3_ui_animation_vid_fbcazt.mp4`, poster: abbasAppPoster },
+  { src: `${CLOUD}/v1784334561/abbas-motors-chatgpt-ad_kbei7j.mp4`, poster: abbasChatPoster },
+  { src: `${CLOUD}/v1784334687/quick-loan-ui-animation_ebdlro.mp4`, poster: quickLoanPoster },
+  { src: `${CLOUD}/v1784334649/demo-star-ui-animation_k10svm.mp4`, poster: demoStarPoster },
 ];
 
 // The single carousel is split into labelled groups by video type. Each entry is
 // the list of indices (into VIDEO_MEDIA / CONTENT[lang].videos) shown in that
 // group's own carousel. Order MUST match CONTENT[lang].videosSection.groups.
-//   0 Renew Story · 1 Renew Star · 2 Easy Way · 3 Golf City
-//   4 It's a Story Problem · 5 Let's Go Big · 6 Portfolio in Motion
-//   7 Abbas App · 8 Abbas Chat · 9 Quick Loan
+//   0 Renew Story · 1 Renew Star · 2 Easy Way · 3 Golf City · 4 Alwassef Motors · 5 Dr. ElKashef
+//   6 It's a Story Problem · 7 Let's Go Big · 8 Portfolio in Motion
+//   9 Abbas App · 10 Abbas Chat · 11 Quick Loan · 12 Demo Star
 const VIDEO_GROUPS: number[][] = [
-  [0, 1, 2, 3], // Cinematic AI Films
-  [4, 5, 6],    // Motion Graphics & Type
-  [7, 8, 9],    // UI Animation
+  [0, 1, 2, 3, 4, 5], // Cinematic AI Films
+  [6, 7, 8],          // Motion Graphics & Type
+  [9, 10, 11, 12],    // UI Animation
 ];
 
 // Render a Rich[] headline, marking the accent segments.
@@ -791,13 +788,17 @@ function Index() {
     <>
       <a href="#main" className="skip-link">{c.a11y.skip}</a>
       {/* Liquid-glass refraction filter — referenced via
-          backdrop-filter: url(#lg-refract) (Chromium only) by the mobile nav
-          chrome AND the video player controls, so it lives at page level. */}
+          backdrop-filter: url(#lg-refract) (Chromium only) by the video player
+          controls, so it lives at page level. It is deliberately NOT applied to
+          the fixed nav / tab bar: an SVG displacement backdrop-filter re-runs its
+          shader every scroll frame over the moving page (the mobile scroll jank).
+          Larger, lower-frequency swells + a softer blur read as a real glass lens
+          bending the video behind the controls, rather than a noisy frost. */}
       <svg aria-hidden="true" width="0" height="0" style={{ position: "absolute" }}>
         <filter id="lg-refract" x="-20%" y="-20%" width="140%" height="140%" colorInterpolationFilters="sRGB">
-          <feTurbulence type="fractalNoise" baseFrequency="0.009 0.013" numOctaves={2} seed={7} result="n" />
-          <feGaussianBlur in="n" stdDeviation="1.4" result="nb" />
-          <feDisplacementMap in="SourceGraphic" in2="nb" scale={11} xChannelSelector="R" yChannelSelector="G" />
+          <feTurbulence type="fractalNoise" baseFrequency="0.006 0.009" numOctaves={2} seed={7} result="n" />
+          <feGaussianBlur in="n" stdDeviation="2" result="nb" />
+          <feDisplacementMap in="SourceGraphic" in2="nb" scale={14} xChannelSelector="R" yChannelSelector="G" />
         </filter>
       </svg>
       {/* ══════════ NAV ══════════ */}
