@@ -28,6 +28,7 @@ import PassportCard from "@/components/PassportCard";
 import SocialLinks from "@/components/SocialLinks";
 import SpotlightReveal from "@/components/SpotlightReveal";
 import RotatingBadge from "@/components/RotatingBadge";
+import Doodle from "@/components/Doodle";
 import { useLang, LangToggle } from "@/i18n";
 import type { Rich as RichText } from "@/content";
 
@@ -669,6 +670,7 @@ function VideosSection() {
     <section className="section dark" id="videos">
       <div className="container">
         <div className="videos-hero" data-reveal>
+          <Doodle shape="sparkle" className="videos-hero-spark" />
           <h2>
             {c.videosSection.head[0].t}
             <MorphWord words={c.videosSection.cycle} className="accent" />
@@ -676,6 +678,7 @@ function VideosSection() {
             <span className="accent">{c.videosSection.head[3].t}</span>
           </h2>
           <p>{c.videosSection.sub}</p>
+          <Doodle shape="squiggle" className="videos-hero-rule" />
         </div>
 
         {/* The three labelled carousels stack Meeko-style: each group pins and
@@ -974,7 +977,7 @@ function Index() {
               <PassportCard />
             </div>
             <div className="about-right" data-reveal>
-              <p className="eyebrow">{c.about.eyebrow}</p>
+              <p className="eyebrow"><Doodle shape="sparkle" />{c.about.eyebrow}</p>
               <h2 className="section-title"><Rich parts={c.about.title} /></h2>
               <p>{c.about.p1}</p>
               <p>{c.about.p2}</p>
@@ -1030,6 +1033,7 @@ function Index() {
                 <path d="M7 17L17 7M17 7H9M17 7v8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </a>
+            <Doodle shape="arrow" className="cta-band-arrow" />
           </div>
         </section>
 
@@ -1055,7 +1059,7 @@ function Index() {
         {/* ══════════ CONTACT ══════════ */}
         <section className="section dark contact" id="contact">
           <div className="container contact-inner" data-reveal>
-            <p className="eyebrow eyebrow-dark">{c.contact.eyebrow}</p>
+            <p className="eyebrow eyebrow-dark"><Doodle shape="sparkle" />{c.contact.eyebrow}</p>
             <h2 className="contact-title"><Rich parts={c.contact.title} /></h2>
             <p className="contact-lede">{c.contact.lede}</p>
             <div className="contact-cta">

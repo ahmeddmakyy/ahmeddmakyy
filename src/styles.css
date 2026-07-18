@@ -332,6 +332,13 @@ ul, ol { list-style: none; }
   letter-spacing: -0.025em;
   color: var(--heading);
 }
+/* Narrow phones: gently ease the 42px floor so the long "AI-Native Content"
+   line wraps cleanly (with margin to spare) instead of sitting borderline
+   against the container edge. Verified against the real mobile viewport (no
+   horizontal overflow). */
+@media (max-width: 480px) {
+  .hero-title { font-size: clamp(30px, 8vw, 42px); }
+}
 
 .hero-stage {
   position: relative;
@@ -486,9 +493,68 @@ ul, ol { list-style: none; }
 @keyframes rotBadgeSpin { to { transform: rotate(360deg); } }
 /* lower-left of the hero stage — clear of the quote (upper-left), rating
    (upper-right) and the bottom-centre CTA */
-.hero-badge { left: clamp(0px, 1vw, 8px); bottom: clamp(2px, 3vw, 28px); }
+.hero-badge { left: clamp(0px, 1vw, 8px); bottom: 16%; }
 @media (max-width: 860px) { .rot-badge { display: none; } }
 @media (prefers-reduced-motion: reduce) { .rot-badge-ring { animation: none; } }
+
+/* ── Decorative doodle system (Doodle.tsx) — a deliberate, in-brand set echoing
+   the reference's twinkles, curly arrow and squiggle underlines. Anchored (not
+   scattered): inline marks stay small on every size; positioned marks are
+   desktop-only. All aria-hidden + pointer-events:none. ── */
+.doodle { color: var(--orange); pointer-events: none; }
+svg.doodle { display: inline-block; vertical-align: middle; overflow: visible; }
+.doodle-sparkle { fill: currentColor; }
+
+/* eyebrow twinkle — inline, flows with the label in both LTR and RTL */
+.eyebrow .doodle-sparkle {
+  width: 0.8em;
+  height: 0.8em;
+  margin-inline-end: 0.5em;
+  vertical-align: -0.05em;
+}
+
+/* videos hero: a twinkle at the block's top corner + a squiggle rule beneath */
+.videos-hero { position: relative; }
+.videos-hero-spark {
+  position: absolute;
+  top: -4px;
+  right: clamp(2px, 8vw, 84px);
+  width: 26px;
+  height: 26px;
+  fill: var(--orange);
+  animation: sparkPulse 3.2s var(--ease) infinite;
+}
+.videos-hero-rule {
+  display: block;
+  width: 92px;
+  height: 12px;
+  margin: 16px auto 0;
+  color: var(--orange);
+  opacity: 0.85;
+}
+@keyframes sparkPulse {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.9; }
+  50% { transform: scale(1.16) rotate(8deg); opacity: 1; }
+}
+
+/* mid CTA band: a curly arrow nodding toward the button (wide desktop only, in
+   the gap between the copy and the button so it never overlaps either) */
+.cta-band-inner { position: relative; }
+.cta-band-arrow {
+  position: absolute;
+  right: clamp(160px, 20vw, 260px);
+  top: 50%;
+  width: 58px;
+  height: 38px;
+  transform: translateY(-54%) rotate(4deg);
+  color: #fff;
+  opacity: 0.9;
+}
+
+/* Mobile: keep only the small inline/centred marks; positioned ones off. */
+@media (max-width: 1023px) { .cta-band-arrow { display: none; } }
+@media (max-width: 760px) { .videos-hero-spark { display: none; } }
+@media (prefers-reduced-motion: reduce) { .videos-hero-spark { animation: none; } }
 
 .glass-cta {
   position: absolute;
