@@ -3,6 +3,14 @@ import type { ReactNode, KeyboardEvent as ReactKeyboardEvent } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import StackingCards from "./StackingCards";
 
+// A fast, deterministic tween for the shared-layout morph. The framer default is
+// a spring, which overshoots and oscillates — extra frames of the whole panel
+// (and its counter-scaled children) re-compositing = the residual open-card
+// jank. Scoped to `layout` so whileHover/whileTap keep their own springs.
+const LAYOUT_TWEEN = {
+  layout: { type: "tween" as const, ease: [0.22, 0.8, 0.3, 1] as const, duration: 0.32 },
+};
+
 export type MorphCardItem = {
   id: string;
   title: string;
@@ -143,6 +151,7 @@ export default function MorphCards({
       onClick={() => setOpenId(it.id)}
       aria-haspopup="dialog"
       aria-expanded={openId === it.id}
+      transition={LAYOUT_TWEEN}
       whileHover={{ y: -6, transition: { type: "spring", stiffness: 300, damping: 20 } }}
       whileTap={{ scale: 0.985 }}
     >
@@ -150,7 +159,7 @@ export default function MorphCards({
           tag/period row up top, so it would collide there */}
       {!it.tag && <CardArrow />}
       {meta(it)}
-      <motion.h3 layoutId={`mct-${it.id}`}>{it.title}</motion.h3>
+      <motion.h3 layoutId={`mct-${it.id}`} transition={LAYOUT_TWEEN}>{it.title}</motion.h3>
       {showTeaser ? <p className="mc-teaser">{it.body}</p> : null}
       {renderBlob?.(i)}
     </motion.button>
@@ -188,6 +197,7 @@ export default function MorphCards({
                 aria-modal="true"
                 aria-label={active.title}
                 onKeyDown={onDialogKeyDown}
+                transition={LAYOUT_TWEEN}
               >
                 {/* Scrolling lives on this inner wrapper, NOT on the panel:
                     an overflow:auto box that is itself scale-morphing forces a
@@ -195,7 +205,7 @@ export default function MorphCards({
                     a clean compositor layer; only this child scrolls. */}
                 <div className="morph-body">
                   {meta(active)}
-                  <motion.h3 layoutId={`mct-${active.id}`}>{active.title}</motion.h3>
+                  <motion.h3 layoutId={`mct-${active.id}`} transition={LAYOUT_TWEEN}>{active.title}</motion.h3>
                   <motion.p
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0, transition: { delay: 0.12, duration: 0.34 } }}

@@ -202,6 +202,7 @@ function VideoCarousel({ indices, label }: { indices: number[]; label: string })
   const [textHidden, setTextHidden] = useState(false);
   const [controlsVisible, setControlsVisible] = useState(true);
   const videoRefs = useRef<Record<number, HTMLVideoElement | null>>({});
+  const groupRef = useRef<HTMLDivElement>(null);
   const seekRef = useRef<HTMLInputElement | null>(null);
   const timeRef = useRef<HTMLSpanElement | null>(null);
   const touchStartX = useRef<number | null>(null);
@@ -264,6 +265,32 @@ function VideoCarousel({ indices, label }: { indices: number[]; label: string })
       }
     });
   }, [videoIndex]);
+
+  // All three carousels stay mounted (deck), so a film left playing keeps
+  // decoding — and its audio keeps going — after its group scrolls off-screen.
+  // Pause the group's videos when it fully leaves the viewport (never
+  // auto-resume: the poster returns and the user taps to play again). Runs once;
+  // videoRefs is a ref, so no re-subscription per index change.
+  useEffect(() => {
+    const el = groupRef.current;
+    if (!el || !("IntersectionObserver" in window)) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) return;
+        let paused = false;
+        Object.values(videoRefs.current).forEach((v) => {
+          if (v && !v.paused) {
+            v.pause();
+            paused = true;
+          }
+        });
+        if (paused) setIsPlaying(false);
+      },
+      { threshold: 0 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
 
   // Auto-hide controls while playing
   useEffect(() => {
@@ -384,7 +411,7 @@ function VideoCarousel({ indices, label }: { indices: number[]; label: string })
   };
 
   return (
-    <div className="videos-group" data-reveal>
+    <div className="videos-group" data-reveal ref={groupRef}>
       <h3 className="videos-group-title">{label}</h3>
 
       {/* the 3D carousel is a symmetric visual, kept LTR in both languages */}
@@ -696,11 +723,14 @@ function Index() {
       const observer = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
-            const el = entry.target as HTMLElement;
             if (entry.isIntersecting) {
-              el.classList.add("revealed");
-            } else {
-              el.classList.remove("revealed");
+              (entry.target as HTMLElement).classList.add("revealed");
+              // Reveal once, then stop watching this element. Previously the
+              // class was toggled off on exit and re-added on re-entry, so every
+              // [data-reveal] near a section edge re-ran its opacity/transform
+              // transition on each scroll pass — a real mobile scroll-jank
+              // source. One-shot reveal removes that per-scroll churn entirely.
+              observer.unobserve(entry.target);
             }
           });
         },

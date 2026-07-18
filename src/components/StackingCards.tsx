@@ -60,6 +60,27 @@ function StackSlot({
   // turns out taller than the viewport allows.
   const [pinTop, setPinTop] = useState(topBase + index * topStep);
 
+  // The deck (sticky pin + scroll-driven scale) is CSS-disabled on phones and
+  // for reduced motion — but framer's motion value still WROTE `transform:
+  // scale()` inline every scroll frame there, forcing a style recalc per slot
+  // per frame even though the value was overridden by `transform:none!important`.
+  // Gate the inline scale so mobile does zero per-frame work. Post-mount only
+  // (starts on, matching SSR) so the server/client first render stays identical.
+  const [deckOn, setDeckOn] = useState(true);
+  useEffect(() => {
+    // Must mirror the CSS that neutralises .stack-slot (styles.css): both the
+    // narrow-width AND short-height (landscape phone / short laptop) breakpoints,
+    // plus reduced motion — otherwise the per-frame scale write would persist on
+    // short viewports where the deck is already CSS-static.
+    const mq = window.matchMedia(
+      "(max-width: 760px), (max-height: 520px), (prefers-reduced-motion: reduce)",
+    );
+    const sync = () => setDeckOn(!mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -83,7 +104,11 @@ function StackSlot({
   const scale = useTransform(progress, [index / total, 1], [1, target]);
 
   return (
-    <motion.div ref={ref} className="stack-slot" style={{ scale, top: pinTop }}>
+    <motion.div
+      ref={ref}
+      className="stack-slot"
+      style={deckOn ? { scale, top: pinTop } : { top: pinTop }}
+    >
       {children}
     </motion.div>
   );
