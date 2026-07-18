@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════
-   Ahmed Mekki — Portfolio
+   Ahmed Maki — Portfolio
    Design system extracted from the JCREA reference
    (see design-analysis.md). Personal override:
    hero circle = #821513 (echoed in blob gradients).
@@ -1726,8 +1726,6 @@ html.js [data-reveal].revealed {
   .blob { animation: none; }
   html.js [data-reveal] { opacity: 1; transform: none; transition: none; }
   .card, .btn, .step { transition: none; }
-  /* the 3D carousel still slides/rotates under reduced-motion — quiet it too */
-  .video-slide, .videos-track, .sp-center, .sp-bar, .slide-shade { transition: none !important; }
 }
 
 /* ══════════ VIDEOS — 3D CAROUSEL ══════════ */
@@ -1749,566 +1747,6 @@ html.js [data-reveal].revealed {
   color: var(--muted-dark);
 }
 
-/* Each video type is its own labelled carousel stacked under the hero. */
-.videos-group {
-  margin-top: 84px;
-}
-.videos-group:first-of-type {
-  margin-top: 8px;
-}
-.videos-group-title {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  text-align: center;
-  font-size: clamp(22px, 3vw, 34px);
-  font-weight: 800;
-  color: #fff;
-  letter-spacing: -0.015em;
-  line-height: 1.1;
-}
-/* Short orange rules flanking the label — echoes the accent system */
-.videos-group-title::before,
-.videos-group-title::after {
-  content: "";
-  flex: 0 0 auto;
-  height: 2px;
-  width: clamp(22px, 6vw, 60px);
-  border-radius: 2px;
-  background: linear-gradient(90deg, transparent, var(--orange));
-}
-.videos-group-title::after {
-  background: linear-gradient(90deg, var(--orange), transparent);
-}
-
-/* deck mode: each labelled carousel becomes an opaque card so it can cover
-   the pinned one behind it (a transparent group would ghost through). The
-   sticky/scale mechanics come from .stack-slot + StackingCards. */
-.videos-stack { margin-top: 8px; }
-.videos-stack .videos-group {
-  margin-top: 0;
-  background: var(--card);
-  border: 1px solid var(--card-border);
-  border-radius: var(--radius-card);
-  padding: 30px 24px 16px;
-}
-@media (max-width: 760px) {
-  /* phones: deck is off (slots go static) — restore the flat spaced look */
-  .videos-stack { gap: 64px; }
-  .videos-stack .videos-group {
-    background: none;
-    border: none;
-    border-radius: 0;
-    padding: 0;
-  }
-}
-
-.videos-stage {
-  position: relative;
-  height: 680px;
-  perspective: 1800px;
-  perspective-origin: 50% 45%;
-  margin-top: 20px;
-  overflow: hidden;
-  touch-action: pan-y;
-}
-.videos-track {
-  position: absolute;
-  inset: 0;
-  transform-style: preserve-3d;
-}
-
-.video-slide {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 320px;
-  height: 640px;
-  margin: -320px 0 0 -160px;
-  border-radius: 44px;
-  overflow: hidden;
-  background: #0d0d0d;
-  border: 1px solid #1f1f1f;
-  transition: transform 0.7s var(--ease), opacity 0.7s var(--ease), filter 0.7s var(--ease), box-shadow 0.7s var(--ease);
-  cursor: pointer;
-  transform-style: preserve-3d;
-  backface-visibility: hidden;
-}
-/* Promote only the on-stage slides — not the hidden ones — to a GPU layer */
-.video-slide[data-pos="0"],
-.video-slide[data-pos="-1"],
-.video-slide[data-pos="1"] { will-change: transform; }
-.video-slide video {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  cursor: pointer;
-}
-/* Fullscreen: the films are 9:16 (Reels/TikTok). object-fit:cover fills the
-   portrait slide card, but in fullscreen the video element becomes the whole
-   16:9 laptop screen (or a landscape phone) and cover would crop/stretch it —
-   his bug. Letterbox instead: contain preserves the 9:16 ratio, centred on
-   black. Vendor-prefixed selectors MUST be separate rules — a browser that
-   doesn't know one pseudo drops the entire selector list. */
-.video-slide video:fullscreen { object-fit: contain; background: #000; }
-.video-slide video:-webkit-full-screen { object-fit: contain; background: #000; }
-.video-slide video:-moz-full-screen { object-fit: contain; background: #000; }
-.video-slide .slide-shade {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.85) 100%);
-  pointer-events: none;
-  transition: opacity 0.3s var(--ease);
-}
-.video-slide .slide-counter {
-  position: absolute;
-  top: 22px;
-  left: 24px;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  color: rgba(255,255,255,0.85);
-  z-index: 2;
-  /* text overlays must never swallow taps meant for the video */
-  pointer-events: none;
-  transition: opacity 0.3s var(--ease);
-}
-.video-slide .slide-body {
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
-  padding: 24px 26px 28px;
-  color: #fff;
-  z-index: 2;
-  pointer-events: none;
-  transition: opacity 0.3s var(--ease);
-}
-.video-slide .slide-tag {
-  display: inline-block;
-  padding: 6px 14px;
-  border-radius: 999px;
-  background: var(--orange);
-  color: #171718; /* dark on orange = ~5.6:1; white here failed AA at 11px */
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  margin-bottom: 14px;
-}
-.video-slide .slide-title {
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: -0.01em;
-  margin-bottom: 10px;
-}
-.video-slide .slide-desc {
-  font-size: 14px;
-  color: rgba(255,255,255,0.78);
-  margin-bottom: 16px;
-  min-height: 42px;
-}
-.video-slide .slide-foot {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  font-size: 13px;
-  color: rgba(255,255,255,0.75);
-  border-top: 1px solid rgba(255,255,255,0.14);
-  padding-top: 14px;
-}
-.video-slide .slide-foot .dot { opacity: 0.4; }
-
-/* Positions */
-.video-slide[data-pos="0"] {
-  transform: translate3d(0, 0, 0) rotateY(0deg) scale(1.08);
-  z-index: 5;
-  box-shadow: 0 60px 100px -30px rgba(0,0,0,0.85), 0 0 0 8px #0a0a0a, 0 0 0 9px #262626;
-}
-.video-slide[data-pos="-1"] {
-  transform: translate3d(-360px, 20px, -220px) rotateY(28deg) scale(0.92);
-  z-index: 4;
-  filter: brightness(0.75);
-}
-.video-slide[data-pos="1"] {
-  transform: translate3d(360px, 20px, -220px) rotateY(-28deg) scale(0.92);
-  z-index: 4;
-  filter: brightness(0.75);
-}
-.video-slide[data-pos="-2"] {
-  transform: translate3d(-640px, 40px, -460px) rotateY(38deg) scale(0.8);
-  z-index: 3;
-  opacity: 0.55;
-  filter: brightness(0.55);
-}
-.video-slide[data-pos="2"] {
-  transform: translate3d(640px, 40px, -460px) rotateY(-38deg) scale(0.8);
-  z-index: 3;
-  opacity: 0.55;
-  filter: brightness(0.55);
-}
-.video-slide[data-pos="hidden"] {
-  transform: translate3d(0, 40px, -800px) scale(0.6);
-  opacity: 0;
-  pointer-events: none;
-}
-.video-slide:not([data-pos="0"]) .slide-desc,
-.video-slide:not([data-pos="0"]) .slide-foot { display: none; }
-
-/* Slide clickcatch (side slides) */
-.slide-clickcatch {
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  background: transparent;
-  border: 0;
-  cursor: pointer;
-}
-
-/* ══════════ CUSTOM VIDEO PLAYER — LIQUID GLASS ══════════ */
-.slide-player {
-  position: absolute;
-  inset: 0;
-  z-index: 6;
-  pointer-events: none;
-}
-.slide-player > * { pointer-events: auto; }
-
-/* Fade the whole overlay when controls hidden */
-.video-slide:not(.show-controls) .sp-center,
-.video-slide:not(.show-controls) .sp-corner-group,
-.video-slide:not(.show-controls) .sp-bar {
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(4px);
-}
-.video-slide:not(.show-controls) .slide-shade { opacity: 0; }
-.video-slide.is-playing:not(.show-controls) .slide-body,
-.video-slide.is-playing:not(.show-controls) .slide-counter { opacity: 0; }
-
-/* While playing with controls hidden, the glass panels are invisible but
-   backdrop-filter would still blur the moving video every frame — drop it. */
-.video-slide.is-playing:not(.show-controls) .sp-btn,
-.video-slide.is-playing:not(.show-controls) .sp-bar {
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
-
-/* Hide text state (eye toggle) */
-.videos-stage.text-hidden .video-slide[data-pos="0"] .slide-body,
-.videos-stage.text-hidden .video-slide[data-pos="0"] .slide-counter,
-.videos-stage.text-hidden .video-slide[data-pos="0"] .slide-shade { opacity: 0; }
-
-/* Center controls: -15 | play | +15 */
-.sp-center {
-  position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  align-items: center;
-  gap: 22px;
-  transition: opacity 0.3s var(--ease), transform 0.3s var(--ease);
-}
-
-/* Liquid glass button base — frosted refraction + specular gloss + rim light */
-.sp-btn {
-  position: relative;
-  display: grid;
-  place-items: center;
-  color: #fff;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.3);
-  /* smoked glass: a dark tint + slightly darkened backdrop keeps the white
-     icon readable over BOTH dark and bright/white video frames */
-  background: linear-gradient(140deg, rgba(255,255,255,0.16), rgba(8,8,12,0.44) 68%);
-  backdrop-filter: blur(16px) saturate(180%) brightness(0.86);
-  -webkit-backdrop-filter: blur(16px) saturate(180%) brightness(0.86);
-  box-shadow:
-    inset 0 1px 1px rgba(255,255,255,0.5),
-    inset 0 -2px 4px rgba(0,0,0,0.3),
-    0 10px 26px rgba(0,0,0,0.5);
-  cursor: pointer;
-  transition: background 0.25s var(--ease), transform 0.25s var(--ease), border-color 0.25s var(--ease), box-shadow 0.25s var(--ease);
-}
-/* specular gloss (clipped by its own border-radius; no overflow:hidden so the
-   keyboard focus ring is never clipped) */
-.sp-btn::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(140deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.08) 34%, rgba(255,255,255,0) 58%);
-  pointer-events: none;
-}
-/* icon above the gloss, with a soft dark edge so it reads on any background */
-.sp-btn > svg { position: relative; z-index: 1; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.55)); }
-.sp-btn:hover {
-  background: linear-gradient(140deg, rgba(255,255,255,0.32), rgba(255,255,255,0.1) 62%);
-  border-color: rgba(255,255,255,0.42);
-  transform: scale(1.05);
-}
-.sp-btn:active { transform: scale(0.96); }
-
-.sp-skip { width: 46px; height: 46px; }
-.sp-skip svg { width: 22px; height: 22px; }
-
-.sp-play { width: 60px; height: 60px; }
-.sp-play svg { width: 26px; height: 26px; margin-left: 3px; }
-.sp-play.playing svg { margin-left: 0; }
-
-/* Top-right corner buttons: fullscreen + hide-details */
-.sp-corner-group {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  display: flex;
-  gap: 8px;
-  transition: opacity 0.3s var(--ease), transform 0.3s var(--ease);
-}
-.sp-corner-btn {
-  width: 42px;
-  height: 42px;
-  transition: background 0.25s var(--ease), transform 0.25s var(--ease), border-color 0.25s var(--ease);
-}
-.sp-corner-btn svg { width: 20px; height: 20px; }
-
-/* Bottom bar — liquid-glass capsule */
-.sp-bar {
-  position: absolute;
-  left: 14px;
-  right: 14px;
-  bottom: 14px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 14px;
-  border-radius: 999px;
-  background: linear-gradient(180deg, rgba(42,42,42,0.4), rgba(14,14,14,0.5));
-  backdrop-filter: blur(18px) saturate(200%) brightness(1.05);
-  -webkit-backdrop-filter: blur(18px) saturate(200%) brightness(1.05);
-  border: 1px solid rgba(255,255,255,0.2);
-  box-shadow:
-    inset 0 1px 1px rgba(255,255,255,0.3),
-    inset 0 -1px 2px rgba(0,0,0,0.3),
-    0 10px 24px rgba(0,0,0,0.42);
-  transition: opacity 0.3s var(--ease), transform 0.3s var(--ease);
-}
-.sp-bar::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0) 42%);
-  pointer-events: none;
-}
-.sp-bar > * { position: relative; z-index: 1; }   /* controls above the gloss */
-
-/* Liquid refraction of the backdrop — Chromium-only enhancement; where SVG
-   backdrop filters aren't supported the frosted glass above stays intact. */
-@supports (backdrop-filter: url("#lg-refract")) {
-  .sp-btn { backdrop-filter: blur(13px) saturate(180%) brightness(0.86) url("#lg-refract"); }
-  .sp-bar { backdrop-filter: blur(15px) saturate(190%) brightness(0.96) url("#lg-refract"); }
-}
-
-/* ── Liquid-glass specular (liquidGL-inspired) ──
-   liquidGL is WebGL + html2canvas and is documented to go unstable once the
-   glass covers >50% of the viewport — exactly our mobile player + tab bar — so
-   its own runtime would fight the very smoothness we just bought. Instead its
-   signature layer, the moving specular highlight, is rebuilt as a light band
-   drifting inside the pane. It rides only the transient, user-focused player
-   controls (not the always-on chrome), stays inside the element's own box (no
-   overflow, so focus rings aren't clipped), and is silenced for reduced motion. */
-@media (prefers-reduced-motion: no-preference) {
-  .sp-play::after,
-  .sp-bar::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    pointer-events: none;
-    z-index: 0;                 /* under the icon (z-index:1), over the ::before gloss */
-    background: linear-gradient(115deg, transparent 38%, rgba(255, 255, 255, 0.4) 50%, transparent 62%);
-    background-size: 260% 100%;
-    background-position: 150% 0;
-    background-repeat: no-repeat;
-    animation: lgSpecular 5.5s var(--ease) infinite;
-  }
-  .sp-bar::after {
-    animation-duration: 7.5s;
-    background-image: linear-gradient(115deg, transparent 42%, rgba(255, 255, 255, 0.26) 50%, transparent 58%);
-  }
-}
-/* the band sweeps across, then rests off-frame most of the cycle (a slow glint,
-   not a strobe) */
-@keyframes lgSpecular {
-  0%   { background-position: 150% 0; }
-  45%  { background-position: -60% 0; }
-  100% { background-position: -60% 0; }
-}
-.sp-mini {
-  width: 34px; height: 34px;
-  background: transparent;
-  border: 0;
-  box-shadow: none;
-  backdrop-filter: none;
-}
-.sp-mini:hover { background: rgba(255,255,255,0.14); transform: none; }
-.sp-mini svg { width: 20px; height: 20px; }
-
-/* 4px visual track inside a 28px hit area so it is grabbable on touch */
-.sp-seek {
-  flex: 1;
-  -webkit-appearance: none;
-  appearance: none;
-  height: 28px;
-  background: transparent;
-  cursor: pointer;
-  /* no outline:none here — the global :focus-visible ring must stay for keyboard users */
-}
-.sp-seek::-webkit-slider-runnable-track {
-  height: 4px;
-  border-radius: 999px;
-  background: linear-gradient(to right, var(--orange) 0%, var(--orange) var(--p, 0%), rgba(255,255,255,0.25) var(--p, 0%), rgba(255,255,255,0.25) 100%);
-}
-.sp-seek::-webkit-slider-thumb {
-  -webkit-appearance: none; appearance: none;
-  width: 18px; height: 18px;
-  margin-top: -7px;
-  border-radius: 50%;
-  background: #fff;
-  border: 2px solid var(--orange);
-  cursor: pointer;
-}
-.sp-seek::-moz-range-track {
-  height: 4px;
-  border-radius: 999px;
-  background: linear-gradient(to right, var(--orange) 0%, var(--orange) var(--p, 0%), rgba(255,255,255,0.25) var(--p, 0%), rgba(255,255,255,0.25) 100%);
-}
-.sp-seek::-moz-range-thumb {
-  width: 18px; height: 18px;
-  border-radius: 50%;
-  background: #fff;
-  border: 2px solid var(--orange);
-  cursor: pointer;
-}
-.sp-time {
-  color: #fff;
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-/* Nav controls under carousel */
-.videos-controls {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 22px;
-  margin-top: 20px;
-}
-.videos-dots { display: flex; gap: 4px; }
-/* 24px hit area (WCAG 2.5.8) with the visible 8px pill drawn via ::before */
-.videos-dots button {
-  width: 24px;
-  height: 24px;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  padding: 0;
-  display: grid;
-  place-items: center;
-}
-.videos-dots button::before {
-  content: "";
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.25);
-  transition: background 0.3s var(--ease), width 0.3s var(--ease);
-}
-.videos-dots button[aria-current="true"]::before { background: var(--orange); width: 26px; }
-
-.videos-arrow {
-  width: 52px;
-  height: 52px;
-  border-radius: 999px;
-  border: 0;
-  background: var(--orange);
-  color: #fff;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  transition: transform 0.25s var(--ease), background 0.25s var(--ease);
-}
-.videos-arrow:hover { background: var(--orange-deep); transform: scale(1.06); }
-.videos-arrow svg { width: 22px; height: 22px; }
-.videos-arrow-prev {
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.18);
-}
-.videos-arrow-prev:hover { background: var(--orange); border-color: var(--orange); }
-
-/* ── Tablet ── */
-@media (max-width: 900px) {
-  .videos-stage { height: 620px; perspective: 1400px; }
-  .video-slide { width: 260px; height: 520px; margin: -260px 0 0 -130px; border-radius: 36px; }
-  .video-slide[data-pos="-1"] { transform: translate3d(-220px, 10px, -220px) rotateY(30deg) scale(0.82); }
-  .video-slide[data-pos="1"] { transform: translate3d(220px, 10px, -220px) rotateY(-30deg) scale(0.82); }
-  .video-slide[data-pos="-2"], .video-slide[data-pos="2"] { opacity: 0; pointer-events: none; }
-  .video-slide .slide-title { font-size: 18px; }
-}
-
-/* ── Mobile: single-slide, no perspective (perf + no overflow) ── */
-@media (max-width: 720px) {
-  .videos-group { margin-top: 56px; }
-  .videos-group-title { gap: 12px; }
-  .videos-stage { height: 560px; perspective: none; margin-top: 8px; }
-  .video-slide {
-    width: min(78vw, 300px);
-    /* ratio-driven height: vh units jump when the mobile browser
-       toolbar collapses; svh + aspect-ratio stay stable */
-    aspect-ratio: 9 / 16;
-    height: auto;
-    max-height: min(74svh, 540px);
-    margin: 0;
-    top: 50%;
-    left: 50%;
-    border-radius: 28px;
-    transform: translate(-50%, -50%) !important;
-    transition: opacity 0.4s var(--ease);
-    /* no 3D transform on mobile — don't hold a GPU layer per slide */
-    will-change: auto;
-  }
-  .video-slide[data-pos="0"] {
-    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.7);
-    opacity: 1;
-  }
-  .video-slide:not([data-pos="0"]) {
-    opacity: 0;
-    pointer-events: none;
-    filter: none;
-  }
-  .sp-play { width: 54px; height: 54px; }
-  .sp-play svg { width: 24px; height: 24px; }
-  .sp-skip { width: 44px; height: 44px; }
-  .sp-skip svg { width: 22px; height: 22px; }
-  .sp-center { gap: 16px; }
-  /* 44px is the minimum comfortable touch target */
-  .sp-corner-group { top: 12px; right: 12px; gap: 8px; }
-  .sp-corner-btn { width: 44px; height: 44px; }
-  .sp-bar { left: 10px; right: 10px; bottom: 10px; padding: 6px 12px; gap: 8px; }
-  .sp-time { font-size: 11px; }
-  .videos-arrow { width: 44px; height: 44px; }
-  .sp-mini { width: 44px; height: 44px; }
-  .sp-seek { height: 40px; } /* visual 4px track unchanged; larger grab area */
-  .work-meta { flex-direction: column; align-items: flex-start; gap: 8px; }
-  .video-slide .slide-body { padding: 18px 20px 22px; }
-  .video-slide .slide-title { font-size: 17px; }
-}
 
 /* ══════════ MOBILE PERFORMANCE ══════════ */
 @media (max-width: 720px) {
@@ -2316,9 +1754,10 @@ html.js [data-reveal].revealed {
   .blob { animation: none; }
   .marquee-group { animation-duration: 40s; }
   .services-wrap .blob-float { display: none; }
+  /* Work meta stacks on phones (re-homed here when the old video-player CSS was removed) */
+  .work-meta { flex-direction: column; align-items: flex-start; gap: 8px; }
   /* Lighter blur across the board on mobile */
   .glass-cta { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
-  .sp-btn, .sp-bar { backdrop-filter: blur(14px) saturate(160%); -webkit-backdrop-filter: blur(14px) saturate(160%); }
   /* The card morphs open on a compositor transform; don't ALSO transition its
      border-colour + 90px-blur shadow on the same frames (full paint each frame).
      Also swap the 90px-blur shadow for a far cheaper one: a huge soft shadow is
@@ -2331,10 +1770,6 @@ html.js [data-reveal].revealed {
 }
 
 @media (hover: none) {
-  /* No hover to reveal — rely on tap/show-controls state */
-  .video-slide.is-playing:hover .sp-center,
-  .video-slide.is-playing:hover .sp-bar { opacity: 0; }
-
   /* ── Touch-only perf: release GPU work reserved for cursor/hover effects that
      can never fire on a touch device. ── */
   /* A full-viewport backdrop blur re-rasterised every frame while a card morphs
@@ -2404,19 +1839,16 @@ html[lang="ar"] textarea {
 /* Latin lockups keep the Latin face + tracking even in Arabic mode */
 html[lang="ar"] .brand-word,
 html[lang="ar"] .tool-chip,
-html[lang="ar"] .lang-toggle,
-html[lang="ar"] .sp-time { font-family: 'Bricolage Grotesque', 'Segoe UI', sans-serif; }
+html[lang="ar"] .lang-toggle { font-family: 'Bricolage Grotesque', 'Segoe UI', sans-serif; }
 /* letter-spacing breaks Arabic glyph joining — drop it on Arabic-bearing bits */
 html[lang="ar"] .eyebrow,
 html[lang="ar"] .tag,
-html[lang="ar"] .slide-tag,
 html[lang="ar"] .step-num,
 html[lang="ar"] .section-title,
 html[lang="ar"] .contact-title,
 html[lang="ar"] .videos-hero h2,
-html[lang="ar"] .videos-group-title,
+html[lang="ar"] .reels-title,
 html[lang="ar"] .card h3,
-html[lang="ar"] .slide-title,
 html[lang="ar"] .hero-title { letter-spacing: normal; }
 
 /* Arabic reads RTL: right-align the start-aligned text in the left-aligned
@@ -2442,5 +1874,275 @@ html[lang="ar"] .about-right p { text-align: right; }
   }
   .glass-tabbar::before,
   .nav::before { content: none; }
+}
+
+/* ══════════ NAME REVEAL (About signature — TrueFocus port) ══════════ */
+.name-reveal {
+  position: relative;
+  display: flex;
+  gap: 0.35em;
+  justify-content: flex-start;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: clamp(2.2rem, 6vw, 4rem);
+}
+.nr-word {
+  position: relative;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  /* --dur is set inline by the component to match animationDuration. */
+  transition: filter var(--dur, 0.5s) ease;
+}
+.nr-frame {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  box-sizing: content-box;
+}
+.nr-corner {
+  position: absolute;
+  width: 0.9rem;
+  height: 0.9rem;
+  /* --nr-border is set inline (borderColor prop); falls back to the site orange. */
+  border: 3px solid var(--nr-border, var(--orange));
+  filter: drop-shadow(0 0 4px var(--nr-border, var(--orange)));
+  border-radius: 3px;
+}
+.nr-tl { top: -10px;    left: -10px;  border-right: none; border-bottom: none; }
+.nr-tr { top: -10px;    right: -10px; border-left: none;  border-bottom: none; }
+.nr-bl { bottom: -10px; left: -10px;  border-right: none; border-top: none; }
+.nr-br { bottom: -10px; right: -10px; border-left: none;  border-top: none; }
+@media (prefers-reduced-motion: reduce) {
+  .nr-word { transition: none; }
+}
+/* About uses the name as its lead-in, sized above the section title */
+.about-name {
+  font-size: clamp(2.4rem, 5.4vw, 3.6rem);
+  color: var(--heading);
+  margin: 2px 0 10px;
+}
+
+/* ══════════ VIDEOS — REEL ROWS (usefayed style) ══════════ */
+.reels-block { margin-top: clamp(44px, 6vw, 80px); }
+.reels-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 22px;
+}
+.reels-title {
+  font-size: clamp(20px, 2.6vw, 30px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.reels-title::before {
+  content: "";
+  width: 26px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--orange);
+}
+.reels-arrows { display: flex; gap: 10px; flex-shrink: 0; }
+.reels-arrow {
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 0.25s var(--ease), border-color 0.25s var(--ease), transform 0.25s var(--ease);
+}
+.reels-arrow:hover { background: var(--orange); border-color: var(--orange); transform: scale(1.06); }
+.reels-arrow svg { width: 20px; height: 20px; }
+
+.reels-track {
+  display: flex;
+  gap: 22px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-left: 2px;
+  padding: 6px 2px 24px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.reels-track::-webkit-scrollbar { display: none; }
+
+.reel-card {
+  flex: 0 0 auto;
+  width: clamp(200px, 22vw, 248px);
+  scroll-snap-align: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+.reel-thumb {
+  position: relative;
+  display: block;
+  aspect-ratio: 9 / 16;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #000;
+  border: 1px solid var(--card-border);
+  transition: transform 0.35s var(--ease), box-shadow 0.35s var(--ease), border-color 0.35s var(--ease);
+}
+.reel-card:hover .reel-thumb,
+.reel-card:focus-visible .reel-thumb {
+  transform: translateY(-8px);
+  box-shadow: 0 26px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(253, 111, 0, 0.35);
+  border-color: var(--orange);
+}
+.reel-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.5s var(--ease);
+}
+.reel-card:hover .reel-thumb img { transform: scale(1.06); }
+
+.reel-tag {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 3;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--orange);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.reel-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 3;
+  width: 54px;
+  height: 54px;
+  transform: translate(-50%, -50%) scale(0.85);
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--orange), var(--orange-soft));
+  color: #fff;
+  display: grid;
+  place-items: center;
+  opacity: 0.9;
+  box-shadow: 0 10px 30px rgba(253, 111, 0, 0.35);
+  transition: transform 0.3s var(--ease), opacity 0.3s var(--ease);
+}
+.reel-card:hover .reel-play,
+.reel-card:focus-visible .reel-play { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+.reel-play svg { width: 22px; height: 22px; margin-left: 2px; }
+
+.reel-shade {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.35) 42%, transparent 68%);
+}
+.reel-info {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 16px 14px;
+}
+.reel-title {
+  color: #fff;
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1.28;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.reel-client { color: rgba(255, 255, 255, 0.6); font-size: 12px; }
+
+/* Lightbox player */
+.reel-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(3, 3, 3, 0.82);
+  backdrop-filter: blur(14px);
+  animation: reelFade 0.25s var(--ease);
+}
+@keyframes reelFade { from { opacity: 0; } to { opacity: 1; } }
+.reel-lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 0.25s var(--ease);
+}
+.reel-lightbox-close:hover { background: var(--orange); border-color: var(--orange); }
+.reel-lightbox-close svg { width: 24px; height: 24px; }
+.reel-lightbox-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  max-width: min(94vw, 460px);
+  max-height: 92vh;
+}
+.reel-lightbox-video {
+  width: auto;
+  max-width: 100%;
+  max-height: 74vh;
+  border-radius: 16px;
+  background: #000;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+}
+.reel-lightbox-meta { text-align: center; color: #fff; max-width: 420px; }
+.reel-lightbox-tag {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--orange);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.reel-lightbox-meta h4 { font-size: 19px; font-weight: 700; margin-bottom: 6px; }
+.reel-lightbox-meta p { font-size: 14px; line-height: 1.55; color: rgba(255, 255, 255, 0.72); }
+
+@media (max-width: 760px) {
+  .reel-card { width: 68vw; max-width: 260px; }
+  .reels-title { font-size: 20px; }
 }
 

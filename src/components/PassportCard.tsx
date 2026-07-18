@@ -240,12 +240,12 @@ export default function PassportCard() {
         />
 
         <div className="pp-photo">
-          <img src={photo} alt="Ahmed Mekki" width={150} height={206} loading="lazy" />
+          <img src={photo} alt="Ahmed Maki" width={150} height={206} loading="lazy" />
         </div>
 
         <div className="pp-fields">
           <div className="pp-lbl">NAME</div>
-          <div className="pp-val">AHMED MEKKI</div>
+          <div className="pp-val">AHMED MAKI</div>
           <div className="pp-two">
             <div>
               <div className="pp-lbl">BASED IN</div>

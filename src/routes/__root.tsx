@@ -73,9 +73,9 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
-const SITE_TITLE = "Ahmed Mekki — AI Content Creator & Creative Strategist | Reels With Maki";
+const SITE_TITLE = "Ahmed Maki — AI Content Creator & Video Editor | Reels With Maki";
 const SITE_DESC =
-  "Ahmed Mekki (Reels With Maki) directs Veo, FLUX & Gemini to give brands a voice — content strategy, brand campaigns & AI video. 15+ brands across Egypt & KSA.";
+  "Ahmed Maki (Reels With Maki) directs Veo, FLUX & Gemini and edits the footage into finished films — content strategy, brand campaigns & AI video for 15+ brands across Egypt & KSA.";
 const OG_IMAGE =
   "https://storage.googleapis.com/gpt-engineer-file-uploads/kBYrN7AScPVPxk5LcflXYJzXNIJ2/social-images/social-1783643425130-ChatGPT_Image_Jul_10,_2026,_03_30_14_AM.webp";
 
@@ -87,23 +87,23 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "theme-color", content: "#050505" },
       { title: SITE_TITLE },
       { name: "description", content: SITE_DESC },
-      { name: "author", content: "Ahmed Mekki" },
+      { name: "author", content: "Ahmed Maki" },
       { property: "og:site_name", content: "Reels With Maki" },
       { property: "og:title", content: SITE_TITLE },
       { property: "og:description", content: SITE_DESC },
       { property: "og:type", content: "profile" },
       { property: "profile:first_name", content: "Ahmed" },
-      { property: "profile:last_name", content: "Mekki" },
+      { property: "profile:last_name", content: "Maki" },
       { property: "og:locale", content: "en_US" },
       { property: "og:locale:alternate", content: "ar_EG" },
       { property: "og:url", content: "https://ahmeddmakyy.lovable.app/" },
       { property: "og:image", content: OG_IMAGE },
-      { property: "og:image:alt", content: "Ahmed Mekki — AI-native content creator" },
+      { property: "og:image:alt", content: "Ahmed Maki — AI content creator & video editor" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: SITE_TITLE },
       { name: "twitter:description", content: SITE_DESC },
       { name: "twitter:image", content: OG_IMAGE },
-      { name: "twitter:image:alt", content: "Ahmed Mekki — AI-native content creator" },
+      { name: "twitter:image:alt", content: "Ahmed Maki — AI content creator & video editor" },
     ],
     links: [
       { rel: "canonical", href: "https://ahmeddmakyy.lovable.app/" },
@@ -123,9 +123,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "@type": "ProfilePage",
           mainEntity: {
             "@type": "Person",
-            name: "Ahmed Mekki",
+            name: "Ahmed Maki",
             alternateName: "Reels With Maki",
-            jobTitle: "AI-Native Content Creator",
+            jobTitle: "AI Content Creator & Video Editor",
             url: "https://ahmeddmakyy.lovable.app/",
             email: "ahmeddmakyy@gmail.com",
             image: OG_IMAGE,
@@ -144,10 +144,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
             knowsLanguage: ["ar", "en"],
             hasOccupation: {
               "@type": "Occupation",
-              name: "AI-Native Content Creator",
+              name: "AI Content Creator & Video Editor",
             },
             knowsAbout: [
               "AI video production",
+              "Video editing",
               "Brand strategy",
               "Copywriting",
               "Content strategy",

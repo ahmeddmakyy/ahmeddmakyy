@@ -99,14 +99,14 @@ const en: SiteContent = {
     line1Pre: "I'm ",
     name: "Ahmed",
     line1Post: ",",
-    line2: "AI-Native Content Creator",
+    line2: "AI Content Creator & Video Editor",
     quote:
-      "The idea, the brief, the taste, and the final call — that part is mine. AI does the heavy lifting.",
+      "The idea, the brief, the edit, and the final call — that part is mine. AI does the heavy lifting.",
     ratingNum: "15+",
     ratingLabel: "Clients Served",
     ctaWork: "See My Work",
     ctaHire: "Let's talk",
-    photoAlt: "Ahmed Mekki, AI-native content creator and AI video director",
+    photoAlt: "Ahmed Maki, AI content creator and video editor",
   },
   services: {
     title: [{ t: "Services", accent: true }],
@@ -250,7 +250,7 @@ const en: SiteContent = {
     eyebrow: "About Me",
     title: [{ t: "Law grad turned " }, { t: "creative", accent: true }],
     p1: "I studied law at Ain Shams, then went where the ideas were. At Renew Media I'm the creative mind behind 15+ brands: I do the research, find the one line a brand can own, and turn it into content plans, campaigns, and films.",
-    p2: "I don't operate cameras or write code. I direct AI tools (Veo, FLUX, Gemini, Claude) the way a director runs a set: the idea, the brief, and the final call are mine. And every word ships in real Egyptian Arabic, reviewed until nothing reads as machine-made.",
+    p2: "I don't operate cameras or write code. I direct AI tools — Veo, FLUX, Gemini, Claude — the way a director runs a set, then edit the footage into the finished film: pacing, sound, and the final cut. The idea, the brief, and the final call are mine. And every word ships in real Egyptian Arabic, reviewed until nothing reads as machine-made.",
     stats: [
       { n: "15+", label: "Clients" },
       { n: "10", label: "Industries" },
@@ -321,7 +321,7 @@ const en: SiteContent = {
     whatsapp: "WhatsApp",
     loc: "Cairo, Egypt",
   },
-  footer: "© 2026 Ahmed Mekki — built by directing the same tools I use for clients.",
+  footer: "© 2026 Ahmed Maki — built by directing the same tools I use for clients.",
 };
 
 const ar: SiteContent = {
@@ -343,14 +343,14 @@ const ar: SiteContent = {
     line1Pre: "أنا ",
     name: "أحمد",
     line1Post: "،",
-    line2: "صانع محتوى بالذكاء الاصطناعي",
+    line2: "صانع محتوى بالذكاء الاصطناعي ومونتير",
     quote:
-      "الفكرة، والتوجيه، والذوق، والقرار النهائي — هذا الجزء لي. والذكاء الاصطناعي يتولّى العمل الشاق.",
+      "الفكرة، والتوجيه، والمونتاج، والقرار النهائي — هذا الجزء لي. والذكاء الاصطناعي يتولّى العمل الشاق.",
     ratingNum: "+15",
     ratingLabel: "عميل خدمتُهم",
     ctaWork: "شاهد أعمالي",
     ctaHire: "لنتحدث",
-    photoAlt: "أحمد مكي، صانع محتوى ومخرج فيديو بالذكاء الاصطناعي",
+    photoAlt: "أحمد مكي، صانع محتوى بالذكاء الاصطناعي ومونتير فيديو",
   },
   services: {
     title: [{ t: "خدماتي", accent: true }],
@@ -494,7 +494,7 @@ const ar: SiteContent = {
     eyebrow: "نبذة عنّي",
     title: [{ t: "خريج حقوق تحوّل إلى " }, { t: "الإبداع", accent: true }],
     p1: "درستُ الحقوق في جامعة عين شمس، ثم اتجهتُ حيث الأفكار. في Renew Media أنا العقل الإبداعي خلف أكثر من 15 علامة تجارية: أُجري البحث، وأجد الجملة الواحدة التي يمكن أن تمتلكها العلامة، وأحوّلها إلى خطط محتوى وحملات وأفلام.",
-    p2: "لا أُشغّل الكاميرات ولا أكتب الأكواد. أُوجّه أدوات الذكاء الاصطناعي (Veo وFLUX وGemini وClaude) كما يدير المخرج موقع التصوير: الفكرة والتوجيه والقرار النهائي لي. وكل كلمة تصدر بالعامية المصرية الحقيقية، مُراجَعة حتى لا يبدو أي شيء مصنوعًا آليًا.",
+    p2: "لا أُشغّل الكاميرات ولا أكتب الأكواد. أُوجّه أدوات الذكاء الاصطناعي — Veo وFLUX وGemini وClaude — كما يدير المخرج موقع التصوير، ثم أُمنتِج اللقطات بنفسي إلى الفيلم النهائي: الإيقاع، والصوت، والقطع النهائي. الفكرة والتوجيه والقرار النهائي لي. وكل كلمة تصدر بالعامية المصرية الحقيقية، مُراجَعة حتى لا يبدو أي شيء مصنوعًا آليًا.",
     stats: [
       { n: "+15", label: "عميل" },
       { n: "10", label: "مجالات" },

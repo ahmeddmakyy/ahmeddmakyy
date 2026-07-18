@@ -4,44 +4,24 @@ import { motion, useMotionValue, useSpring, useReducedMotion } from "framer-moti
 import ahmedHero from "@/assets/ahmed-hero-cropped.webp";
 import ahmedHeroBw from "@/assets/ahmed-hero-bw.webp";
 import logoMark from "@/assets/logo-mark.webp";
-import renewStoryPoster from "@/assets/posters/renew_story.webp";
-import renewStarPoster from "@/assets/posters/renew_star.webp";
-import easyWayPoster from "@/assets/posters/easy_way.webp";
-import golfCityPoster from "@/assets/posters/golf_city.webp";
-import alwassefPoster from "@/assets/posters/alwassef.webp";
-import drKashefPoster from "@/assets/posters/dr_kashef.webp";
-import textMotionPoster from "@/assets/posters/text_motion.webp";
-import letsGoBigPoster from "@/assets/posters/lets_go_big.webp";
-import hyperframePoster from "@/assets/posters/hyperframe.webp";
-import abbasAppPoster from "@/assets/posters/abbas_app.webp";
-import abbasChatPoster from "@/assets/posters/abbas_chatgpt.webp";
-import quickLoanPoster from "@/assets/posters/quick_loan.webp";
-import demoStarPoster from "@/assets/posters/demo_star.webp";
 import BrandMarquee from "@/components/BrandMarquee";
 import AnimatedStats from "@/components/AnimatedStats";
 import MorphCards from "@/components/MorphCards";
 import ServiceIcon from "@/components/ServiceIcon";
 import GlassTabBar from "@/components/GlassTabBar";
-import StackingCards from "@/components/StackingCards";
-import MorphWord from "@/components/MorphWord";
 import PassportCard from "@/components/PassportCard";
 import SocialLinks from "@/components/SocialLinks";
 import SpotlightReveal from "@/components/SpotlightReveal";
 import RotatingBadge from "@/components/RotatingBadge";
 import Doodle from "@/components/Doodle";
+import VideoReels from "@/components/VideoReels";
+import NameReveal from "@/components/NameReveal";
 import { useLang, LangToggle } from "@/i18n";
 import type { Rich as RichText } from "@/content";
 
 export const Route = createFileRoute("/")({
   component: Index,
 });
-
-// Every film is hosted on Cloudinary (cloud "ahmedmakyy") so the source tree
-// carries no video weight — the repo dropped from ~136 MB of bundled mp4s to
-// zero. Cloudinary's CDN answers byte-range requests, so the player's seek /
-// skip still work, and it serves the same URL to both Lovable and Vercel.
-// Posters stay bundled (a few KB of webp each) for an instant first paint.
-const CLOUD = "https://res.cloudinary.com/ahmedmakyy/video/upload";
 
 // Lower-friction contact: prefill the email draft + the WhatsApp message so the
 // first click never lands on a blank compose window.
@@ -53,36 +33,6 @@ const MAILTO =
 const WHATSAPP =
   "https://wa.me/201069989951?text=" +
   encodeURIComponent("Hi Ahmed — saw your portfolio, I'd like to talk about a project.");
-
-// Media only — the localized title/tag/client/description come from CONTENT[lang].
-// Order MUST match CONTENT[lang].videos. Each src is a Cloudinary delivery URL.
-const VIDEO_MEDIA = [
-  { src: `${CLOUD}/v1784334179/compressO-renew_media_motion_graphic_ybku0x.mp4`, poster: renewStoryPoster },
-  { src: `${CLOUD}/v1784334122/compressO-RENEW_MEDIA_MOTION_KSA_kjlqd8.mp4`, poster: renewStarPoster },
-  { src: `${CLOUD}/v1784335254/easy_way_iwy4h2.mp4`, poster: easyWayPoster },
-  { src: `${CLOUD}/v1784334512/compressO-%D8%AC%D9%88%D9%84%D9%81_%D8%B3%D9%8A%D8%AA%D9%8A_zzudoe.mp4`, poster: golfCityPoster },
-  { src: `${CLOUD}/v1784334088/elwaseef_final_hfkw8g.mp4`, poster: alwassefPoster },
-  { src: `${CLOUD}/v1784335848/0625_1_1_l1vbcl.mp4`, poster: drKashefPoster },
-  { src: `${CLOUD}/v1784334599/text-motion_muphmj.mp4`, poster: textMotionPoster },
-  { src: `${CLOUD}/v1784334583/lets-go-big_jhm6wz.mp4`, poster: letsGoBigPoster },
-  { src: `${CLOUD}/v1784336497/portfolio-hyperframe_ptwnet.mp4`, poster: hyperframePoster },
-  { src: `${CLOUD}/v1784334048/compressO-%D9%85%D8%AD%D9%85%D8%AF_%D8%B9%D8%A8%D8%A7%D8%B3_ui_animation_vid_fbcazt.mp4`, poster: abbasAppPoster },
-  { src: `${CLOUD}/v1784334561/abbas-motors-chatgpt-ad_kbei7j.mp4`, poster: abbasChatPoster },
-  { src: `${CLOUD}/v1784334687/quick-loan-ui-animation_ebdlro.mp4`, poster: quickLoanPoster },
-  { src: `${CLOUD}/v1784334649/demo-star-ui-animation_k10svm.mp4`, poster: demoStarPoster },
-];
-
-// The single carousel is split into labelled groups by video type. Each entry is
-// the list of indices (into VIDEO_MEDIA / CONTENT[lang].videos) shown in that
-// group's own carousel. Order MUST match CONTENT[lang].videosSection.groups.
-//   0 Renew Story · 1 Renew Star · 2 Easy Way · 3 Golf City · 4 Alwassef Motors · 5 Dr. ElKashef
-//   6 It's a Story Problem · 7 Let's Go Big · 8 Portfolio in Motion
-//   9 Abbas App · 10 Abbas Chat · 11 Quick Loan · 12 Demo Star
-const VIDEO_GROUPS: number[][] = [
-  [0, 1, 2, 3, 4, 5], // Cinematic AI Films
-  [6, 7, 8],          // Motion Graphics & Type
-  [9, 10, 11, 12],    // UI Animation
-];
 
 // Render a Rich[] headline, marking the accent segments.
 function Rich({ parts }: { parts: RichText }) {
@@ -189,513 +139,6 @@ function HeroTitle({
         </Fragment>
       ))}
     </h1>
-  );
-}
-
-// Isolated so per-frame playback updates never re-render the rest of the page.
-// One independent 3D carousel for a single video group. Owns all of its own
-// playback state so multiple carousels on the page never fight each other.
-function VideoCarousel({ indices, label }: { indices: number[]; label: string }) {
-  const { content: c } = useLang();
-  const [videoIndex, setVideoIndex] = useState(0);
-  const [videoDurations, setVideoDurations] = useState<Record<number, string>>({});
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [textHidden, setTextHidden] = useState(false);
-  const [controlsVisible, setControlsVisible] = useState(true);
-  const videoRefs = useRef<Record<number, HTMLVideoElement | null>>({});
-  const groupRef = useRef<HTMLDivElement>(null);
-  const seekRef = useRef<HTMLInputElement | null>(null);
-  const timeRef = useRef<HTMLSpanElement | null>(null);
-  const touchStartX = useRef<number | null>(null);
-  const touchStartY = useRef<number | null>(null);
-  const hideTimer = useRef<number | null>(null);
-
-  const N = indices.length;
-
-  const formatTime = (s: number) => {
-    const m = Math.floor(s / 60);
-    const sec = Math.floor(s % 60);
-    return `${m}:${sec.toString().padStart(2, "0")}`;
-  };
-
-  // Progress is painted imperatively — no React state per timeupdate tick.
-  const updateProgressUI = (p: number, t: number) => {
-    if (seekRef.current) {
-      seekRef.current.value = String(p);
-      seekRef.current.style.setProperty("--p", `${p}%`);
-    }
-    if (timeRef.current) timeRef.current.textContent = formatTime(t);
-  };
-
-  const clearHideTimer = () => {
-    if (hideTimer.current) {
-      window.clearTimeout(hideTimer.current);
-      hideTimer.current = null;
-    }
-  };
-
-  const scheduleHide = () => {
-    clearHideTimer();
-    hideTimer.current = window.setTimeout(() => setControlsVisible(false), 2600);
-  };
-
-  const showControls = () => {
-    setControlsVisible(true);
-    if (isPlaying) scheduleHide();
-  };
-
-  const goTo = (n: number) => {
-    const next = ((n % N) + N) % N;
-    setVideoIndex(next);
-    setIsPlaying(false);
-    setTextHidden(false);
-    setControlsVisible(true);
-    clearHideTimer();
-    updateProgressUI(0, 0);
-  };
-  const goPrev = () => goTo(videoIndex - 1);
-  const goNext = () => goTo(videoIndex + 1);
-
-  // Pause non-active videos when index changes
-  useEffect(() => {
-    Object.entries(videoRefs.current).forEach(([k, v]) => {
-      if (!v) return;
-      if (Number(k) !== videoIndex) {
-        v.pause();
-        v.currentTime = 0;
-      }
-    });
-  }, [videoIndex]);
-
-  // All three carousels stay mounted (deck), so a film left playing keeps
-  // decoding — and its audio keeps going — after its group scrolls off-screen.
-  // Pause the group's videos when it fully leaves the viewport (never
-  // auto-resume: the poster returns and the user taps to play again). Runs once;
-  // videoRefs is a ref, so no re-subscription per index change.
-  useEffect(() => {
-    const el = groupRef.current;
-    if (!el || !("IntersectionObserver" in window)) return;
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) return;
-        let paused = false;
-        Object.values(videoRefs.current).forEach((v) => {
-          if (v && !v.paused) {
-            v.pause();
-            paused = true;
-          }
-        });
-        if (paused) setIsPlaying(false);
-      },
-      { threshold: 0 },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-
-  // Auto-hide controls while playing
-  useEffect(() => {
-    if (isPlaying) scheduleHide();
-    else {
-      clearHideTimer();
-      setControlsVisible(true);
-    }
-    return clearHideTimer;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPlaying, videoIndex]);
-
-  const togglePlay = () => {
-    const v = videoRefs.current[videoIndex];
-    if (!v) return;
-    if (v.paused) {
-      v.play().catch(() => {});
-      setIsPlaying(true);
-    } else {
-      v.pause();
-      setIsPlaying(false);
-    }
-  };
-
-  const toggleMute = () => {
-    const v = videoRefs.current[videoIndex];
-    if (!v) return;
-    v.muted = !v.muted;
-    setIsMuted(v.muted);
-    showControls();
-  };
-
-  const enterFullscreen = () => {
-    const v = videoRefs.current[videoIndex];
-    if (!v) return;
-    const vAny = v as HTMLVideoElement & {
-      webkitEnterFullscreen?: () => void;
-    };
-    // iOS Safari only fullscreens the <video> itself via this call
-    if (vAny.webkitEnterFullscreen) {
-      vAny.webkitEnterFullscreen();
-    } else if (document.fullscreenElement) {
-      document.exitFullscreen();
-    } else if (v.requestFullscreen) {
-      v.requestFullscreen();
-    }
-    showControls();
-  };
-
-  const skip = (delta: number) => {
-    const v = videoRefs.current[videoIndex];
-    if (!v) return;
-    const d = v.duration || 0;
-    v.currentTime = Math.max(0, Math.min(d, v.currentTime + delta));
-    if (d) updateProgressUI((v.currentTime / d) * 100, v.currentTime);
-    showControls();
-  };
-
-  const onSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = videoRefs.current[videoIndex];
-    if (!v || !v.duration) return;
-    const p = Number(e.target.value);
-    v.currentTime = (p / 100) * v.duration;
-    updateProgressUI(p, v.currentTime);
-    showControls();
-  };
-
-  const onSlideTap = () => {
-    if (!isPlaying) {
-      togglePlay();
-      return;
-    }
-    if (controlsVisible) {
-      setControlsVisible(false);
-      clearHideTimer();
-    } else {
-      showControls();
-    }
-  };
-
-  const onTouchStart = (e: React.TouchEvent) => {
-    // Drags that start on the player controls (seek bar etc.) are not swipes
-    if ((e.target as HTMLElement).closest(".slide-player")) {
-      touchStartX.current = null;
-      touchStartY.current = null;
-      return;
-    }
-    touchStartX.current = e.touches[0].clientX;
-    touchStartY.current = e.touches[0].clientY;
-  };
-  const onTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartX.current == null || touchStartY.current == null) return;
-    const dx = e.changedTouches[0].clientX - touchStartX.current;
-    const dy = e.changedTouches[0].clientY - touchStartY.current;
-    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
-      // In RTL the swipe direction is mirrored
-      const forward = c.dir === "rtl" ? dx > 0 : dx < 0;
-      if (forward) goNext();
-      else goPrev();
-    }
-    touchStartX.current = null;
-    touchStartY.current = null;
-  };
-
-  // Distance around the circular carousel — wraps, unlike |i - videoIndex|
-  const circDist = (i: number) => {
-    const d = Math.abs(i - videoIndex);
-    return Math.min(d, N - d);
-  };
-
-  const getSlidePos = (i: number): string => {
-    let d = i - videoIndex;
-    if (d > N / 2) d -= N;
-    if (d < -N / 2) d += N;
-    if (d === 0) return "0";
-    if (d === -1 || d === 1 || d === -2 || d === 2) return String(d);
-    return "hidden";
-  };
-
-  return (
-    <div className="videos-group" data-reveal ref={groupRef}>
-      <h3 className="videos-group-title">{label}</h3>
-
-      {/* the 3D carousel is a symmetric visual, kept LTR in both languages */}
-      <div
-        className={`videos-stage${textHidden ? " text-hidden" : ""}`}
-        dir="ltr"
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
-      >
-        <div className="videos-track">
-          {indices.map((gi, i) => {
-              const media = VIDEO_MEDIA[gi];
-              const v = c.videos[gi];
-              const pos = getSlidePos(i);
-              const isActive = pos === "0";
-              const count = `${(i + 1).toString().padStart(2, "0")} / ${N.toString().padStart(2, "0")}`;
-              return (
-                <article
-                  key={i}
-                  className={`video-slide${isActive && isPlaying ? " is-playing" : ""}${isActive && controlsVisible ? " show-controls" : ""}`}
-                  data-pos={pos}
-                  aria-hidden={pos === "hidden"}
-                  onClick={() => {
-                    if (isActive) onSlideTap();
-                    else goTo(i);
-                  }}
-                  onMouseMove={isActive ? showControls : undefined}
-                  onMouseLeave={isActive && isPlaying ? () => { setControlsVisible(false); clearHideTimer(); } : undefined}
-                >
-                  <video
-                    ref={(el) => {
-                      videoRefs.current[i] = el;
-                    }}
-                    // Idle slides carry a src but load nothing (preload="none");
-                    // the poster covers them, so no decode until a slide is active.
-                    src={circDist(i) <= 1 ? media.src : undefined}
-                    poster={media.poster}
-                    muted={!isActive || isMuted}
-                    playsInline
-                    loop
-                    preload={isActive ? "metadata" : "none"}
-                    onPlay={() => isActive && setIsPlaying(true)}
-                    onPause={() => isActive && setIsPlaying(false)}
-                    onTimeUpdate={(e) => {
-                      if (!isActive) return;
-                      const el = e.currentTarget;
-                      if (el.duration) {
-                        updateProgressUI((el.currentTime / el.duration) * 100, el.currentTime);
-                      }
-                    }}
-                    onLoadedMetadata={(e) => {
-                      const d = e.currentTarget.duration;
-                      if (!isNaN(d)) {
-                        setVideoDurations((prev) =>
-                          prev[i] ? prev : { ...prev, [i]: formatTime(d) },
-                        );
-                      }
-                    }}
-                  />
-                  {!isActive && (
-                    <button
-                      type="button"
-                      className="slide-clickcatch"
-                      aria-label={v.title}
-                      aria-hidden={pos === "hidden" || undefined}
-                      tabIndex={pos === "hidden" ? -1 : undefined}
-                      onClick={() => goTo(i)}
-                    />
-                  )}
-                  <div className="slide-shade" />
-
-                  {isActive && (
-                    <div className="slide-player" onClick={(e) => e.stopPropagation()}>
-                      {/* Center controls: skip -15, play/pause, skip +15 */}
-                      <div className="sp-center">
-                        <button
-                          type="button"
-                          className="sp-btn sp-skip"
-                          aria-label={c.player.rewind}
-                          onClick={() => skip(-15)}
-                        >
-                          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                            <path d="M12 5V2L7 6l5 4V7a6 6 0 11-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                            <text x="12" y="16" textAnchor="middle" fontSize="7" fontWeight="700" fill="currentColor">15</text>
-                          </svg>
-                        </button>
-                        <button
-                          type="button"
-                          className={`sp-btn sp-play${isPlaying ? " playing" : ""}`}
-                          aria-label={isPlaying ? c.player.pause : c.player.play}
-                          onClick={togglePlay}
-                        >
-                          {isPlaying ? (
-                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                              <rect x="6" y="5" width="4" height="14" rx="1.2" />
-                              <rect x="14" y="5" width="4" height="14" rx="1.2" />
-                            </svg>
-                          ) : (
-                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                              <path d="M8 5v14l11-7z" />
-                            </svg>
-                          )}
-                        </button>
-                        <button
-                          type="button"
-                          className="sp-btn sp-skip"
-                          aria-label={c.player.forward}
-                          onClick={() => skip(15)}
-                        >
-                          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                            <path d="M12 5V2l5 4-5 4V7a6 6 0 106 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                            <text x="12" y="16" textAnchor="middle" fontSize="7" fontWeight="700" fill="currentColor">15</text>
-                          </svg>
-                        </button>
-                      </div>
-
-                      {/* Top-right: fullscreen + hide details */}
-                      <div className="sp-corner-group">
-                        <button
-                          type="button"
-                          className="sp-btn sp-corner-btn"
-                          aria-label={c.player.fullscreen}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            enterFullscreen();
-                          }}
-                        >
-                          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                            <path d="M8 3H5a2 2 0 00-2 2v3M16 3h3a2 2 0 012 2v3M8 21H5a2 2 0 01-2-2v-3M16 21h3a2 2 0 002-2v-3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        </button>
-                        <button
-                          type="button"
-                          className="sp-btn sp-corner-btn sp-toggle-text"
-                          aria-label={textHidden ? c.player.showDetails : c.player.hideDetails}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setTextHidden((t) => !t);
-                            showControls();
-                          }}
-                        >
-                          {textHidden ? (
-                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                              <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" stroke="currentColor" strokeWidth="1.8" />
-                              <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.8" />
-                            </svg>
-                          ) : (
-                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                              <path d="M3 3l18 18M10.6 6.1A9.7 9.7 0 0112 6c6.5 0 10 7 10 7a15.3 15.3 0 01-3.4 4M6.1 6.1C3.5 8 2 12 2 12s3.5 7 10 7c1.7 0 3.2-.4 4.5-1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                            </svg>
-                          )}
-                        </button>
-                      </div>
-
-                      {/* Bottom bar: mute + seek + time */}
-                      <div className="sp-bar">
-                        <button
-                          type="button"
-                          className="sp-btn sp-mini"
-                          aria-label={isMuted ? c.player.unmute : c.player.mute}
-                          onClick={toggleMute}
-                        >
-                          {isMuted ? (
-                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                              <path d="M4 9v6h4l5 4V5L8 9H4zM16 9l6 6M22 9l-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                            </svg>
-                          ) : (
-                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                              <path d="M4 9v6h4l5 4V5L8 9H4zM16 8a5 5 0 010 8M19 5a9 9 0 010 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                            </svg>
-                          )}
-                        </button>
-                        <input
-                          ref={seekRef}
-                          type="range"
-                          min={0}
-                          max={100}
-                          step={0.1}
-                          defaultValue={0}
-                          onChange={onSeek}
-                          className="sp-seek"
-                          aria-label={c.player.seek}
-                        />
-                        <span className="sp-time">
-                          <span ref={timeRef}>0:00</span> / {videoDurations[i] ?? "0:00"}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-
-                  <span className="slide-counter">{count}</span>
-                  <div className="slide-body">
-                    <span className="slide-tag">{v.tag}</span>
-                    <h4 className="slide-title">{v.title}</h4>
-                    <p className="slide-desc">{v.description}</p>
-                    <div className="slide-foot">
-                      <span>◷ {videoDurations[i] ?? "—"}</span>
-                      <span className="dot">|</span>
-                      <span>▤ {v.client}</span>
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="videos-controls">
-          <button
-            type="button"
-            className="videos-arrow videos-arrow-prev"
-            aria-label={c.videosSection.prev}
-            onClick={goPrev}
-          >
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M19 12H5M11 6l-6 6 6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-          <div className="videos-dots" role="group" aria-label={c.videosSection.selectFilm}>
-            {indices.map((gi, i) => (
-              <button
-                type="button"
-                key={i}
-                aria-label={c.videos[gi].title}
-                aria-current={i === videoIndex}
-                onClick={() => goTo(i)}
-              />
-            ))}
-          </div>
-          <button
-            type="button"
-            className="videos-arrow"
-            aria-label={c.videosSection.next}
-            onClick={goNext}
-          >
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-        </div>
-      </div>
-  );
-}
-
-// The Videos section: the animated intro headline once, then one labelled
-// carousel per video group (Cinematic AI Films / Motion Graphics & Type / UI
-// Animation). The player controls' liquid-glass refraction filter
-// (url(#lg-refract)) is defined at page level in Index — the mobile nav
-// chrome shares it.
-function VideosSection() {
-  const { content: c } = useLang();
-  return (
-    <section className="section dark" id="videos">
-      <div className="container">
-        <div className="videos-hero" data-reveal>
-          <Doodle shape="sparkle" className="videos-hero-spark" />
-          <h2>
-            {c.videosSection.head[0].t}
-            <MorphWord words={c.videosSection.cycle} className="accent" />
-            {c.videosSection.head[2].t}
-            <span className="accent">{c.videosSection.head[3].t}</span>
-          </h2>
-          <p>{c.videosSection.sub}</p>
-          <Doodle shape="squiggle" className="videos-hero-rule" />
-        </div>
-
-        {/* The three labelled carousels stack Meeko-style: each group pins and
-            the next one scrolls up to cover it. Wider scale step than the work
-            deck (3 cards → 0.90 / 0.95 / 1, the Webflow original's ratios);
-            topBase 100 buys tall carousel cards room under the nav. */}
-        <StackingCards className="stacking-cards videos-stack" scaleStep={0.05} topBase={100}>
-          {VIDEO_GROUPS.map((indices, gi) => (
-            <VideoCarousel
-              key={gi}
-              indices={indices}
-              label={c.videosSection.groups[gi]}
-            />
-          ))}
-        </StackingCards>
-      </div>
-    </section>
   );
 }
 
@@ -846,8 +289,8 @@ function Index() {
               <li key={n.id}>{navLink(n.id, n.label)}</li>
             ))}
           </ul>
-          <a href="#home" className="brand" aria-label="Ahmed Mekki — home">
-            <img className="brand-mark" src={logoMark} alt="Ahmed Mekki logo" width={38} height={38} />
+          <a href="#home" className="brand" aria-label="Ahmed Maki — home">
+            <img className="brand-mark" src={logoMark} alt="Ahmed Maki logo" width={38} height={38} />
             <span className="brand-word">reelswithmaki</span>
           </a>
           <ul className="nav-links nav-right">
@@ -967,7 +410,7 @@ function Index() {
         </section>
 
         {/* ══════════ VIDEOS ══════════ */}
-        <VideosSection />
+        <VideoReels />
 
 
         {/* ══════════ ABOUT ══════════ */}
@@ -978,6 +421,7 @@ function Index() {
             </div>
             <div className="about-right" data-reveal>
               <p className="eyebrow"><Doodle shape="sparkle" />{c.about.eyebrow}</p>
+              <NameReveal sentence="Ahmed Maki" className="about-name" pauseBetweenAnimations={2} />
               <h2 className="section-title"><Rich parts={c.about.title} /></h2>
               <p>{c.about.p1}</p>
               <p>{c.about.p2}</p>
@@ -985,8 +429,8 @@ function Index() {
               <div className="about-cta">
                 <a
                   className="btn btn-dark"
-                  href="/ahmed-mekki-cv.pdf"
-                  download="Ahmed-Mekki-CV.pdf"
+                  href="/ahmed-maki-cv.pdf"
+                  download="Ahmed-Maki-CV.pdf"
                 >
                   {c.about.cv}
                   <svg className="dl-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -1092,7 +536,7 @@ function Index() {
           </div>
           <footer className="footer container">
             <a href="#home" className="brand brand-footer">
-              <img className="brand-mark" src={logoMark} alt="Ahmed Mekki logo" width={38} height={38} />
+              <img className="brand-mark" src={logoMark} alt="Ahmed Maki logo" width={38} height={38} />
               <span className="brand-word">reelswithmaki</span>
             </a>
             <p>{c.footer}</p>
