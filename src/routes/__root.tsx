@@ -75,7 +75,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 
 const SITE_TITLE = "Ahmed Maki — AI Content Creator & Video Editor | Reels With Maki";
 const SITE_DESC =
-  "Ahmed Maki (Reels With Maki) directs Veo, FLUX & Gemini and edits the footage into finished films — content strategy, brand campaigns & AI video for 15+ brands across Egypt & KSA.";
+  "Ahmed Maki (Reels With Maki) directs Veo, FLUX & Gemini and edits the footage into finished films — content strategy, brand campaigns & AI video for 15+ brands across Egypt.";
 const OG_IMAGE =
   "https://storage.googleapis.com/gpt-engineer-file-uploads/kBYrN7AScPVPxk5LcflXYJzXNIJ2/social-images/social-1783643425130-ChatGPT_Image_Jul_10,_2026,_03_30_14_AM.webp";
 

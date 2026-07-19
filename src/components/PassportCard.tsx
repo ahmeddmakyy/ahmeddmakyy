@@ -167,8 +167,8 @@ export default function PassportCard() {
               <rect x="3" y="3" width="98" height="78" fill="none" stroke="currentColor" strokeWidth="2" />
               <g fill="currentColor"><circle cx="16" cy="16" r="1.2" /><circle cx="24" cy="13" r="1.2" /><circle cx="32" cy="12" r="1.2" /><circle cx="40" cy="13" r="1.2" /><circle cx="48" cy="16" r="1.2" /></g>
               <path d="M14 44 h30 M14 44 l7 -6 M14 44 l7 6" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-              <text x="52" y="40" textAnchor="middle" fontSize="9">2 MARKETS</text>
-              <text x="52" y="60" textAnchor="middle" fontSize="11.5" letterSpacing=".5">EGY · KSA</text>
+              <text x="52" y="40" textAnchor="middle" fontSize="9">AI NATIVE</text>
+              <text x="52" y="60" textAnchor="middle" fontSize="11.5" letterSpacing=".5">PRODUCER</text>
               <text x="52" y="73" textAnchor="middle" fontSize="8">SINCE 2024</text>
             </svg>
           </Stamp>
