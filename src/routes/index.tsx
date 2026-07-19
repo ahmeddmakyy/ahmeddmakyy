@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Fragment, useEffect, useRef, useState } from "react";
-import { motion, useMotionValue, useSpring, useReducedMotion } from "framer-motion";
+import { motion, useMotionValue, useSpring, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import ahmedHero from "@/assets/ahmed-hero-cropped.webp";
 import ahmedHeroBw from "@/assets/ahmed-hero-bw.webp";
 import logoMark from "@/assets/logo-mark.webp";
@@ -16,6 +16,7 @@ import RotatingBadge from "@/components/RotatingBadge";
 import Doodle from "@/components/Doodle";
 import VideoReels from "@/components/VideoReels";
 import NameReveal from "@/components/NameReveal";
+import HeroMark3D from "@/components/HeroMark3D";
 import { useLang, LangToggle } from "@/i18n";
 import type { Rich as RichText } from "@/content";
 
@@ -145,6 +146,13 @@ function HeroTitle({
 function Index() {
   const { content: c } = useLang();
   const [activeSection, setActiveSection] = useState("home");
+  const reduce = useReducedMotion();
+
+  // Subtle scroll parallax for the 3D hero mark (drifts up as you leave the
+  // hero). Scoped to this one decorative element so it never touches the LCP
+  // portrait or the finely-tuned entrance animations. Off under reduced motion.
+  const { scrollY } = useScroll();
+  const markParallax = useTransform(scrollY, [0, 600], [0, -64]);
 
   // Scroll reveal + section spy + reduced motion handling
   useEffect(() => {
@@ -381,6 +389,13 @@ function Index() {
               {/* deliberate reference nod: a rotating in-brand sticker in the
                   otherwise-empty lower-left of the stage (desktop only) */}
               <RotatingBadge className="hero-badge" />
+
+              {/* real-3D "play" mark (reels motif) in the mirror corner —
+                  lower-right. R3F on capable desktops, a cheap Zdog spin on
+                  tablets, a static SVG under reduced motion, nothing on phones. */}
+              <motion.div className="hero-mark3d-wrap" style={{ y: reduce ? 0 : markParallax }}>
+                <HeroMark3D />
+              </motion.div>
             </div>
           </div>
         </section>
