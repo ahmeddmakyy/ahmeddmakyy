@@ -16,7 +16,7 @@ import RotatingBadge from "@/components/RotatingBadge";
 import Doodle from "@/components/Doodle";
 import VideoReels from "@/components/VideoReels";
 import NameReveal from "@/components/NameReveal";
-import HeroOrb from "@/components/HeroOrb";
+import HeroField from "@/components/HeroField";
 import { useLang, LangToggle } from "@/i18n";
 import type { Rich as RichText } from "@/content";
 
@@ -321,6 +321,8 @@ function Index() {
       <main id="main">
         {/* ══════════ HERO ══════════ */}
         <section className="hero" id="home">
+          {/* interactive brand-particle field across the whole banner */}
+          <HeroField />
           <div className="container hero-inner">
             <div className="hello-badge load-1">
               <svg className="scribble scribble-badge-l" viewBox="0 0 40 40" fill="none" aria-hidden="true">
@@ -343,10 +345,6 @@ function Index() {
 
             <div className="hero-stage">
               <div className="hero-circle load-3" aria-hidden="true"></div>
-              {/* Living "creative energy" cloud — thousands of glowing particles
-                  swirling behind the portrait, reacting to the cursor. WebGL on
-                  capable desktops only; everything else keeps the maroon circle. */}
-              <HeroOrb />
               <SpotlightReveal
                 className="hero-spot load-4"
                 baseSrc={ahmedHeroBw}
