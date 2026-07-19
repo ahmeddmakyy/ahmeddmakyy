@@ -3,8 +3,11 @@ import type { Ptr } from "./HeroField.r3f";
 
 const FieldR3F = lazy(() => import("./HeroField.r3f"));
 
+type Quality = { density: number; maxSize: number };
+
 export default function HeroField() {
-  const [count, setCount] = useState(0);
+  const [quality, setQuality] = useState<Quality | null>(null);
+  const [live, setLive] = useState(true);
   const boxRef = useRef<HTMLDivElement>(null);
   const pointer = useRef<Ptr>({ x: 0, y: 0, active: 0 });
 
@@ -13,21 +16,32 @@ export default function HeroField() {
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     try {
+      // three r185 is WebGL2-only, and the field simulates itself in a float
+      // render target — probe both here so an unsupported device never pays for
+      // the three chunk at all
       const c = document.createElement("canvas");
-      if (!(c.getContext("webgl2") || c.getContext("webgl"))) return;
+      const probe = c.getContext("webgl2");
+      if (!probe) return;
+      const floatRT =
+        !!probe.getExtension("EXT_color_buffer_float") ||
+        !!probe.getExtension("EXT_color_buffer_half_float");
+      probe.getExtension("WEBGL_lose_context")?.loseContext();
+      if (!floatRT) return;
     } catch {
       return;
     }
-    // keep the visual density even, not the raw count — a phone shows the same
-    // dash size in a fraction of the area, so it needs far fewer marks
+    // density is points-per-area, not a raw count — a phone shows the same dash
+    // size in a fraction of the area, so the same number would read as clutter
     const w = window.innerWidth;
-    setCount(w < 640 ? 110 : w < 1100 ? 260 : 580);
+    setQuality(
+      w < 640 ? { density: 150, maxSize: 128 } : w < 1100 ? { density: 180, maxSize: 192 } : { density: 200, maxSize: 256 },
+    );
   }, []);
 
-  // Cursor drives the repulsion. Tracked on the hero section so the field
-  // reacts across the whole banner, not just where the canvas sits.
+  // Cursor drives the ring. Tracked on the hero section so the field reacts
+  // across the whole banner, not just where the canvas sits.
   useEffect(() => {
-    if (!count) return;
+    if (!quality) return;
     const box = boxRef.current;
     if (!box) return;
     const host = (box.closest(".hero") as HTMLElement) ?? box;
@@ -44,17 +58,37 @@ export default function HeroField() {
 
     host.addEventListener("pointermove", onMove, { passive: true });
     host.addEventListener("pointerleave", onLeave, { passive: true });
+    host.addEventListener("pointercancel", onLeave, { passive: true });
     return () => {
       host.removeEventListener("pointermove", onMove);
       host.removeEventListener("pointerleave", onLeave);
+      host.removeEventListener("pointercancel", onLeave);
     };
-  }, [count]);
+  }, [quality]);
+
+  // The hero scrolls away within one screen; a GPGPU field nobody can see is
+  // pure battery drain, so park the render loop once it leaves the viewport.
+  useEffect(() => {
+    if (!quality) return;
+    const box = boxRef.current;
+    if (!box || !("IntersectionObserver" in window)) return;
+    const io = new IntersectionObserver(([entry]) => setLive(entry.isIntersecting), {
+      rootMargin: "120px",
+    });
+    io.observe(box);
+    return () => io.disconnect();
+  }, [quality]);
 
   return (
     <div ref={boxRef} className="hero-field" aria-hidden="true">
-      {count > 0 ? (
+      {quality ? (
         <Suspense fallback={null}>
-          <FieldR3F pointer={pointer} count={count} />
+          <FieldR3F
+            pointer={pointer}
+            density={quality.density}
+            maxSize={quality.maxSize}
+            live={live}
+          />
         </Suspense>
       ) : null}
     </div>
