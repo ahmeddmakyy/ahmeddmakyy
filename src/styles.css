@@ -547,34 +547,29 @@ ul, ol { list-style: none; }
 @media (max-width: 860px) { .rot-badge { display: none; } }
 @media (prefers-reduced-motion: reduce) { .rot-badge-ring { animation: none; } }
 
-/* ── 3D "play" mark (HeroMark3D) — lower-right mirror of the rotating badge.
-   R3F on capable desktops, a Zdog pseudo-3D spin on tablets, a static SVG under
-   reduced motion, nothing below 860px (the stage declutters on mobile). ── */
-.hero-mark3d-wrap {
+/* ── Living "creative energy" cloud (HeroOrb) — a WebGL particle field that
+   swirls behind the portrait, over the maroon circle. Desktop-only + lazy; on
+   everything else the component renders nothing and the circle stands alone. ── */
+.hero-orb {
+  /* exactly overlays .hero-circle and clips to it: the maroon disc becomes a
+     living energy sphere — additive glow needs the dark backdrop to read as
+     light, not as lava on the cream page */
   position: absolute;
-  right: clamp(-6px, 1vw, 12px);
-  bottom: 18%;
-  width: clamp(126px, 12vw, 172px);
-  height: clamp(126px, 12vw, 172px);
-  z-index: 3;
-  pointer-events: none; /* wrap passes clicks through to the stage */
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: clamp(320px, 40vw, 540px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  overflow: hidden;
+  z-index: 1; /* over the circle, behind the portrait (z-index 2) */
+  pointer-events: none; /* never blocks the portrait's spotlight */
   opacity: 0;
-  animation: markIn 0.7s 0.65s ease forwards;
+  animation: orbIn 1.1s 0.5s ease forwards;
 }
-@keyframes markIn { to { opacity: 1; } }
-.hero-mark3d { position: relative; width: 100%; height: 100%; }
-.hero-mark3d-canvas { width: 100%; height: 100%; pointer-events: auto; } /* cursor tilt */
-.hero-mark3d-canvas canvas { display: block; width: 100% !important; height: 100% !important; }
-.hero-mark3d-static {
-  display: block;
-  width: 100%;
-  height: 100%;
-  filter: drop-shadow(0 12px 26px rgba(253, 111, 0, 0.3));
-}
-@media (max-width: 860px) { .hero-mark3d-wrap { display: none; } }
-@media (prefers-reduced-motion: reduce) {
-  .hero-mark3d-wrap { opacity: 1; animation: none; }
-}
+@media (max-width: 900px) { .hero-orb { display: none; } }
+@keyframes orbIn { to { opacity: 1; } }
+.hero-orb-canvas { width: 100% !important; height: 100% !important; display: block; }
 
 /* ── Decorative doodle system (Doodle.tsx) — a deliberate, in-brand set echoing
    the reference's twinkles, curly arrow and squiggle underlines. Anchored (not
