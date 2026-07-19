@@ -639,6 +639,10 @@ svg.doodle { display: inline-block; vertical-align: middle; overflow: visible; }
 }
 .btn .arrow { width: 17px; transition: transform 0.3s var(--ease); }
 .btn:hover .arrow { transform: translate(3px, -3px); }
+/* Every other tappable pill on the site (nav-link, gt-item, morph-btn) has
+   press feedback; the CTA buttons were the one gap — touch users got zero
+   tactile response on the site's most-tapped elements. */
+.btn:active { transform: scale(0.96); }
 
 /* white on orange measures 2.82:1 — kept deliberately: it is the JCREA
    template identity this site clones; do not "fix" to dark text */
@@ -1780,6 +1784,8 @@ html.js [data-reveal].revealed {
   .blob { animation: none; }
   html.js [data-reveal] { opacity: 1; transform: none; transition: none; }
   .card, .btn, .step { transition: none; }
+  .btn:active, .reels-arrow:active, .reel-card:active .reel-thumb { transform: none; }
+  .reel-thumb img { transition: none; }
 }
 
 /* ══════════ VIDEOS — 3D CAROUSEL ══════════ */
@@ -2045,13 +2051,17 @@ html[lang="ar"] .name-reveal { direction: rtl; }
   transition: background 0.25s var(--ease), border-color 0.25s var(--ease), transform 0.25s var(--ease);
 }
 .reels-arrow:hover { background: var(--orange); border-color: var(--orange); transform: scale(1.06); }
+.reels-arrow:active { transform: scale(0.9); }
 .reels-arrow svg { width: 20px; height: 20px; }
 
 .reels-track {
   display: flex;
   gap: 22px;
   overflow-x: auto;
-  scroll-snap-type: x mandatory;
+  /* proximity (not mandatory): a finger drag settles free until it's near a
+     card, then eases in — mandatory fights every small drag into a full snap,
+     which is what read as "not smooth" scrolling on phones. */
+  scroll-snap-type: x proximity;
   scroll-padding-left: 2px;
   padding: 6px 2px 24px;
   scrollbar-width: none;
@@ -2087,14 +2097,27 @@ html[lang="ar"] .name-reveal { direction: rtl; }
   box-shadow: 0 26px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(253, 111, 0, 0.35);
   border-color: var(--orange);
 }
+/* Touch has no hover — tap gets its own press feedback (scale, not lift) so
+   the main video-browsing gesture on mobile still feels alive. Declared after
+   :hover so it wins if a touch browser keeps a sticky hover state on tap. */
+.reel-card:active .reel-thumb {
+  transform: scale(0.96);
+  border-color: var(--orange);
+}
 .reel-thumb img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 0.5s var(--ease);
+  transition: transform 0.5s var(--ease), opacity 0.5s var(--ease);
 }
 .reel-card:hover .reel-thumb img { transform: scale(1.06); }
+/* Lazy poster bloom-in: React toggles .is-loaded once the image decodes, so
+   below-the-fold cards fade up softly instead of popping in mid-scroll.
+   Gated on html.js (same convention as [data-reveal]) so a pre-hydration or
+   no-JS render never hides a poster with nothing left to add the class. */
+html.js .reel-thumb img:not(.is-loaded) { opacity: 0; }
+.reel-thumb img.is-loaded { opacity: 1; }
 
 .reel-tag {
   position: absolute;

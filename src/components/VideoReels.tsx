@@ -70,6 +70,15 @@ function ReelCard({ gi, onPlay }: { gi: number; onPlay: (gi: number) => void }) 
   const { content: c } = useLang();
   const media = VIDEO_MEDIA[gi];
   const v = c.videos[gi];
+  const imgRef = useRef<HTMLImageElement>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  // A cached poster is already `.complete` on mount and never fires onLoad —
+  // without this it would sit at opacity:0 forever behind a cache hit.
+  useEffect(() => {
+    if (imgRef.current?.complete) setLoaded(true);
+  }, []);
+
   return (
     <button
       type="button"
@@ -78,7 +87,15 @@ function ReelCard({ gi, onPlay }: { gi: number; onPlay: (gi: number) => void }) 
       aria-label={`${c.player.play}: ${v.title}`}
     >
       <span className="reel-thumb">
-        <img src={media.poster} alt="" loading="lazy" decoding="async" />
+        <img
+          ref={imgRef}
+          src={media.poster}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          className={loaded ? "is-loaded" : undefined}
+          onLoad={() => setLoaded(true)}
+        />
         <span className="reel-tag">{v.tag}</span>
         <span className="reel-play">
           <PlayGlyph />
