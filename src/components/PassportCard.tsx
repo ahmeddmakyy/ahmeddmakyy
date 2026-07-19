@@ -143,7 +143,7 @@ export default function PassportCard() {
               <text x="48" y="24" textAnchor="middle" fontSize="12" letterSpacing="1">CONTENT</text>
               <text x="48" y="40" textAnchor="middle" fontSize="11" letterSpacing="1">PLAN</text>
               <line x1="12" y1="50" x2="84" y2="50" stroke="currentColor" strokeWidth="1" />
-              <text x="48" y="72" textAnchor="middle" fontSize="10">90 DAYS</text>
+              <text x="48" y="72" textAnchor="middle" fontSize="10">MONTHLY+</text>
               <text x="48" y="90" textAnchor="middle" fontSize="12">150</text>
               <text x="48" y="106" textAnchor="middle" fontSize="12">IDEAS</text>
               <path d="M30 116 h36 M30 116 l6 -5 M30 116 l6 5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />

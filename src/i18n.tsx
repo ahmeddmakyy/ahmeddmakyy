@@ -60,8 +60,8 @@ export function LangToggle({ className }: { className?: string }) {
       type="button"
       className={`lang-toggle${className ? " " + className : ""}`}
       onClick={toggle}
-      aria-label={lang === "en" ? "التبديل إلى العربية" : "Switch to English"}
-      title={lang === "en" ? "العربية" : "English"}
+      aria-label={lang === "en" ? "حوّل للعربي" : "Switch to English"}
+      title={lang === "en" ? "عربي" : "English"}
     >
       <span className={lang === "en" ? "is-active" : ""}>EN</span>
       <span className="lang-sep" aria-hidden="true">|</span>
