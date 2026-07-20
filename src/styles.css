@@ -386,6 +386,28 @@ ul, ol { list-style: none; }
 }
 @media (prefers-reduced-motion: reduce) { .aurora-cursor { display: none; } }
 
+/* ── Anime-fire "portal" that rings an open modal frame (FireFrame). A transient
+   fixed, full-viewport, pointer-events:none canvas mounted INSIDE the modal DOM
+   (so it inherits the modal's stacking context: reel-lightbox 200 / morph 120)
+   and painted above the scrim but around the framed element. It exists only
+   while the modal is open, then its WebGL context is disposed. Desktop +
+   non-reduced-motion only (self-gated in the component). */
+.fire-frame {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  display: block;
+  /* Local to whichever modal stacking context it is mounted in (reel-lightbox
+     200 / morph-layer 120). 120 ties the morph scrim (120) and — being later in
+     the DOM — paints above it, while the morph panel (121) still paints above
+     the flames, so the fire rings from BEHIND the panel edges. In the video
+     lightbox (context 200) it simply sits above the scrim/video. */
+  z-index: 120;
+}
+@media (prefers-reduced-motion: reduce) { .fire-frame { display: none; } }
+
 .hero-inner { text-align: center; position: relative; z-index: 1; }
 
 .hello-badge {

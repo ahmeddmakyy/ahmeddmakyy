@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { ReactNode, KeyboardEvent as ReactKeyboardEvent } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import StackingCards from "./StackingCards";
+import FireFrame from "./FireFrame";
 
 // A fast, deterministic tween for the shared-layout morph. The framer default is
 // a spring, which overshoots and oscillates — extra frames of the whole panel
@@ -62,6 +63,16 @@ export default function MorphCards({
   const reduce = useReducedMotion();
   const closeRef = useRef<HTMLButtonElement>(null);
   const active = items.find((it) => it.id === openId) ?? null;
+
+  // The panel scale-MORPHS via framer's shared-layout animation, so the fire
+  // portal must ignite only AFTER the morph settles (onLayoutAnimationComplete)
+  // — otherwise it would ring the wrong, mid-flight rect. `settled` also resets
+  // on close, and the FireFrame unmounts with the panel (extinguish).
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [settled, setSettled] = useState(false);
+  useEffect(() => {
+    if (!openId) setSettled(false);
+  }, [openId]);
 
   const close = () => {
     const id = openId;
@@ -191,6 +202,7 @@ export default function MorphCards({
                 onClick={close}
               />
               <motion.div
+                ref={panelRef}
                 layoutId={`mc-${active.id}`}
                 className={`${cardClassName} morph-open`}
                 role="dialog"
@@ -198,6 +210,7 @@ export default function MorphCards({
                 aria-label={active.title}
                 onKeyDown={onDialogKeyDown}
                 transition={LAYOUT_TWEEN}
+                onLayoutAnimationComplete={() => setSettled(true)}
               >
                 {/* Scrolling lives on this inner wrapper, NOT on the panel:
                     an overflow:auto box that is itself scale-morphing forces a
@@ -229,6 +242,10 @@ export default function MorphCards({
                   </motion.button>
                 </div>
               </motion.div>
+              {/* Fire portal — ignited only once the morph settles so it rings
+                  the final panel rect, not a mid-flight one. Self-gates desktop
+                  + non-reduced-motion; disposes with the panel on close. */}
+              {settled && <FireFrame targetRef={panelRef} onDark={1} radius={24} />}
             </>
           )}
         </AnimatePresence>

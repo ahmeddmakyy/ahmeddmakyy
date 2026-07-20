@@ -1,26 +1,33 @@
 /* ────────────────────────────────────────────────────────────────────────────
  * AuroraCursor.webgl — the heavy, client-only WebGL2 core of the site-wide warm
- * "aurora" cursor light. Dynamically imported by AuroraCursor.tsx AFTER every
- * perf/support gate has passed, so it never enters the entry bundle and never
- * runs on the server or on mobile.
+ * cursor. Dynamically imported by AuroraCursor.tsx AFTER every perf/support gate
+ * has passed, so it never enters the entry bundle and never runs on the server
+ * or on mobile.
  *
- * PROVENANCE — this is a PORT + MERGE of two selected prototypes, not a rewrite:
- *   • BASE  = prototype B  — a single fixed fullscreen quad, premultiplied-alpha
- *     normal blend, momentum-smoothed pointer, and a single uOnDark uniform
- *     (driven by document.elementFromPoint → background luminance, eased ~0.06/
- *     frame) that switches the warm emission between a bright additive-reading
- *     bloom on DARK and a restrained deeper tint on LIGHT. That adaptive
- *     light/dark crossfade is the whole point and is preserved verbatim.
- *   • STREAK GRAFT = prototype C — its velocity-raked comet/curtain that streams
- *     BEHIND the pointer. B's weakness was a round "sun-like" core; here C's
- *     velocity-biased rake is grafted onto the core itself (it now elongates
- *     into a comet along the smoothed velocity) and C's flow-field striations
- *     rake the curtain. Done PROCEDURALLY in the ONE fragment shader — no second
- *     context, no ping-pong feedback buffer.
+ * TWO effects share this ONE canvas / ONE WebGL2 context (no extra contexts):
+ *   1. LIQUID RIPPLE cursor — ported from prototype liquidA. Procedural
+ *      concentric ripples spawned along the smoothed pointer path (radially
+ *      symmetric → STABLE, never flips direction), warm molten palette, per-pixel
+ *      surface-normal + specular/caustic shade, small & localized (~200–260px),
+ *      settling to nothing at rest. The uOnDark light/dark luminance adaptation,
+ *      hero suppression (uMaster), premultiplied blend, render scale, DPR cap,
+ *      context-loss handling and teardown are all preserved.
+ *      ART-DIRECTOR FIX: on LIGHT it now ETCHES rather than hazes — deep maroon
+ *      trough banding + thin bright gold specular crest lines = engraved grooves.
+ *   2. CLICK FIRE BURST — a short anime-fire burst on left-mousedown anywhere,
+ *      drawn as a SECOND program (shared fire GLSL, see fire.glsl.ts) on this
+ *      same canvas, plus a synthesized WebAudio "fwoosh". Not hero-suppressed
+ *      (a click should always fire); self-lit so it reads on light and dark.
  *
- * All the look/feel knobs live in TUNING at the top so they are trivially
- * tunable without reading the shader.
+ * All look/feel knobs live in TUNING at the top.
  * ──────────────────────────────────────────────────────────────────────────── */
+
+import {
+  FIRE_VERT,
+  FIRE_MAX_BURSTS,
+  FIRE_TUNING,
+  buildBurstFragment,
+} from "./fire.glsl";
 
 export interface AuroraController {
   destroy(): void;
@@ -28,170 +35,159 @@ export interface AuroraController {
 
 export interface AuroraOptions {
   /** Live-read flag: while #home (the hero) is on screen the master opacity is
-   *  eased to ~0 so the aurora doesn't fight the hero's own particle field +
-   *  cursor ring + portrait loupe. Owned by the React component's IO. */
+   *  eased to ~0 so the liquid doesn't fight the hero's own particle field +
+   *  cursor ring + portrait loupe. Owned by the React component's IO. Only the
+   *  LIQUID is suppressed — click bursts fire everywhere. */
   heroVisible: { current: boolean };
 }
 
-/* ══════════════════════ TUNING — the only knobs you need ══════════════════════
- * Colours are kept as exact normalized float triples (not hex) so they match the
- * chosen prototype pixel-for-pixel. Brand hex noted alongside for reference. */
+/* ══════════════════════ TUNING — the only knobs you need ══════════════════════ */
 const TUNING = {
   // — global feel —
-  MASTER_INTENSITY: 0.9, //  overall opacity ceiling of the whole effect (subtle by default)
-  RENDER_SCALE: 0.55, //     backing-store scale vs CSS px (soft blurry effect → cheap upscale)
-  DPR_CAP: 1, //             device-pixel-ratio ceiling (integrated GPU friendly)
-  OCTAVES: 4, //             fbm noise octaves (few = cheap; effect is soft anyway)
+  MASTER_INTENSITY: 0.95, //  opacity ceiling of the LIQUID (bursts are always full)
+  RENDER_SCALE: 0.9, //       backing-store scale vs CSS px (near-native keeps the
+  //                          etched crest lines crisp; the effect early-outs on
+  //                          most pixels so full-ish res stays cheap)
+  DPR_CAP: 1, //              device-pixel-ratio ceiling (integrated GPU friendly)
 
-  // — comet / core shape —
-  CORE_SIZE: 90, //          core tightness (higher = smaller, tighter hot point)
-  CORE_RAKE: 0.8, //         how far the core elongates BEHIND the pointer (0 = round, 1 = long comet)
-  STREAK_LENGTH: 1.0, //     multiplier on the velocity-raked tail of the body envelope
-  STRIAE_MIX: 0.5, //        how strongly C's flow-field striations rake the curtain (0..1)
-
-  // — motion smoothing —
-  POINTER_SMOOTH: 0.14, //   momentum lag of the pointer (lower = more trailing lag = longer read)
-  VEL_SMOOTH: 0.18, //       velocity smoothing (streak "decay"; lower = longer-lived streak)
-  ONDARK_EASE: 0.06, //      light↔dark crossfade speed (~0.25s, no pop)
-  MASTER_EASE: 0.045, //     hero-suppression ramp speed (ease master in/out of the hero)
+  // — liquid ripple field —
+  MAX_RIPPLES: 28, //         ripple sources held in the uniform array
+  RIPPLE_STEP: 13, //         px between ripple seeds spawned along the path
+  RIPPLE_LIFE: 1.5, //        seconds a ripple lives before it is culled
+  POINTER_SMOOTH: 0.25, //    smoothed-pointer follow (per frame @60)
+  ONDARK_EASE: 0.15, //       light↔dark crossfade speed at the pointer
+  MASTER_EASE: 0.05, //       hero-suppression ramp speed
 
   // — housekeeping —
-  LUM_EVERY: 4, //           run elementFromPoint luminance probe every N frames (cheap)
+  LUM_EVERY: 3, //            run the elementFromPoint luminance probe every N frames
 
-  // — DARK palette: bright additive-reading warm bloom (amber core → orange → warm rose edge) —
-  DARK_ROSE: [0.62, 0.14, 0.22], //   warm rose edge (barely magenta, no blue push)
-  DARK_ORANGE: [0.992, 0.435, 0.0], // #FD6F00
-  DARK_AMBER: [1.0, 0.8, 0.48], //    warm bright core
-  DARK_GOLD: [1.0, 0.94, 0.76], //    hottest point blooms to warm gold-white
-
-  // — LIGHT palette: restrained deeper warm tint (deep-orange → maroon) —
-  LIGHT_MAROON: [0.51, 0.082, 0.075], // #821513
-  LIGHT_DEEPO: [0.89, 0.388, 0.0], //   #E36300
+  // — click fire —
+  MASTER_VOLUME: 0.5, //      tasteful trim on the fwoosh (fires on EVERY click)
 } as const;
 
-/* ── shaders (GLSL ES 3.00 / WebGL2) ──────────────────────────────────────── */
+/* ── LIQUID shaders (GLSL ES 3.00 / WebGL2) ───────────────────────────────── */
 
-// Fullscreen triangle with no attribute buffer — gl_VertexID does the work.
-const VERT = `#version 300 es
-const vec2 P[3] = vec2[3](vec2(-1.,-1.), vec2(3.,-1.), vec2(-1.,3.));
-void main(){ gl_Position = vec4(P[gl_VertexID], 0.0, 1.0); }
-`;
+// Fullscreen triangle, no attribute buffer — shared vertex shader.
+const VERT = FIRE_VERT;
 
-const FRAG = `#version 300 es
+const LIQUID_FRAG = `#version 300 es
 precision highp float;
-out vec4 fragColor;
+out vec4 outColor;
 
-uniform vec2  uRes;        // backing-store resolution (px)
-uniform vec2  uMouse;      // aspect-corrected smoothed pointer (y up)
-uniform vec2  uVel;        // aspect-corrected smoothed velocity
+uniform vec2  uResCss;   // viewport size in CSS px
+uniform float uScale;    // css px -> backing px (gl_FragCoord / uScale = css px)
 uniform float uTime;
-uniform float uOnDark;     // 0 = over light paper, 1 = over dark ink (eased)
-uniform float uSpeed;      // smoothed speed magnitude
-uniform float uMaster;     // master opacity (hero suppression * MASTER_INTENSITY)
+uniform int   uCount;
+uniform vec3  uRip[${TUNING.MAX_RIPPLES}];  // x, y (css px, y down), birth time
+uniform float uOnDark;   // 0 = light bg, 1 = dark bg (smoothed at pointer)
+uniform float uMaster;   // hero suppression * MASTER_INTENSITY
 
-uniform float uCoreSize;   // TUNING.CORE_SIZE
-uniform float uCoreRake;   // TUNING.CORE_RAKE
-uniform float uStreak;     // TUNING.STREAK_LENGTH
-uniform float uStriae;     // TUNING.STRIAE_MIX
+// palette
+const vec3 ORANGE      = vec3(0.992,0.435,0.000); // FD6F00
+const vec3 ORANGE_DEEP = vec3(0.890,0.388,0.000); // E36300
+const vec3 ORANGE_SOFT = vec3(0.996,0.647,0.373); // FEA55F
+const vec3 MAROON      = vec3(0.510,0.082,0.075); // 821513
+const vec3 GOLD        = vec3(1.000,0.820,0.420);
+const vec3 AMBER       = vec3(1.000,0.620,0.180);
 
-uniform vec3  uRose;
-uniform vec3  uOrange;
-uniform vec3  uAmber;
-uniform vec3  uGold;
-uniform vec3  uMaroon;
-uniform vec3  uDeepO;
-
-// ---- value noise + fbm (from B) ----
-float hash(vec2 p){
-  p = fract(p*vec2(123.34, 345.45));
-  p += dot(p, p+34.345);
-  return fract(p.x*p.y);
+// single ripple wave-height contribution at pixel p (css px)
+float rippleH(vec2 p, vec3 rip){
+  float age = uTime - rip.z;
+  if(age < 0.0 || age > 1.5) return 0.0;
+  vec2 d2 = p - rip.xy;
+  float d = length(d2);
+  float speed = 94.0;              // px/sec expansion
+  float R = 14.0 + age * speed;    // current ring radius
+  float ringW = 26.0;              // gaussian band width
+  float env  = exp(-pow((d - R)/ringW, 2.0));
+  float wave = sin((d - R) * 0.17);// wavelength ~ 37px -> a couple of rings
+  float life = exp(-age * 1.45);   // fade ripple over ~0.7s
+  float loc  = exp(-d / 70.0);     // keep it tight around cursor
+  return wave * env * life * loc;
 }
-float vnoise(vec2 p){
-  vec2 i = floor(p), f = fract(p);
-  vec2 u = f*f*(3.0-2.0*f);
-  float a = hash(i);
-  float b = hash(i+vec2(1.0,0.0));
-  float c = hash(i+vec2(0.0,1.0));
-  float d = hash(i+vec2(1.0,1.0));
-  return mix(mix(a,b,u.x), mix(c,d,u.x), u.y);
-}
-float fbm(vec2 p){
-  float v = 0.0, amp = 0.55;
-  mat2 m = mat2(1.6,1.2,-1.2,1.6);
-  for(int i=0;i<${TUNING.OCTAVES};i++){
-    v += amp*vnoise(p);
-    p = m*p;
-    amp *= 0.5;
+
+// sum height + presence mask
+float heightAt(vec2 p, out float mask){
+  float h = 0.0; float m = 0.0;
+  for(int i=0;i<${TUNING.MAX_RIPPLES};i++){
+    if(i>=uCount) break;
+    vec3 rip = uRip[i];
+    float age = uTime - rip.z;
+    if(age < 0.0 || age > 1.5) continue;
+    float hi = rippleH(p, rip);
+    h += hi;
+    vec2 d2 = p - rip.xy; float d = length(d2);
+    float R = 14.0 + age*94.0;
+    float env = exp(-pow((d - R)/34.0,2.0));
+    float life = exp(-age*1.45);
+    float loc = exp(-d/70.0);
+    m = max(m, env*life*loc);
   }
-  return v;
+  mask = m;
+  return h;
 }
 
 void main(){
-  vec2 st = (gl_FragCoord.xy - 0.5*uRes)/uRes.y;   // aspect space, y up
-  vec2 p  = st - uMouse;
+  vec2 fragCss = gl_FragCoord.xy / uScale;
+  vec2 p = vec2(fragCss.x, uResCss.y - fragCss.y); // flip to y-down css space
 
-  // travel direction (fallback drifts slowly so the light "lives" at rest)
-  float sp = uSpeed;
-  vec2 driftDir = vec2(cos(uTime*0.15), sin(uTime*0.11));
-  vec2 dir = (sp > 0.0006) ? uVel/max(length(uVel),1e-4) : normalize(driftDir);
+  float mask;
+  float h = heightAt(p, mask);
 
-  // comet body envelope: short ahead, long rake behind; faster => longer tail
-  float along  = dot(p, dir);                       // + ahead, - behind
-  float across = dot(p, vec2(-dir.y, dir.x));
-  float tail   = 1.0 + clamp(sp*55.0, 0.0, 3.2) * uStreak;
-  float alongS = (along >= 0.0) ? along*2.6 : along/tail;
-  float dd = alongS*alongS*1.0 + across*across*2.7;
-  float env = exp(-dd*6.5);
+  if(mask < 0.004){ outColor = vec4(0.0); return; }
 
-  // aurora curtain: striations run across travel, flow along it + drift in time
-  vec2 fc = vec2(across*4.2, along*1.8 - uTime*0.35 - sp*26.0);
-  fc += 0.6*vec2(fbm(fc*0.8 + uTime*0.12), fbm(fc*0.8 + 7.0 - uTime*0.09)); // domain warp
-  float curtain = fbm(fc + vec2(0.0, uTime*0.18));
-  curtain = smoothstep(0.08, 0.92, curtain);
+  // finite-difference gradient of height -> surface normal
+  float e = 1.4;
+  float md;
+  float hx1 = heightAt(p + vec2(e,0.0), md);
+  float hx0 = heightAt(p - vec2(e,0.0), md);
+  float hy1 = heightAt(p + vec2(0.0,e), md);
+  float hy0 = heightAt(p - vec2(0.0,e), md);
+  vec2 grad = vec2(hx1-hx0, hy1-hy0) / (2.0*e);
+  float amp = 26.0;
+  vec3 n = normalize(vec3(-grad.x*amp, -grad.y*amp, 1.0));
 
-  // GRAFT (prototype C): flow-field striations that rake the curtain so it reads
-  // as a raked comet-curtain streaming BEHIND the pointer, not a round wash.
-  float fld = sin(across*7.0 + along*2.0 - uTime*0.9 - sp*30.0)
-            + 0.5*sin(across*13.0 - uTime*0.6);
-  float striae = 0.5 + 0.5*fld;
-  curtain *= mix(1.0, striae, uStriae);
+  // lighting
+  vec3 L = normalize(vec3(0.35, -0.55, 0.75));
+  vec3 V = vec3(0.0,0.0,1.0);
+  vec3 H = normalize(L + V);
+  float ndh = max(dot(n,H),0.0);
+  float spec     = pow(ndh, 70.0);    // sharp specular glint
+  float specThin = pow(ndh, 170.0);   // razor-thin crest LINE (engraving)
+  float caustic  = pow(ndh, 10.0);    // broader warm sheen
+  float diff = max(dot(n,L),0.0);
 
-  // soft halo bleed, and a RAKED bright core (comet — elongated behind, not a sun)
-  float r    = length(p);
-  float halo = exp(-r*r*16.0);
-  float alongC = (along >= 0.0) ? along : along/(1.0 + (tail-1.0)*uCoreRake);
-  float ddC  = alongC*alongC*1.0 + across*across*1.7;   // tighter across => rakes along travel
-  float core = exp(-ddC*uCoreSize);
+  // height -> crest(+) vs trough(-)
+  float crest = clamp(h*7.0, -1.0, 1.0);
 
-  // ambient breathing so the light lives even at rest
-  float ambient = 0.10 * halo * (0.5 + 0.5*sin(uTime*0.6 + across*4.0));
+  float signal = mask;
 
-  // curtains carry the striated body, core adds the bright point, halo a soft bleed
-  float I = env*(0.30 + 1.05*curtain) + halo*0.20 + core*0.95 + ambient;
-  I *= 1.0 + sp*4.5;                 // motion brightens the streak
-  I = clamp(I, 0.0, 1.9);
+  // ── LIGHT: engraved grooves on pale paper (deep maroon troughs, thin gold lines) ──
+  vec3 troughLight = MAROON * 0.5;                                   // darker maroon between rings
+  vec3 lc = mix(troughLight, ORANGE_DEEP, smoothstep(-0.70, 0.05, crest));
+  lc = mix(lc, ORANGE, smoothstep(0.05, 0.55, crest));
+  lc += caustic * AMBER * 0.22;
+  lc += specThin * GOLD * 2.4;                                       // thin bright crest line
+  lc *= (1.0 - 0.42 * smoothstep(0.0, -0.55, crest));               // deepen the trough banding
+  float glintL = specThin*2.0 + spec*0.55 + caustic*0.25;
+  float aLight = signal*(0.46 + 0.72*abs(crest)) + glintL*0.40;
 
-  // ---------- warm identity, two treatments (from B, preserved) ----------
-  // DARK: amber core -> orange -> warm rose edge, blooming to gold at the hot point
-  vec3 darkCol = mix(uRose, uOrange, smoothstep(0.10, 0.60, I));
-  darkCol      = mix(darkCol, uAmber, smoothstep(0.65, 1.00, I));
-  darkCol      = mix(darkCol, uGold,  smoothstep(1.05, 1.65, I));
+  // ── DARK: molten glints on the void (brighter, more glint) ──
+  vec3 troughDark = mix(MAROON, ORANGE_DEEP, 0.45);
+  vec3 dc = mix(troughDark, ORANGE, smoothstep(-0.6,0.2,crest));
+  dc = mix(dc, ORANGE_SOFT, smoothstep(0.1,0.9,crest));
+  dc += caustic * AMBER * 0.55;
+  dc += spec * GOLD * 1.6;
+  dc = dc*(0.9 + 0.6*diff) + (spec*1.6 + caustic*0.5)*GOLD*0.4;
+  float glintD = spec*1.6 + caustic*0.5;
+  float aDark = signal*(0.30 + 0.45*abs(crest)) + glintD*0.6;
 
-  // LIGHT: maroon edge -> deep-orange -> orange core (darkens the paper, restrained)
-  vec3 lightCol= mix(uMaroon, uDeepO, smoothstep(0.10, 0.80, I));
-  lightCol     = mix(lightCol, uOrange, smoothstep(0.90, 1.6, I));
+  vec3 finalCol = mix(lc, dc, uOnDark);
+  float alpha   = mix(aLight, aDark, uOnDark);
+  alpha *= smoothstep(0.0, 0.05, mask);   // soft outer feather
+  alpha = clamp(alpha, 0.0, 0.92) * uMaster;
 
-  vec3 col = mix(lightCol, darkCol, uOnDark);
-
-  // alpha: dark gets an extra core boost so the hot point blooms over black; light
-  // keeps a low ceiling so the tint never blows out the paper.
-  float aDark  = clamp(I*0.52 + core*0.34, 0.0, 0.90);
-  float aLight = clamp(I*0.44, 0.0, 0.46);
-  float alpha  = mix(aLight, aDark, uOnDark) * uMaster;
-
-  // premultiplied output — color+alpha alone carry the contrast (canvas blend:normal)
-  fragColor = vec4(col*alpha, alpha);
+  outColor = vec4(finalCol * alpha, alpha);
 }
 `;
 
@@ -208,18 +204,21 @@ export function createAurora(canvas: HTMLCanvasElement, opts: AuroraOptions): Au
     powerPreference: "low-power",
   }) as WebGL2RenderingContext | null;
 
-  // Should never happen — the component probes WebGL2 before importing us — but
-  // fail safe (normal blend means "nothing" just shows nothing, no white-out).
   if (!gl) {
     return { destroy() {} };
   }
 
-  type GLObjects = {
+  type LiquidGL = {
     prog: WebGLProgram;
-    vao: WebGLVertexArrayObject;
     u: Record<string, WebGLUniformLocation | null>;
   };
-  let glo: GLObjects | null = null;
+  type FireGL = {
+    prog: WebGLProgram;
+    u: Record<string, WebGLUniformLocation | null>;
+  };
+  let liquid: LiquidGL | null = null;
+  let fire: FireGL | null = null;
+  let vao: WebGLVertexArrayObject | null = null;
 
   function compile(type: number, src: string): WebGLShader {
     const s = gl!.createShader(type)!;
@@ -233,9 +232,9 @@ export function createAurora(canvas: HTMLCanvasElement, opts: AuroraOptions): Au
     return s;
   }
 
-  function buildGL(): GLObjects {
-    const vs = compile(gl!.VERTEX_SHADER, VERT);
-    const fs = compile(gl!.FRAGMENT_SHADER, FRAG);
+  function link(vsSrc: string, fsSrc: string): WebGLProgram {
+    const vs = compile(gl!.VERTEX_SHADER, vsSrc);
+    const fs = compile(gl!.FRAGMENT_SHADER, fsSrc);
     const prog = gl!.createProgram()!;
     gl!.attachShader(prog, vs);
     gl!.attachShader(prog, fs);
@@ -247,38 +246,35 @@ export function createAurora(canvas: HTMLCanvasElement, opts: AuroraOptions): Au
       gl!.deleteProgram(prog);
       throw new Error("aurora link failed: " + log);
     }
-    // Empty VAO — the fullscreen triangle is generated from gl_VertexID, no buffers.
-    const vao = gl!.createVertexArray()!;
+    return prog;
+  }
 
-    const names = [
-      "uRes", "uMouse", "uVel", "uTime", "uOnDark", "uSpeed", "uMaster",
-      "uCoreSize", "uCoreRake", "uStreak", "uStriae",
-      "uRose", "uOrange", "uAmber", "uGold", "uMaroon", "uDeepO",
-    ];
-    const u: Record<string, WebGLUniformLocation | null> = {};
-    for (const n of names) u[n] = gl!.getUniformLocation(prog, n);
+  function buildGL() {
+    const lprog = link(VERT, LIQUID_FRAG);
+    const lNames = ["uResCss", "uScale", "uTime", "uCount", "uRip", "uOnDark", "uMaster"];
+    const lu: Record<string, WebGLUniformLocation | null> = {};
+    for (const n of lNames) lu[n] = gl!.getUniformLocation(lprog, n);
+    liquid = { prog: lprog, u: lu };
 
-    // Static colour + shape uniforms only need to be set once per program.
-    gl!.useProgram(prog);
-    gl!.uniform1f(u.uCoreSize, TUNING.CORE_SIZE);
-    gl!.uniform1f(u.uCoreRake, TUNING.CORE_RAKE);
-    gl!.uniform1f(u.uStreak, TUNING.STREAK_LENGTH);
-    gl!.uniform1f(u.uStriae, TUNING.STRIAE_MIX);
-    gl!.uniform3fv(u.uRose, TUNING.DARK_ROSE);
-    gl!.uniform3fv(u.uOrange, TUNING.DARK_ORANGE);
-    gl!.uniform3fv(u.uAmber, TUNING.DARK_AMBER);
-    gl!.uniform3fv(u.uGold, TUNING.DARK_GOLD);
-    gl!.uniform3fv(u.uMaroon, TUNING.LIGHT_MAROON);
-    gl!.uniform3fv(u.uDeepO, TUNING.LIGHT_DEEPO);
+    const fprog = link(VERT, buildBurstFragment());
+    const fNames = ["uScale", "uTime", "uOnDark", "uBursts"];
+    const fu: Record<string, WebGLUniformLocation | null> = {};
+    for (const n of fNames) fu[n] = gl!.getUniformLocation(fprog, n);
+    fire = { prog: fprog, u: fu };
 
-    return { prog, vao, u };
+    // Empty VAO — the fullscreen triangle is generated from gl_VertexID.
+    vao = gl!.createVertexArray()!;
+
+    // premultiplied-alpha compositing for BOTH passes on the one canvas.
+    gl!.enable(gl!.BLEND);
+    gl!.blendFunc(gl!.ONE, gl!.ONE_MINUS_SRC_ALPHA);
   }
 
   /* ── sizing (reduced-resolution backing store, DPR-capped) ── */
   let W = 0, H = 0, scale = 1;
   function resize() {
     const dpr = Math.min(window.devicePixelRatio || 1, TUNING.DPR_CAP);
-    scale = dpr * TUNING.RENDER_SCALE; // maps CSS px -> backing px
+    scale = dpr * TUNING.RENDER_SCALE;
     W = Math.max(1, Math.floor(window.innerWidth * scale));
     H = Math.max(1, Math.floor(window.innerHeight * scale));
     canvas.width = W;
@@ -286,19 +282,54 @@ export function createAurora(canvas: HTMLCanvasElement, opts: AuroraOptions): Au
     gl!.viewport(0, 0, W, H);
   }
 
-  /* ── pointer state (client px) ── */
-  let tx = window.innerWidth * 0.5, ty = window.innerHeight * 0.5; // raw target
-  let sx = tx, sy = ty; // smoothed
-  let psx = sx, psy = sy; // previous smoothed
-  let vx = 0, vy = 0; // smoothed velocity (aspect/frame)
+  /* ── pointer state (css px) ── */
+  let px = window.innerWidth * 0.5, py = window.innerHeight * 0.5; // raw target
+  let sx = px, sy = py; // smoothed
 
   const onPointer = (e: PointerEvent | MouseEvent) => {
-    tx = e.clientX;
-    ty = e.clientY;
+    px = e.clientX;
+    py = e.clientY;
   };
 
+  /* ── ripple field (css px, y-down) ── */
+  type Ripple = { x: number; y: number; t: number };
+  const ripples: Ripple[] = [];
+  const ripFlat = new Float32Array(TUNING.MAX_RIPPLES * 3);
+  let lastSpawnX = sx, lastSpawnY = sy, lastSpawnMs = 0;
+
+  function spawnAlong(nowMs: number, tSec: number) {
+    const dx = sx - lastSpawnX, dy = sy - lastSpawnY;
+    const dist = Math.hypot(dx, dy);
+    if (dist >= TUNING.RIPPLE_STEP && nowMs - lastSpawnMs > 16) {
+      const n = Math.min(Math.floor(dist / TUNING.RIPPLE_STEP), 3);
+      for (let i = 1; i <= n; i++) {
+        const f = i / n;
+        ripples.push({ x: lastSpawnX + dx * f, y: lastSpawnY + dy * f, t: tSec });
+        if (ripples.length > TUNING.MAX_RIPPLES) ripples.shift();
+      }
+      lastSpawnX = sx;
+      lastSpawnY = sy;
+      lastSpawnMs = nowMs;
+    }
+    // No idle spawning — a resting pointer settles back to glass (stable).
+  }
+
+  /* ── click fire bursts (css px, y-UP; matches the burst shader) ── */
+  const bursts = new Float32Array(FIRE_MAX_BURSTS * 4);
+  for (let i = 0; i < FIRE_MAX_BURSTS; i++) bursts[i * 4 + 2] = -999.0; // inactive
+  let bhead = 0;
+  let activeBursts = false;
+
+  function spawnBurst(clientX: number, clientY: number, tSec: number) {
+    const i = (bhead++ % FIRE_MAX_BURSTS) * 4;
+    bursts[i + 0] = clientX;
+    bursts[i + 1] = window.innerHeight - clientY; // y-up css px
+    bursts[i + 2] = tSec;
+    bursts[i + 3] = Math.random() * 10.0;
+    activeBursts = true;
+  }
+
   /* ── luminance detection -> uOnDark target ── */
-  let onDark = 0, onDarkTarget = 0;
   function bgLumAt(x: number, y: number): number {
     let el = document.elementFromPoint(x, y) as HTMLElement | null;
     while (el) {
@@ -316,45 +347,127 @@ export function createAurora(canvas: HTMLCanvasElement, opts: AuroraOptions): Au
     return 1; // assume light
   }
 
-  /* ── master (hero suppression) ── */
+  /* ── eased state ── */
+  let onDark = 0, onDarkTarget = 0;
   let master = 0; // start suppressed; eases up once past the hero
+
+  /* ── WebAudio "fwoosh" (lazy, ported verbatim from the fire prototype) ── */
+  let AC: AudioContext | null = null;
+  let masterGain: GainNode | null = null;
+  let noiseBuf: AudioBuffer | null = null;
+
+  function initAudio() {
+    if (AC) return;
+    const Ctor = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!Ctor) return;
+    AC = new Ctor();
+    // graph: gain(0.9) -> compressor -> MASTER_VOLUME trim -> destination
+    masterGain = AC.createGain();
+    masterGain.gain.value = 0.9;
+    const comp = AC.createDynamicsCompressor();
+    comp.threshold.value = -14;
+    comp.knee.value = 18;
+    comp.ratio.value = 6;
+    comp.attack.value = 0.002;
+    comp.release.value = 0.18;
+    const trim = AC.createGain();
+    trim.gain.value = TUNING.MASTER_VOLUME;
+    masterGain.connect(comp);
+    comp.connect(trim);
+    trim.connect(AC.destination);
+  }
+  function getNoise(ac: AudioContext): AudioBuffer {
+    if (noiseBuf) return noiseBuf;
+    const len = Math.floor(ac.sampleRate * 0.4);
+    noiseBuf = ac.createBuffer(1, len, ac.sampleRate);
+    const d = noiseBuf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    return noiseBuf;
+  }
+  function fwoosh() {
+    if (!AC || !masterGain) return;
+    if (AC.state === "suspended") AC.resume();
+    const t = AC.currentTime;
+
+    // 1) filtered noise burst, downward-swept bandpass
+    const src = AC.createBufferSource(); src.buffer = getNoise(AC);
+    const bp = AC.createBiquadFilter(); bp.type = "bandpass"; bp.Q.value = 0.9;
+    bp.frequency.setValueAtTime(3200, t);
+    bp.frequency.exponentialRampToValueAtTime(300, t + 0.26);
+    const hp = AC.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 170;
+    const g = AC.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.85, t + 0.018);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.30);
+    src.connect(bp); bp.connect(hp); hp.connect(g); g.connect(masterGain);
+    src.start(t); src.stop(t + 0.34);
+
+    // 2) soft low thump
+    const osc = AC.createOscillator(); osc.type = "sine";
+    osc.frequency.setValueAtTime(170, t);
+    osc.frequency.exponentialRampToValueAtTime(48, t + 0.17);
+    const og = AC.createGain();
+    og.gain.setValueAtTime(0.0001, t);
+    og.gain.exponentialRampToValueAtTime(0.55, t + 0.014);
+    og.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+    osc.connect(og); og.connect(masterGain);
+    osc.start(t); osc.stop(t + 0.24);
+
+    // 3) crackle transient (very short highpassed noise)
+    const cs = AC.createBufferSource(); cs.buffer = getNoise(AC);
+    const cf = AC.createBiquadFilter(); cf.type = "highpass"; cf.frequency.value = 2200;
+    const cg = AC.createGain();
+    cg.gain.setValueAtTime(0.5, t);
+    cg.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+    cs.connect(cf); cf.connect(cg); cg.connect(masterGain);
+    cs.start(t); cs.stop(t + 0.1);
+  }
+
+  // reduced-motion is already gated by the component, but re-check so a live
+  // toggle between mount and first click never plays sound.
+  const prefersReduced = () =>
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const onMouseDown = (e: MouseEvent) => {
+    if (e.button !== 0) return; // left button only, never right-click
+    const target = e.target as HTMLElement | null;
+    if (target && target.closest("input, textarea, select")) return;
+    if (prefersReduced()) return;
+    const t = (performance.now() - t0) / 1000;
+    initAudio();
+    fwoosh();
+    spawnBurst(e.clientX, e.clientY, t);
+  };
 
   /* ── loop ── */
   let rafId = 0;
   let running = false;
   let lost = false;
-  let t0 = performance.now();
+  const t0 = performance.now();
   let last = t0;
   let frameNo = 0;
   let lastLum = 1;
 
   function renderFrame(now: number) {
     rafId = requestAnimationFrame(renderFrame);
-    if (!glo) return;
+    if (!liquid || !fire || !vao) return;
 
-    // clamp dt so the first frame after a tab-resume / scroll pause doesn't jump
     let dt = (now - last) / 1000;
     last = now;
     dt = Math.min(dt, 1 / 30);
     const t = (now - t0) / 1000;
-    const f = dt * 60; // frame-rate normalisation factor
+    const f = dt * 60; // frame-rate normalisation
 
-    // momentum smoothing (lag => trailing read)
+    // smooth pointer
     const kp = 1 - Math.pow(1 - TUNING.POINTER_SMOOTH, f);
-    sx += (tx - sx) * kp;
-    sy += (ty - sy) * kp;
+    sx += (px - sx) * kp;
+    sy += (py - sy) * kp;
 
-    // velocity in aspect space (divide by height), smoothed
-    const ivx = (sx - psx) / window.innerHeight;
-    const ivy = -(sy - psy) / window.innerHeight;
-    const kv = 1 - Math.pow(1 - TUNING.VEL_SMOOTH, f);
-    vx += (ivx - vx) * kv;
-    vy += (ivy - vy) * kv;
-    psx = sx;
-    psy = sy;
-    const speed = Math.hypot(vx, vy);
+    // spawn ripples along the smoothed path, cull expired
+    spawnAlong(now, t);
+    while (ripples.length && t - ripples[0].t > TUNING.RIPPLE_LIFE) ripples.shift();
 
-    // background luminance under the SMOOTHED pointer (throttled) -> crossfade
+    // background luminance under the smoothed pointer (throttled) -> crossfade
     if (frameNo % TUNING.LUM_EVERY === 0) {
       lastLum = bgLumAt(
         Math.max(0, Math.min(window.innerWidth - 1, sx)),
@@ -365,28 +478,52 @@ export function createAurora(canvas: HTMLCanvasElement, opts: AuroraOptions): Au
     onDarkTarget = lastLum < 0.5 ? 1 : 0;
     onDark += (onDarkTarget - onDark) * (1 - Math.pow(1 - TUNING.ONDARK_EASE, f));
 
-    // hero suppression: master eases to 0 over #home, to MASTER_INTENSITY past it
+    // hero suppression (liquid only)
     const masterTarget = opts.heroVisible.current ? 0 : TUNING.MASTER_INTENSITY;
     master += (masterTarget - master) * (1 - Math.pow(1 - TUNING.MASTER_EASE, f));
 
-    // aspect-space pointer (y up), in backing px
-    const mx = (sx * scale - 0.5 * W) / H;
-    const my = (0.5 * H - sy * scale) / H;
-
-    const u = glo.u;
-    gl!.useProgram(glo.prog);
-    gl!.bindVertexArray(glo.vao);
-    gl!.uniform2f(u.uRes, W, H);
-    gl!.uniform2f(u.uMouse, mx, my);
-    gl!.uniform2f(u.uVel, vx, vy);
-    gl!.uniform1f(u.uTime, t);
-    gl!.uniform1f(u.uOnDark, onDark);
-    gl!.uniform1f(u.uSpeed, speed);
-    gl!.uniform1f(u.uMaster, master);
-
     gl!.clearColor(0, 0, 0, 0);
     gl!.clear(gl!.COLOR_BUFFER_BIT);
+    gl!.bindVertexArray(vao);
+
+    // ── pass 1: liquid ripple cursor ──
+    const cnt = Math.min(ripples.length, TUNING.MAX_RIPPLES);
+    for (let i = 0; i < cnt; i++) {
+      const r = ripples[ripples.length - cnt + i];
+      ripFlat[i * 3] = r.x;
+      ripFlat[i * 3 + 1] = r.y;
+      ripFlat[i * 3 + 2] = r.t;
+    }
+    const lu = liquid.u;
+    gl!.useProgram(liquid.prog);
+    gl!.uniform2f(lu.uResCss, window.innerWidth, window.innerHeight);
+    gl!.uniform1f(lu.uScale, scale);
+    gl!.uniform1f(lu.uTime, t);
+    gl!.uniform1i(lu.uCount, cnt);
+    gl!.uniform3fv(lu.uRip, ripFlat);
+    gl!.uniform1f(lu.uOnDark, onDark);
+    gl!.uniform1f(lu.uMaster, master);
     gl!.drawArrays(gl!.TRIANGLES, 0, 3);
+
+    // ── pass 2: click fire bursts (only while any are alive) ──
+    if (activeBursts) {
+      let anyAlive = false;
+      for (let i = 0; i < FIRE_MAX_BURSTS; i++) {
+        const st = bursts[i * 4 + 2];
+        if (st >= 0 && t - st <= FIRE_TUNING.BURST_LIFE) { anyAlive = true; break; }
+      }
+      if (anyAlive) {
+        const fu = fire.u;
+        gl!.useProgram(fire.prog);
+        gl!.uniform1f(fu.uScale, scale);
+        gl!.uniform1f(fu.uTime, t);
+        gl!.uniform1f(fu.uOnDark, onDark);
+        gl!.uniform4fv(fu.uBursts, bursts);
+        gl!.drawArrays(gl!.TRIANGLES, 0, 3);
+      } else {
+        activeBursts = false;
+      }
+    }
   }
 
   function startLoop() {
@@ -412,25 +549,24 @@ export function createAurora(canvas: HTMLCanvasElement, opts: AuroraOptions): Au
     e.preventDefault();
     lost = true;
     stopLoop();
-    if (glo) {
-      // GL objects are invalid after loss; drop references, recreate on restore.
-      glo = null;
-    }
+    liquid = null;
+    fire = null;
+    vao = null;
   };
   const onRestored = () => {
     lost = false;
     try {
-      glo = buildGL();
+      buildGL();
       resize();
       if (!document.hidden) startLoop();
     } catch {
-      /* leave dark — nothing renders, which is safe under normal blend */
+      /* leave dark — nothing renders, which is safe under premultiplied blend */
     }
   };
 
   /* ── boot ── */
   try {
-    glo = buildGL();
+    buildGL();
   } catch {
     return { destroy() {} };
   }
@@ -439,6 +575,7 @@ export function createAurora(canvas: HTMLCanvasElement, opts: AuroraOptions): Au
   window.addEventListener("resize", resize);
   window.addEventListener("mousemove", onPointer, { passive: true });
   window.addEventListener("pointermove", onPointer, { passive: true });
+  window.addEventListener("mousedown", onMouseDown);
   document.addEventListener("visibilitychange", onVisibility);
   canvas.addEventListener("webglcontextlost", onLost, false);
   canvas.addEventListener("webglcontextrestored", onRestored, false);
@@ -452,15 +589,14 @@ export function createAurora(canvas: HTMLCanvasElement, opts: AuroraOptions): Au
       window.removeEventListener("resize", resize);
       window.removeEventListener("mousemove", onPointer);
       window.removeEventListener("pointermove", onPointer);
+      window.removeEventListener("mousedown", onMouseDown);
       document.removeEventListener("visibilitychange", onVisibility);
       canvas.removeEventListener("webglcontextlost", onLost, false);
       canvas.removeEventListener("webglcontextrestored", onRestored, false);
-      if (glo) {
-        gl!.deleteProgram(glo.prog);
-        gl!.deleteVertexArray(glo.vao);
-        glo = null;
-      }
-      // free the GPU context deterministically
+      if (liquid) { gl!.deleteProgram(liquid.prog); liquid = null; }
+      if (fire) { gl!.deleteProgram(fire.prog); fire = null; }
+      if (vao) { gl!.deleteVertexArray(vao); vao = null; }
+      if (AC) { AC.close().catch(() => {}); AC = null; masterGain = null; noiseBuf = null; }
       gl!.getExtension("WEBGL_lose_context")?.loseContext();
     },
   };

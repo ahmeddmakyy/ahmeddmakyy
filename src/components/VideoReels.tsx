@@ -3,6 +3,7 @@ import { useReducedMotion } from "framer-motion";
 import { useLang } from "@/i18n";
 import MorphWord from "@/components/MorphWord";
 import Doodle from "@/components/Doodle";
+import FireFrame from "@/components/FireFrame";
 import renewStoryPoster from "@/assets/posters/renew_story.webp";
 import renewStarPoster from "@/assets/posters/renew_star.webp";
 import easyWayPoster from "@/assets/posters/easy_way.webp";
@@ -264,6 +265,10 @@ function ReelsRow({
  */
 function VideoLightbox({ gi, onClose }: { gi: number | null; onClose: () => void }) {
   const { content: c } = useLang();
+  // Ringed by the anime-fire portal (FireFrame). Self-gates desktop + non-reduced
+  // motion and only exists while the lightbox is mounted, so its transient WebGL
+  // context is disposed the moment the film closes.
+  const innerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (gi === null) return;
@@ -295,7 +300,11 @@ function VideoLightbox({ gi, onClose }: { gi: number | null; onClose: () => void
           <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
         </svg>
       </button>
-      <div className="reel-lightbox-inner" onClick={(e) => e.stopPropagation()}>
+      {/* Fiery portal ringing the film frame. Behind the inner in DOM so the
+          video paints over the inner glow and the flames lick around its edges;
+          pointer-events:none, so the player controls stay clickable. */}
+      <FireFrame targetRef={innerRef} onDark={1} radius={16} />
+      <div className="reel-lightbox-inner" ref={innerRef} onClick={(e) => e.stopPropagation()}>
         {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
         <video
           className="reel-lightbox-video"
