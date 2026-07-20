@@ -72,7 +72,6 @@ export interface SiteContent {
   };
   work: {
     title: Rich;
-    lede: string;
     cards: { tag: string; period: string; title: string; body: string }[];
     more: string;
   };
@@ -246,6 +245,13 @@ const en: SiteContent = {
       description:
         "A product showcase animated entirely in code — HTML, CSS and JS directed with AI, rendered as a vertical fashion reel for the menswear brand.",
     },
+    {
+      title: "Alwassef Motors — He's Never Driven One",
+      tag: "AI Film",
+      client: "Car Showroom · Geely EX2",
+      description:
+        "A cinematic AI reel for the electric Geely EX2 launch: a cafe know-it-all warns against Chinese cars, until the man who actually drove one answers him with the keys in his hand. Characters, shots and Arabic voice-over all AI-directed, shot by shot.",
+    },
   ],
   about: {
     name: "Ahmed Maki",
@@ -261,7 +267,6 @@ const en: SiteContent = {
   },
   work: {
     title: [{ t: "Selected " }, { t: "Work", accent: true }],
-    lede: "Real briefs, real clients, real deliverables: strategy, idea catalogs, and AI films that shipped.",
     cards: [
       {
         tag: "Rebranding",
@@ -490,6 +495,13 @@ const ar: SiteContent = {
       description:
         "عرض منتج متحرك بالكامل بالكود — HTML وCSS وJS بتوجيه الذكاء الاصطناعي، كريلز أزياء طولي للبراند.",
     },
+    {
+      title: "الوصيف موتورز — عمره ما ساقه",
+      tag: "فيلم AI",
+      client: "معرض عربيات · جيلي EX2",
+      description:
+        "ريلز سينمائي بالذكاء الاصطناعي لإطلاق جيلي EX2 الكهربائية: فزلوكة القهوة قاعد يخوّف من العربيات الصيني، لحد ما الراجل اللي ساقها فعلاً يرد عليه والمفتاح في إيده. الشخصيات واللقطات والڤويس أوفر العربي كلهم بتوجيه الذكاء الاصطناعي، لقطة لقطة.",
+    },
   ],
   about: {
     name: "أحمد مكي",
@@ -505,7 +517,6 @@ const ar: SiteContent = {
   },
   work: {
     title: [{ t: "عينة من " }, { t: "شغلي", accent: true }],
-    lede: "بريفات حقيقية، عملاء حقيقيين، وتسليمات على الأرض: استراتيجيات، كتالوجات أفكار، وأفلام AI طلعت للنور فعلاً.",
     cards: [
       {
         tag: "ريبراندنج",

@@ -85,9 +85,13 @@ function StackSlot({
     const el = ref.current;
     if (!el) return;
     const measure = () => {
+      // The deck clears the fixed nav, and the nav is rem-sized — so both the
+      // offset and the lip follow the global design scale. BOTTOM_GAP stays raw
+      // px: it's a safety margin measured against real viewport pixels.
+      const k = parseFloat(getComputedStyle(document.documentElement).fontSize) / 16 || 1;
       // offsetHeight ignores the scale transform, so this never feeds back.
-      const base = Math.min(topBase, stableViewportHeight() - el.offsetHeight - BOTTOM_GAP);
-      setPinTop(Math.round(base + index * topStep));
+      const base = Math.min(topBase * k, stableViewportHeight() - el.offsetHeight - BOTTOM_GAP);
+      setPinTop(Math.round(base + index * topStep * k));
     };
     measure();
     const ro = new ResizeObserver(measure);

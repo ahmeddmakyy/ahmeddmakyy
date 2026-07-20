@@ -8,6 +8,7 @@ import renewStarPoster from "@/assets/posters/renew_star.webp";
 import easyWayPoster from "@/assets/posters/easy_way.webp";
 import golfCityPoster from "@/assets/posters/golf_city.webp";
 import alwassefPoster from "@/assets/posters/alwassef.webp";
+import alwassefGeelyPoster from "@/assets/posters/alwassef_geely.webp";
 import drKashefPoster from "@/assets/posters/dr_kashef.webp";
 import textMotionPoster from "@/assets/posters/text_motion.webp";
 import letsGoBigPoster from "@/assets/posters/lets_go_big.webp";
@@ -39,6 +40,7 @@ const VIDEO_MEDIA = [
   { src: `${CLOUD}/v1784334561/abbas-motors-chatgpt-ad_kbei7j.mp4`, poster: abbasChatPoster },
   { src: `${CLOUD}/v1784334687/quick-loan-ui-animation_ebdlro.mp4`, poster: quickLoanPoster },
   { src: `${CLOUD}/v1784334649/demo-star-ui-animation_k10svm.mp4`, poster: demoStarPoster },
+  { src: `${CLOUD}/v1784573775/ELWASEEF_GEELY_biqo85.mp4`, poster: alwassefGeelyPoster },
 ];
 
 // Each labelled reel row shows this list of indices (into VIDEO_MEDIA /
@@ -46,10 +48,11 @@ const VIDEO_MEDIA = [
 //   0 Renew Story · 1 Renew Star · 2 Easy Way · 3 Golf City · 4 Alwassef · 5 Dr. ElKashef
 //   6 It's a Story Problem · 7 Let's Go Big · 8 Portfolio in Motion
 //   9 Abbas App · 10 Abbas Chat · 11 Quick Loan · 12 Demo Star
+//   13 Alwassef Geely EX2
 const VIDEO_GROUPS: number[][] = [
-  [0, 1, 2, 3, 4, 5], // Cinematic AI Films
-  [6, 7, 8],          // Motion Graphics & Type
-  [9, 10, 11, 12],    // UI Animation
+  [0, 1, 2, 3, 4, 5, 13], // Cinematic AI Films
+  [6, 7, 8],              // Motion Graphics & Type
+  [9, 10, 11, 12],        // UI Animation
 ];
 
 function PlayGlyph() {

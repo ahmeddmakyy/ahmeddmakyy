@@ -450,7 +450,6 @@ function Index() {
           <div className="container">
             <div className="section-head" data-reveal>
               <h2 className="section-title"><Rich parts={c.work.title} /></h2>
-              <p className="section-lede">{c.work.lede}</p>
             </div>
             <MorphCards
               gridClassName="stacking-cards"

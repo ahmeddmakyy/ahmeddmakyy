@@ -64,6 +64,13 @@ export default function SpotlightReveal({
       return;
     }
 
+    // The loupe is a design length in px, but the layout is rem-scaled (the root
+    // font-size steps down on wide viewports), so the radius has to follow or the
+    // spotlight ends up wider than the shrunken portrait and reveals it all at
+    // once. Read once and on resize — never inside the rAF loop.
+    const rootScale = () =>
+      parseFloat(getComputedStyle(document.documentElement).fontSize) / 16 || 1;
+    let k = rootScale();
     let r = wrap.getBoundingClientRect();
     const face = () => ({ x: r.width / 2, y: r.height * faceY });
     const t = { ...face(), rad: 0 };
@@ -72,10 +79,13 @@ export default function SpotlightReveal({
     let mode: "intro" | "park" | "cursor" = "intro";
     const t0 = performance.now();
 
-    const onResize = () => (r = wrap.getBoundingClientRect());
+    const onResize = () => {
+      r = wrap.getBoundingClientRect();
+      k = rootScale();
+    };
     const take = () => {
       mode = "cursor";
-      t.rad = radius;
+      t.rad = radius * k;
     };
     const onEnter = () => take();
     const onLeave = () => (t.rad = 0);
@@ -84,7 +94,7 @@ export default function SpotlightReveal({
       r = wrap.getBoundingClientRect();
       t.x = e.clientX - r.left;
       t.y = e.clientY - r.top;
-      t.rad = radius;
+      t.rad = radius * k;
     };
 
     const loop = (now: number) => {
@@ -94,12 +104,12 @@ export default function SpotlightReveal({
         const e = 1 - Math.pow(1 - p, 3); // easeOutCubic bloom
         t.x = r.width * (0.5 + 0.1 * Math.sin(now / 520));
         t.y = r.height * faceY;
-        t.rad = radius * 0.82 * e;
+        t.rad = radius * k * 0.82 * e;
         if (p >= 1) mode = "park";
       } else if (mode === "park") {
         t.x = r.width * (0.5 + 0.09 * Math.sin(now / 950));
         t.y = r.height * (faceY + 0.04 * Math.sin(now / 1300));
-        t.rad = radius * 0.82;
+        t.rad = radius * k * 0.82;
       }
       c.x += (t.x - c.x) * 0.14;
       c.y += (t.y - c.y) * 0.14;
@@ -107,7 +117,7 @@ export default function SpotlightReveal({
       setV("--mx", c.x.toFixed(1) + "px");
       setV("--my", c.y.toFixed(1) + "px");
       setV("--r", c.rad.toFixed(1) + "px");
-      if (showRing && fine) setRingO(Math.min(1, c.rad / (radius * 0.5)) * 0.85);
+      if (showRing && fine) setRingO(Math.min(1, c.rad / (radius * k * 0.5)) * 0.85);
       raf = requestAnimationFrame(loop);
     };
 
