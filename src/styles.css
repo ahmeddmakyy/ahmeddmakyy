@@ -366,6 +366,26 @@ ul, ol { list-style: none; }
 .hero-field-canvas { width: 100% !important; height: 100% !important; display: block; }
 @media (prefers-reduced-motion: reduce) { .hero-field { display: none; } }
 
+/* ── Site-wide warm "aurora" cursor light (AuroraCursor). A single fixed,
+   pointer-events:none WebGL canvas that paints the mouse-steered warm bloom.
+   z-index 40: ABOVE section backgrounds + content (which top out at 3 inside
+   their own stacking contexts) so the light is actually visible, but BELOW the
+   nav (.nav-wrap 100), the mobile tab bar (.glass-tabbar 110), the card modal
+   (.morph-* 120/121) and the reel lightbox (.reel-lightbox 200) so it never
+   tints the chrome or the video player. Normal blend + low, localized alpha
+   keeps real DOM text crisp. Only mounted client-side on qualifying devices. */
+.aurora-cursor {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 40;
+  pointer-events: none;
+  mix-blend-mode: normal;
+  display: block;
+}
+@media (prefers-reduced-motion: reduce) { .aurora-cursor { display: none; } }
+
 .hero-inner { text-align: center; position: relative; z-index: 1; }
 
 .hello-badge {

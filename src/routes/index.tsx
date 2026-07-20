@@ -17,6 +17,7 @@ import Doodle from "@/components/Doodle";
 import VideoReels from "@/components/VideoReels";
 import NameReveal from "@/components/NameReveal";
 import HeroField from "@/components/HeroField";
+import AuroraCursor from "@/components/AuroraCursor";
 import { useLang, LangToggle } from "@/i18n";
 import type { Rich as RichText } from "@/content";
 
@@ -265,6 +266,11 @@ function Index() {
   return (
     <>
       <a href="#main" className="skip-link">{c.a11y.skip}</a>
+      {/* Site-wide, mouse-steered warm aurora cursor light. Self-gates
+          (reduced-motion / touch / no WebGL2 → renders null) and suppresses
+          itself over the hero. Mounted once, above section backgrounds but
+          below the nav and modals (z-index 40). */}
+      <AuroraCursor />
       {/* Liquid-glass refraction filter — referenced via backdrop-filter:
           url(#lg-refract) (Chromium only) by the DESKTOP nav bar, so it lives at
           page level. Deliberately NOT used on the mobile tab bar: an SVG
