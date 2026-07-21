@@ -39,8 +39,8 @@ const TUNING = {
   //                      every size); lower = larger, calmer swells
   SPEED: 0.4, //          time scale — slow so it reads as calm water, not busy
   AMBIENT: 1.0, //        surface-wave amplitude feeding the slope
-  SLOPE: 12.0, //         how strongly the slope bends light (kept gentle)
-  STRENGTH: 0.008, //     refraction as a fraction of uv — subtle, never a flip
+  SLOPE: 15.0, //         how strongly the slope bends light (gentle)
+  STRENGTH: 0.013, //     refraction as a fraction of uv — visible water, never a flip
 } as const;
 
 const VERT = `#version 300 es
@@ -103,14 +103,18 @@ void main(){
   // refract the media across the WHOLE surface by a SMALL fraction of uv
   vec2 baseUv = 0.5 + (luv - 0.5) * uCover;
   vec2 refr = baseUv + n.xy * ${TUNING.STRENGTH.toFixed(4)};
-  vec2 texUv = vec2(refr.x, 1.0 - refr.y);           // DOM texture is y-flipped
+  // UNPACK_FLIP_Y is false AND luv is y-down, so texUv.y = refr.y is UPRIGHT.
+  // A stray "1.0 - refr.y" here rendered the whole overlay UPSIDE-DOWN — that was
+  // the long-standing "the image flips / looks mirrored on hover" bug: the
+  // flipped copy covered the real poster, so the water never read as water.
+  vec2 texUv = vec2(refr.x, refr.y);
   vec3 col = texture(uTex, clamp(texUv, 0.001, 0.999)).rgb;
 
-  // a faint moving sheen where the surface tilts to the light — kept very low so
-  // it reads as water catching light, not glare
+  // a soft moving sheen where the surface tilts to the light — reads as light
+  // gliding across water (gentle, never glare)
   vec3 L = normalize(vec3(0.35, -0.45, 0.82));
   vec3 H = normalize(L + vec3(0.0, 0.0, 1.0));
-  float spec = pow(max(dot(n, H), 0.0), 60.0) * 0.10;
+  float spec = pow(max(dot(n, H), 0.0), 45.0) * 0.16;
   col += spec * rectMask;
 
   float alpha = clamp(presence + spec * rectMask, 0.0, 1.0);
