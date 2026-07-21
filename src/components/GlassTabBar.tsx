@@ -83,7 +83,10 @@ export default function GlassTabBar({
   }, [active, optimistic]);
   const current = optimistic ?? active;
 
-  const onTap = (id: string) => {
+  // Fire on POINTERDOWN, not click: the pill + haptic land on touchdown (<100ms,
+  // native feel) instead of after the ~50–120ms synthetic click. The <a href>
+  // still handles the real navigation on click.
+  const onDown = (id: string) => {
     setOptimistic(id);
     // subtle native-style tick (Android/Chrome honour it; iOS Safari no-ops)
     try {
@@ -104,7 +107,7 @@ export default function GlassTabBar({
             href={`#${t.id}`}
             className={`gt-item${t.cta ? " gt-cta" : ""}${isActive ? " active" : ""}`}
             aria-current={isActive ? "location" : undefined}
-            onClick={() => onTap(t.id)}
+            onPointerDown={() => onDown(t.id)}
           >
             {isActive && (
               <motion.span

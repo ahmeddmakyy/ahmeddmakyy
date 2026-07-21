@@ -59,6 +59,8 @@ export interface SiteContent {
     showDetails: string;
     hideDetails: string;
     seek: string;
+    copyLink: string;
+    copied: string;
   };
   videos: { title: string; tag: string; client: string; description: string }[];
   about: {
@@ -152,6 +154,8 @@ const en: SiteContent = {
     showDetails: "Show details",
     hideDetails: "Hide details",
     seek: "Seek",
+    copyLink: "Copy link",
+    copied: "Link copied!",
   },
   videos: [
     {
@@ -402,6 +406,8 @@ const ar: SiteContent = {
     showDetails: "افتح التفاصيل",
     hideDetails: "اقفل التفاصيل",
     seek: "التنقل في الفيديو",
+    copyLink: "انسخ لينك الفيديو",
+    copied: "اتنسخ اللينك!",
   },
   videos: [
     {
