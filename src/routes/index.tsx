@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Fragment, useEffect, useRef, useState } from "react";
-import { motion, useMotionValue, useSpring, useReducedMotion } from "framer-motion";
+import { Fragment, useEffect, useState } from "react";
 import ahmedHero from "@/assets/ahmed-hero-cropped.webp";
 import ahmedHeroBw from "@/assets/ahmed-hero-bw.webp";
 import logoMark from "@/assets/logo-mark.webp";
@@ -17,7 +16,6 @@ import Doodle from "@/components/Doodle";
 import VideoReels from "@/components/VideoReels";
 import NameReveal from "@/components/NameReveal";
 import HeroField from "@/components/HeroField";
-import AuroraCursor from "@/components/AuroraCursor";
 import LiquidMedia from "@/components/LiquidMedia";
 import CursorFxToggle from "@/components/CursorFxToggle";
 import { useLang, LangToggle } from "@/i18n";
@@ -52,51 +50,6 @@ function Rich({ parts }: { parts: RichText }) {
         ),
       )}
     </>
-  );
-}
-
-// A pill link that gently pulls toward the cursor (magnetic). Same markup/classes
-// as the plain <a>, so the visual design is unchanged — only the motion is added.
-function MagneticLink({
-  href,
-  className,
-  strength = 0.32,
-  children,
-}: {
-  href: string;
-  className?: string;
-  strength?: number;
-  children: React.ReactNode;
-}) {
-  const ref = useRef<HTMLAnchorElement>(null);
-  const reduce = useReducedMotion();
-  const mx = useMotionValue(0);
-  const my = useMotionValue(0);
-  const x = useSpring(mx, { stiffness: 220, damping: 18, mass: 0.4 });
-  const y = useSpring(my, { stiffness: 220, damping: 18, mass: 0.4 });
-  const onMove = (e: React.PointerEvent<HTMLAnchorElement>) => {
-    // Mouse-only: a touch finger dragging over the button shouldn't drive the
-    // magnetic spring (it jitters and fights scrolling on mobile).
-    if (reduce || !ref.current || e.pointerType !== "mouse") return;
-    const r = ref.current.getBoundingClientRect();
-    mx.set((e.clientX - (r.left + r.width / 2)) * strength);
-    my.set((e.clientY - (r.top + r.height / 2)) * strength);
-  };
-  const reset = () => {
-    mx.set(0);
-    my.set(0);
-  };
-  return (
-    <motion.a
-      ref={ref}
-      href={href}
-      className={`${className ?? ""} btn-magnetic`.trim()}
-      style={{ x, y }}
-      onPointerMove={onMove}
-      onPointerLeave={reset}
-    >
-      {children}
-    </motion.a>
   );
 }
 
@@ -268,39 +221,21 @@ function Index() {
   return (
     <>
       <a href="#main" className="skip-link">{c.a11y.skip}</a>
-      {/* Site-wide, mouse-steered warm aurora cursor light. Self-gates
-          (reduced-motion / touch / no WebGL2 → renders null) and suppresses
-          itself over the hero. Mounted once, above section backgrounds but
-          below the nav and modals (z-index 40). */}
-      <AuroraCursor />
-      {/* The mouse "liquid", moved OFF the whole browser and ONTO media only:
-          a WebGL lens that refracts whatever [data-liquid] element the cursor
-          is over (reel posters now, idea-images later), using the media's own
-          pixels — no fixed colour — and going quiet while a video plays.
-          Self-gates (touch / reduced-motion / no WebGL2 / the calm toggle). */}
+      {/* The mouse "liquid" lives ONLY on media: a WebGL surface that ripples
+          whatever [data-liquid] element the cursor is over (reel posters now),
+          using the media's own pixels — the image itself behaves like water.
+          It does NOT track the cursor; hovering just wakes the gentle ambient
+          ripple. Self-gates (touch / reduced-motion / no WebGL2 / calm toggle).
+          The click FIRE was removed per request. */}
       <LiquidMedia />
-      {/* Standalone glass button in the hero's top-left (beside the floating
-          nav) that calms JUST the cursor fire + liquid for anyone who prefers
+      {/* Standalone sticker button in the hero's top-left (beside the floating
+          nav) that calms the media liquid + frame fire for anyone who prefers
           less motion; desktop-only, persisted. Morphs open on hover. */}
       <CursorFxToggle />
-      {/* Liquid-glass refraction filter — referenced via backdrop-filter:
-          url(#lg-refract) (Chromium only) by the DESKTOP nav bar, so it lives at
-          page level. Deliberately NOT used on the mobile tab bar: an SVG
-          displacement backdrop-filter re-runs its shader every scroll frame
-          (mobile scroll jank) and iOS doesn't support url() backdrop filters at
-          all. Larger, lower-frequency swells + a soft blur read as a real glass
-          lens bending the page behind the bar, rather than a noisy frost. */}
-      <svg aria-hidden="true" width="0" height="0" style={{ position: "absolute" }}>
-        <filter id="lg-refract" x="-20%" y="-20%" width="140%" height="140%" colorInterpolationFilters="sRGB">
-          <feTurbulence type="fractalNoise" baseFrequency="0.004 0.006" numOctaves={2} seed={7} result="n" />
-          <feGaussianBlur in="n" stdDeviation="2.4" result="nb" />
-          <feDisplacementMap in="SourceGraphic" in2="nb" scale={20} xChannelSelector="R" yChannelSelector="G" />
-        </filter>
-      </svg>
       {/* ══════════ NAV ══════════ */}
-      {/* Mobile has no hamburger menu: the top bar slims down to brand + language
-          (liquid glass via CSS ≤980px) and navigation moves to the app-style
-          glass tab bar in the thumb zone below. */}
+      {/* Mobile has no hamburger menu: the top bar slims to brand + language and
+          navigation moves to the app-style sticker dock in the thumb zone below.
+          Both the bar and the dock are cream stickers — no liquid glass. */}
       <header className="nav-wrap">
         <nav className="nav container" aria-label="Main">
           <ul className="nav-links nav-left">
@@ -388,15 +323,15 @@ function Index() {
               </div>
 
               <div className="glass-cta load-6">
-                <MagneticLink className="btn btn-primary" href="#videos">
+                <a className="btn btn-primary" href="#videos">
                   {c.hero.ctaWork}
                   <svg className="arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path d="M7 17L17 7M17 7H9M17 7v8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
-                </MagneticLink>
-                <MagneticLink className="btn btn-ghost" href="#contact">
+                </a>
+                <a className="btn btn-ghost" href="#contact">
                   {c.hero.ctaHire}
-                </MagneticLink>
+                </a>
               </div>
 
               {/* deliberate reference nod: a rotating in-brand sticker in the

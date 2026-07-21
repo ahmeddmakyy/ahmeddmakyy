@@ -25,6 +25,18 @@
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --radius-card: 1.5rem;
 
+  /* ── Adaptive "sticker" primitive ──────────────────────────────────────────
+     ONE sticker language across the whole site: a solid fill + a 2px outline + a
+     HARD offset "peel" shadow. The outline + peel TONE flips by surface so the
+     sticker reads on light AND dark: ink peel on light paper (the default here),
+     cream peel on the near-black sections (see the .section.dark remap). Orange
+     stays reserved for ACTION — it is never the peel. Cards keep their own fill;
+     only the peel/outline adapt to the background they sit on. */
+  --stk-cream: #FFFDF8;
+  --stk-line: var(--heading);            /* 2px outline, light surfaces */
+  --stk-cast: var(--heading);            /* hard peel offset, light surfaces */
+  --stk-soft: rgba(23, 23, 24, 0.28);    /* soft float drop under the peel */
+
   /* reels / lightbox */
   --reel-radius: 1.25rem;      /* 20px small tiles */
   --reel-radius-lg: 1.5rem;    /* 24px hero + lightbox video */
@@ -111,14 +123,19 @@ ul, ol { list-style: none; }
   z-index: 100;
 }
 
+/* The top bar is now a CREAM STICKER — the same language as the buttons (no more
+   liquid glass, on desktop or mobile). Cream fill, bold ink outline, hard ink
+   peel + a soft float. Ink text throughout; orange stays only on the CTA + the
+   active tab. */
 .nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--ink);
-  border-radius: 1.125rem;
-  padding: 0.625rem 1.125rem;
-  box-shadow: 0 12px 32px rgba(5, 5, 5, 0.18);
+  background: var(--stk-cream);
+  border-radius: 16px;
+  border: 2px solid var(--heading);
+  padding: 0.5rem 0.85rem;
+  box-shadow: 0 3px 0 0 var(--heading), 0 14px 28px -14px rgba(23, 23, 24, 0.28);
 }
 
 .nav-links {
@@ -129,47 +146,54 @@ ul, ol { list-style: none; }
 .nav-right { justify-content: flex-end; }
 
 .nav-link {
-  color: #fff;
+  color: var(--heading);
   font-size: 0.9688rem;
-  font-weight: 500;
-  padding: 0.5625rem 1.125rem;
+  font-weight: 600;
+  padding: 0.5625rem 1rem;
   border-radius: 999px;
   transition: background 0.3s var(--ease), color 0.3s var(--ease);
 }
-.nav-link:hover { background: rgba(255, 255, 255, 0.1); }
-.nav-link.active { background: var(--orange); }
+.nav-link:hover { background: rgba(23, 23, 24, 0.07); }
+.nav-link.active { background: var(--orange); color: #fff; }
 
-/* Nav contact CTA (replaces the plain Contact link) */
+/* Nav contact CTA (replaces the plain Contact link) — an orange sticker pill */
 .nav-cta {
   display: inline-flex;
   align-items: center;
-  padding: 0.5625rem 1.25rem;
+  padding: 0.5rem 1.15rem;
   border-radius: 999px;
   background: var(--orange);
   color: #fff;
   font-size: 0.9688rem;
   font-weight: 700;
   white-space: nowrap;
-  transition: background 0.3s var(--ease), transform 0.3s var(--ease);
+  border: 2px solid var(--heading);
+  box-shadow: 0 3px 0 0 var(--heading);
+  transition: transform 0.16s var(--ease), box-shadow 0.16s var(--ease), background 0.3s var(--ease);
 }
-.nav-cta:hover { background: var(--orange-deep); transform: translateY(-1px); }
+.nav-cta:hover { background: var(--orange-deep); transform: translateY(-2px); box-shadow: 0 5px 0 0 var(--heading); }
+.nav-cta:active { transform: translateY(2px); box-shadow: 0 1px 0 0 var(--heading); }
 .nav-cta.active { background: var(--orange-deep); }
 
 .brand {
   display: flex;
   align-items: center;
   gap: 0.625rem;
-  padding: 0 1.125rem;
+  padding: 0 0.75rem;
 }
+/* the brand mark is a light/monoline logo — seat it on a small ink chip so it
+   reads on the cream bar (it was designed for the old dark bar) */
 .brand-mark {
   display: block;
-  width: 2.375rem;
-  height: 2.375rem;
-  border-radius: 0.6875rem;
+  width: 2.125rem;
+  height: 2.125rem;
+  border-radius: 0.55rem;
   object-fit: contain;
+  background: var(--heading);
+  padding: 3px;
 }
 .brand-word {
-  color: #fff;
+  color: var(--heading);
   font-weight: 700;
   font-size: 1rem;
   letter-spacing: 0.005em;
@@ -183,91 +207,14 @@ ul, ol { list-style: none; }
 }
 .nav-link { transition: background 0.3s var(--ease), color 0.3s var(--ease), transform 0.16s var(--ease); }
 .nav-link:hover { transform: translateY(-1px); }
-.nav-link:active, .nav-cta:active { transform: scale(0.93); }
+.nav-link:active { transform: scale(0.93); }
 .brand-mark { transition: transform 0.45s var(--ease); }
 .brand:hover .brand-mark { transform: rotate(-8deg) scale(1.06); }
 .brand:active .brand-mark { transform: scale(0.94); }
 
-/* ── Desktop liquid-glass nav (≥981px) — the flagship liquidGL-style surface ──
-   On PC the top bar becomes a smoked-glass pane that REFRACTS the hero behind it
-   (genuine backdrop refraction via #lg-refract on Chromium — the tool's real
-   look), finished with a bevelled rim + specular sheen. Desktop only: it has the
-   GPU headroom the mobile scroll path can't spare, and the bar is small/bounded
-   (never the >50%-viewport case liquidGL is documented to destabilise on). The
-   smoked tint matches the mobile chrome so white nav text stays ≥AA over the
-   light hero. @supports-guarded so no-backdrop browsers keep the solid ink bar. */
-@media (min-width: 981px) {
-  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-    .nav {
-      position: relative;
-      border-radius: 999px; /* full capsule ends — the WWDC liquid-glass silhouette */
-      /* Clearer "liquid glass": a near-uniform translucent tint (no silvery white
-         fill / heavy bevel — those read as brushed metal) so the hero shows
-         THROUGH the bar, refracted below. The glass cues come from the thin
-         bright rim, the dispersion edge, and the refraction — not from a tint
-         gradient. White text stays legible via the dimmed backdrop + link shadow. */
-      background:
-        linear-gradient(180deg, rgba(40, 40, 48, 0.30), rgba(14, 14, 18, 0.46)),
-        radial-gradient(120% 140% at 50% -20%, rgba(255, 255, 255, 0.10), transparent 55%);
-      backdrop-filter: blur(12px) saturate(190%) brightness(0.82);
-      -webkit-backdrop-filter: blur(12px) saturate(190%) brightness(0.82);
-      border: 1px solid rgba(255, 255, 255, 0.22);
-      box-shadow:
-        inset 0 1.5px 0.5px rgba(255, 255, 255, 0.62), /* crisp bright top rim */
-        inset 0 6px 14px -8px rgba(255, 255, 255, 0.22), /* inner glass glow */
-        inset 0 -8px 16px -10px rgba(0, 0, 0, 0.5), /* bottom thickness/depth */
-        0 24px 56px -12px rgba(5, 5, 5, 0.42); /* deep floating shadow */
-    }
-    /* Specular: a soft top glint, plus a bright light-streak parked off-frame
-       that SWEEPS across on hover — reads as light catching real glass, with
-       zero idle cost (it only repaints during the brief hover transition). */
-    .nav::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      overflow: hidden;
-      background-image:
-        radial-gradient(120% 76% at 50% -35%, rgba(255, 255, 255, 0.18), transparent 58%),
-        linear-gradient(100deg, transparent 42%, rgba(255, 255, 255, 0.22) 50%, transparent 58%);
-      background-size: 100% 100%, 250% 100%;
-      background-repeat: no-repeat;
-      background-position: 0 0, 205% 0;
-      mix-blend-mode: screen;
-      pointer-events: none;
-      transition: background-position 0.95s var(--ease);
-    }
-    .nav:hover::before { background-position: 0 0, -55% 0; }
-    /* Chromatic dispersion at the rim — the prism edge that says "real glass".
-       A 1.2px gradient border (cool → warm) revealed by an xor mask ring. */
-    .nav::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      padding: 1.4px;
-      background: var(--glass-disp);
-      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-      -webkit-mask-composite: xor;
-      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-      mask-composite: exclude;
-      pointer-events: none;
-    }
-    .nav > * { position: relative; z-index: 1; }
-    .nav .nav-link,
-    .nav .brand-word { text-shadow: 0 1px 2px rgba(0, 0, 0, 0.38); }
-    /* Chromium only: bend the hero THROUGH the glass. Bigger scale + lower noise
-       frequency than the player's filter → a smoother, more lens-like refraction
-       (the desktop bar has the GPU headroom the scroll path can't spare). */
-    @supports (backdrop-filter: url("#lg-refract")) {
-      .nav { backdrop-filter: blur(7px) saturate(185%) brightness(0.84) url("#lg-refract"); }
-    }
-  }
-}
-
-/* ── "Calm the cursor" toggle — a standalone liquid-glass pill in the hero's
-   top-left, matching the desktop nav glass. Desktop-only, since the fire+liquid
-   it controls are themselves desktop-only. ── */
+/* ── "Calm the cursor" toggle — a standalone CREAM STICKER pill in the hero's
+   top-left, matching the nav + buttons. Desktop-only, since the liquid + frame
+   fire it calms are themselves desktop-only. ── */
 .fx-toggle { display: none; }
 @media (min-width: 981px) {
   /* At rest a glass CIRCLE (icon only); on hover/focus it MORPHS into a pill and
@@ -283,21 +230,14 @@ ul, ol { list-style: none; }
     height: 2.75rem;
     padding: 0;
     border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    background:
-      linear-gradient(180deg, rgba(40, 40, 48, 0.30), rgba(14, 14, 18, 0.46)),
-      radial-gradient(120% 140% at 50% -20%, rgba(255, 255, 255, 0.10), transparent 55%);
-    backdrop-filter: blur(12px) saturate(190%) brightness(0.82);
-    -webkit-backdrop-filter: blur(12px) saturate(190%) brightness(0.82);
-    color: rgba(255, 255, 255, 0.92);
+    border: 2px solid var(--heading);
+    background: var(--stk-cream);
+    color: var(--heading);
     cursor: pointer;
     overflow: hidden;
     white-space: nowrap;
-    box-shadow:
-      inset 0 1.5px 0.5px rgba(255, 255, 255, 0.62),
-      inset 0 -7px 14px -9px rgba(0, 0, 0, 0.5),
-      0 16px 36px -12px rgba(5, 5, 5, 0.42);
-    transition: transform 0.3s var(--ease), color 0.25s var(--ease), box-shadow 0.3s var(--ease);
+    box-shadow: 0 3px 0 0 var(--heading), 0 12px 24px -14px rgba(23, 23, 24, 0.3);
+    transition: transform 0.18s var(--ease), color 0.25s var(--ease), box-shadow 0.18s var(--ease);
     animation: navDrop 0.7s var(--ease) both;
   }
   .fx-toggle-ico {
@@ -319,13 +259,10 @@ ul, ol { list-style: none; }
   }
   .fx-toggle:hover,
   .fx-toggle:focus-visible {
-    transform: translateY(-1px);
-    color: #fff;
+    transform: translateY(-2px);
+    color: var(--orange-deep);
     outline: none;
-    box-shadow:
-      inset 0 1.5px 0.5px rgba(255, 255, 255, 0.72),
-      0 20px 44px -12px rgba(5, 5, 5, 0.5),
-      0 0 22px -4px rgba(253, 111, 0, 0.38);
+    box-shadow: 0 5px 0 0 var(--heading), 0 16px 28px -14px rgba(23, 23, 24, 0.34);
   }
   .fx-toggle:hover .fx-toggle-label,
   .fx-toggle:focus-visible .fx-toggle-label {
@@ -333,7 +270,7 @@ ul, ol { list-style: none; }
     opacity: 1;
     padding-right: 1.05rem;
   }
-  .fx-toggle:active { transform: scale(0.95); }
+  .fx-toggle:active { transform: translateY(2px); box-shadow: 0 1px 0 0 var(--heading); }
   .fx-toggle .fx-spark-main,
   .fx-toggle .fx-spark-a,
   .fx-toggle .fx-spark-b { transition: opacity 0.25s var(--ease); }
@@ -344,7 +281,7 @@ ul, ol { list-style: none; }
     transition: opacity 0.25s var(--ease), transform 0.25s var(--ease);
   }
   /* reduced state: dim the sparks, reveal the slash, tint the whole chip warm */
-  .fx-toggle.is-reduced { color: var(--orange-soft); }
+  .fx-toggle.is-reduced { color: var(--orange-deep); background: #FFF3E9; }
   .fx-toggle.is-reduced .fx-spark-main,
   .fx-toggle.is-reduced .fx-spark-a,
   .fx-toggle.is-reduced .fx-spark-b { opacity: 0.4; }
@@ -525,25 +462,8 @@ ul, ol { list-style: none; }
 .hero-field-canvas { width: 100% !important; height: 100% !important; display: block; }
 @media (prefers-reduced-motion: reduce) { .hero-field { display: none; } }
 
-/* ── Site-wide warm "aurora" cursor light (AuroraCursor). A single fixed,
-   pointer-events:none WebGL canvas that paints the mouse-steered warm bloom.
-   z-index 40: ABOVE section backgrounds + content (which top out at 3 inside
-   their own stacking contexts) so the light is actually visible, but BELOW the
-   nav (.nav-wrap 100), the mobile tab bar (.glass-tabbar 110), the card modal
-   (.morph-* 120/121) and the reel lightbox (.reel-lightbox 200) so it never
-   tints the chrome or the video player. Normal blend + low, localized alpha
-   keeps real DOM text crisp. Only mounted client-side on qualifying devices. */
-.aurora-cursor {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 40;
-  pointer-events: none;
-  mix-blend-mode: normal;
-  display: block;
-}
-@media (prefers-reduced-motion: reduce) { .aurora-cursor { display: none; } }
+/* (The site-wide click-fire cursor canvas was removed per request — only the
+   media liquid remains.) */
 
 /* The media liquid-lens canvas — full-viewport but it only paints a small
    refracted patch over whatever [data-liquid] element the cursor is on. Sits
@@ -920,6 +840,8 @@ svg.doodle { display: inline-block; vertical-align: middle; overflow: visible; }
   .videos-hero-spark, .contact-star { animation: none; }
 }
 
+/* The hero button group — just a layout wrapper now (the glass is gone; each
+   button is its own sticker). */
 .glass-cta {
   position: absolute;
   z-index: 3;
@@ -928,49 +850,58 @@ svg.doodle { display: inline-block; vertical-align: middle; overflow: visible; }
   transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 0.375rem;
-  padding: 0.5625rem;
-  border-radius: 999px;
-  background: var(--glass-fill);
-  border: 1px solid var(--glass-border);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 10px 30px rgba(5, 5, 5, 0.14);
+  gap: 0.625rem;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
-/* ══════════ BUTTONS ══════════ */
+/* ══════════ BUTTONS — the sticker language, everywhere ══════════ */
+/* Every CTA is now a "sticker": solid fill + 2px outline + a HARD peel offset
+   whose tone adapts to the surface (see --stk-*). On a real pointer it PEELS UP
+   on hover (taller offset + lift) and DEPRESSES on press — the tactile motion
+   Ahmed liked on the mobile "See My Work" button, now on desktop too. */
 .btn {
   display: inline-flex;
   align-items: center;
   gap: 0.5625rem;
   font-family: inherit;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 650;
   border-radius: 999px;
   padding: 0.875rem 1.75rem;
   white-space: nowrap;
-  transition: background 0.3s var(--ease), border-color 0.3s var(--ease), transform 0.3s var(--ease);
+  border: 2px solid var(--stk-line);
+  box-shadow: 0 3px 0 0 var(--stk-cast), 0 10px 20px -12px var(--stk-soft);
+  transition: transform 0.16s var(--ease), box-shadow 0.16s var(--ease),
+              background 0.3s var(--ease), border-color 0.3s var(--ease);
 }
 .btn .arrow { width: 1.0625rem; transition: transform 0.3s var(--ease); }
 .btn:hover .arrow { transform: translate(0.1875rem, -0.1875rem); }
-/* Every other tappable pill on the site (nav-link, gt-item, morph-btn) has
-   press feedback; the CTA buttons were the one gap — touch users got zero
-   tactile response on the site's most-tapped elements. */
-.btn:active { transform: scale(0.96); }
+/* press: the sticker sinks into the page (offset collapses) — works on touch too */
+.btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 0 0 0 var(--stk-cast), 0 4px 10px -8px var(--stk-soft);
+}
+@media (hover: hover) and (pointer: fine) {
+  /* the PC "animation": peel UP + a taller hard offset on hover */
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 0 0 var(--stk-cast), 0 16px 26px -14px var(--stk-soft);
+  }
+}
 
-/* white on orange measures 2.82:1 — kept deliberately: it is the JCREA
-   template identity this site clones; do not "fix" to dark text */
+/* orange = the primary action (kept white-on-orange: the brand identity). */
 .btn-primary { background: var(--orange); color: #fff; }
 .btn-primary:hover { background: var(--orange-deep); }
 
-.btn-ghost { color: #fff; padding: 0.875rem 1.375rem; }
-.btn-ghost:hover { background: rgba(255, 255, 255, 0.14); }
+/* ghost = a cream sticker with ink text (the mobile "See My Work" companion). */
+.btn-ghost { background: var(--stk-cream); color: var(--heading); padding: 0.875rem 1.5rem; }
+.btn-ghost:hover { background: #fff; }
 
-.btn-outline {
-  color: #fff;
-  border: 1.5px solid rgba(255, 255, 255, 0.28);
-}
-.btn-outline:hover { border-color: var(--orange); }
+.btn-outline { background: var(--stk-cream); color: var(--heading); }
+.btn-outline:hover { background: #fff; }
 
 /* WhatsApp CTA — intentionally NOT green; uses the brand orange primary fill. */
 .btn .wa-icon { width: 1.25rem; height: 1.25rem; }
@@ -1011,12 +942,17 @@ svg.doodle { display: inline-block; vertical-align: middle; overflow: visible; }
   padding: 0 1rem;
   border-radius: 999px;
   font-family: inherit;
-  font-weight: 600;
+  font-weight: 650;
   font-size: 1rem;
   white-space: nowrap;
-  transition: background 0.3s var(--ease), border-color 0.3s var(--ease), box-shadow 0.3s var(--ease), transform 0.2s var(--ease);
+  border: 2px solid var(--stk-line);
+  box-shadow: 0 3px 0 0 var(--stk-cast), 0 10px 20px -12px var(--stk-soft);
+  transition: transform 0.16s var(--ease), box-shadow 0.16s var(--ease), background 0.3s var(--ease), border-color 0.3s var(--ease);
 }
-.morph-btn:active { transform: scale(0.96); }
+.morph-btn:active { transform: translateY(3px); box-shadow: 0 0 0 0 var(--stk-cast), 0 4px 10px -8px var(--stk-soft); }
+@media (hover: hover) and (pointer: fine) {
+  .morph-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 0 0 var(--stk-cast), 0 16px 26px -14px var(--stk-soft); }
+}
 .morph-btn .mb-ico { display: grid; place-items: center; width: 1.375rem; height: 1.375rem; flex: none; }
 .morph-btn .mb-ico svg { width: 1.375rem; height: 1.375rem; }
 .morph-btn .mb-label {
@@ -1026,10 +962,10 @@ svg.doodle { display: inline-block; vertical-align: middle; overflow: visible; }
   overflow: hidden;
   transition: max-width 0.5s var(--ease), opacity 0.35s var(--ease), margin-left 0.5s var(--ease);
 }
-.morph-btn-primary { background: var(--orange); color: #fff; box-shadow: 0 12px 26px -10px rgba(253, 111, 0, 0.6); }
+.morph-btn-primary { background: var(--orange); color: #fff; }
 .morph-btn-primary:hover, .morph-btn-primary:focus-visible { background: var(--orange-deep); }
-.morph-btn-outline { color: #fff; border: 1.5px solid rgba(255, 255, 255, 0.3); }
-.morph-btn-outline:hover, .morph-btn-outline:focus-visible { border-color: var(--orange); }
+.morph-btn-outline { background: transparent; color: #fff; }
+.morph-btn-outline:hover, .morph-btn-outline:focus-visible { background: rgba(255, 253, 248, 0.08); }
 @media (hover: hover) {
   .morph-btn:hover .mb-label,
   .morph-btn:focus-visible .mb-label { max-width: 24ch; opacity: 1; margin-left: 0.6875rem; }
@@ -1147,6 +1083,11 @@ svg.doodle { display: inline-block; vertical-align: middle; overflow: visible; }
   color: #fff;
 }
 .section.light { background: var(--paper); }
+/* Near-black sections flip the sticker peel to CREAM — an ink peel is invisible on
+   #060–#0B0 black. Buttons + cards inside now cast a warm cream lip that reads as a
+   sticker on the dark. (The maroon CTA band keeps the default ink peel: its white
+   button reads a dark peel fine, so it is deliberately NOT remapped here.) */
+.section.dark { --stk-line: rgba(255, 253, 248, 0.55); --stk-cast: var(--stk-cream); --stk-soft: rgba(0, 0, 0, 0.5); }
 /* Videos gets its own "room": Services + Videos were two identical dark bands
    back-to-back, so the flagship blended in. Deeper base + a stronger warm
    corner-glow + a hairline top rule give it a clear boundary. */
@@ -1201,18 +1142,22 @@ svg.doodle { display: inline-block; vertical-align: middle; overflow: visible; }
   gap: 1.5rem;
 }
 
+/* Cards are STICKERS too (Ahmed's ask). They keep their own dark fill; the 2px
+   outline + hard peel come from --stk-* and, because these cards live on the
+   near-black sections, that peel is CREAM (an ink peel is invisible on black).
+   transform (entrance + hover lift) stays framer's; CSS only grows the peel +
+   outline on hover so the two never fight over `transform`. */
 .card {
   background: var(--card);
-  border: 1px solid var(--card-border);
+  border: 2px solid var(--stk-line);
   border-radius: var(--radius-card);
   padding: 1.875rem;
-  /* transform (entrance + hover lift) is owned by framer-motion; CSS only
-     animates the colour/shadow so the two don't fight over `transform` */
+  box-shadow: 0 3px 0 0 var(--stk-cast), 0 16px 30px -18px var(--stk-soft);
   transition: border-color 0.35s var(--ease), box-shadow 0.35s var(--ease);
 }
 .card:hover {
-  border-color: rgba(253, 111, 0, 0.55);
-  box-shadow: 0 22px 44px rgba(5, 5, 5, 0.5);
+  border-color: var(--orange);
+  box-shadow: 0 6px 0 0 var(--stk-cast), 0 26px 48px -20px var(--stk-soft);
 }
 
 .card h3 {
@@ -2028,46 +1973,8 @@ html.js [data-reveal].revealed {
     right: env(safe-area-inset-right, 0px);
   }
   main .container { padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px); }
-  .nav {
-    position: relative;
-    padding: 0.5rem 0.9rem;
-    border-radius: 16px;
-    border: 2px solid var(--heading);      /* sticker ink outline */
-    background: #FFFDF8;                    /* warm cream, solid — no glass */
-    color: var(--heading);
-    box-shadow:
-      0 3px 0 0 var(--heading),
-      0 10px 20px -10px rgba(23, 23, 24, 0.28);
-  }
-  .nav > * { position: relative; z-index: 1; }
-  .nav .brand-word { color: var(--heading); text-shadow: none; }  /* ink on cream */
-
-  /* Sticker buttons on the light hero: drop the frosted glass container and give
-     the pills a solid fill + ink outline + hard offset (the Figr sticker look). */
-  .glass-cta {
-    background: transparent;
-    border: none;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    box-shadow: none;
-    gap: 0.5rem;
-    padding: 0;
-  }
-  .btn-primary {
-    color: #fff;
-    border: 2px solid var(--heading);
-    box-shadow: 0 3px 0 0 var(--heading);
-  }
-  .btn-ghost {
-    background: #FFFDF8;
-    color: var(--heading);
-    border: 2px solid var(--heading);
-    box-shadow: 0 3px 0 0 var(--heading);
-  }
-  .btn-primary:active, .btn-ghost:active {
-    transform: translateY(2px);
-    box-shadow: 0 1px 0 0 var(--heading);
-  }
+  /* The nav + hero buttons are now the SAME cream sticker at every width (base
+     rules), so the old mobile-only glass-strip + sticker overrides are gone. */
 
   /* the last scrollable content must clear the floating dock */
   .footer { padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px)); }
@@ -2166,8 +2073,6 @@ html.js [data-reveal].revealed {
   .services-wrap .blob-float { display: none; }
   /* Work meta stacks on phones (re-homed here when the old video-player CSS was removed) */
   .work-meta { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
-  /* Lighter blur across the board on mobile */
-  .glass-cta { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
   /* The card morphs open on a compositor transform; don't ALSO transition its
      border-colour + 90px-blur shadow on the same frames (full paint each frame).
      Also swap the 90px-blur shadow for a far cheaper one: a huge soft shadow is
@@ -2211,27 +2116,32 @@ html.js [data-reveal].revealed {
 }
 
 /* ══════════ LANGUAGE TOGGLE ══════════ */
+/* Language toggle = a MINI sticker pill (cream fill, ink outline, ink text). It
+   was previously white-on-transparent — invisible on the cream bar, which read
+   as "no language buttons" in the top bar. The active script shows in orange. */
 .lang-toggle {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: var(--stk-cream);
+  border: 2px solid var(--stk-line);
   border-radius: 999px;
-  padding: 0.4375rem 0.8125rem;
-  min-height: 2.75rem; /* comfortable touch target for the primary EN/AR switch */
+  padding: 0.375rem 0.75rem;
+  min-height: 2.375rem; /* comfortable touch target for the primary EN/AR switch */
   justify-content: center;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--muted-light);
   font-family: 'Bricolage Grotesque', 'Segoe UI', sans-serif;
-  font-weight: 700;
+  font-weight: 800;
   font-size: 0.8125rem;
   line-height: 1;
   cursor: pointer;
-  transition: background 0.3s var(--ease), border-color 0.3s var(--ease);
+  box-shadow: 0 2px 0 0 var(--stk-cast);
+  transition: transform 0.14s var(--ease), box-shadow 0.14s var(--ease);
 }
-.lang-toggle:hover { background: rgba(255, 255, 255, 0.16); border-color: rgba(255, 255, 255, 0.28); }
-.lang-toggle .is-active { color: #fff; }
-.lang-toggle .lang-sep { color: rgba(255, 255, 255, 0.3); }
+.lang-toggle:hover { transform: translateY(-1px); box-shadow: 0 3px 0 0 var(--stk-cast); }
+.lang-toggle:active { transform: translateY(1px); box-shadow: 0 1px 0 0 var(--stk-cast); }
+.lang-toggle .is-active { color: var(--orange-deep); }
+.lang-toggle .lang-sep { color: rgba(23, 23, 24, 0.22); }
 .nav-lang { display: flex; align-items: center; margin-inline-start: 0.5rem; }
 .lang-toggle-mobile { display: none; }
 @media (max-width: 980px) {
@@ -2301,20 +2211,8 @@ html[lang="ar"] .name-reveal { direction: rtl; }
    beat the ≤980px glass rules regardless of source order — the build's CSS
    transform (Lightning) collapses backdrop-filter prefix pairs, which silently
    demoted an order-based override of the same specificity. */
-@media (prefers-reduced-transparency: reduce) {
-  /* The mobile sticker dock + cream top nav are already SOLID (no transparency),
-     so they need no fallback. Only the DESKTOP glass nav collapses to solid ink. */
-  @media (min-width: 981px) {
-    .nav {
-      /* standard property ONLY — writing the -webkit- twin here makes Lightning
-         merge the pair and emit just the prefixed alias, which loses to the
-         standard declarations in the glass rules */
-      backdrop-filter: none !important;
-      background: var(--ink) !important;
-    }
-    .nav::before { content: none; }
-  }
-}
+/* (The nav is now a SOLID cream sticker at every width — no glass anywhere — so
+   the old prefers-reduced-transparency desktop fallback is no longer needed.) */
 
 /* ══════════ NAME REVEAL (About signature — TrueFocus port) ══════════ */
 .name-reveal {

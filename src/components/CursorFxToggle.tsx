@@ -1,12 +1,12 @@
 import { useCursorFxReduced, toggleCursorFxReduced } from "./cursorFx";
 import { useLang } from "@/i18n";
 
-/* A small, standalone glass button pinned in the hero's top-left — beside the
- * floating nav bar. It calms JUST the cursor effects (media liquid lens + click
- * fire + frame-wrap fire); every other animation on the site stays. The choice
+/* A small, standalone CREAM STICKER button pinned in the hero's top-left —
+ * beside the floating nav bar. It calms JUST the cursor effects (media liquid
+ * water + frame-wrap fire); every other animation on the site stays. The choice
  * persists (localStorage) via the shared cursorFx store.
  *
- * At rest it's a glass circle (icon only); on hover/focus it MORPHS open into a
+ * At rest it's a sticker circle (icon only); on hover/focus it MORPHS open into a
  * pill that reveals its label ("Reduce Animations" / "Enable Animations"). The
  * whole grow-from-circle motion is CSS (see .fx-toggle in styles.css).
  *

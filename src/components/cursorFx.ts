@@ -1,12 +1,12 @@
 /* cursorFx — a tiny shared, persisted toggle for the CURSOR effects only:
- *   • the liquid-ripple cursor       (AuroraCursor)
- *   • the click fire burst + fwoosh  (AuroraCursor)
+ *   • the media liquid water surface (LiquidMedia)
  *   • the frame-wrap "portal" fire   (FireFrame)
  *
- * When "reduced", those three don't mount — nothing else on the site changes
- * (the hero particle field, morph/stacking animations, scroll reveals, marquee,
- * spotlight loupe, etc. all stay). This is the switch behind the hero's little
- * "calm the cursor" button; the preference persists in localStorage.
+ * (The site-wide click-fire burst was removed per request; the toggle now calms
+ * just these two.) When "reduced", they don't mount — nothing else on the site
+ * changes (the hero particle field, morph/stacking animations, scroll reveals,
+ * marquee, spotlight loupe, etc. all stay). This is the switch behind the hero's
+ * little "calm the cursor" button; the preference persists in localStorage.
  *
  * It's a minimal external store consumed via useSyncExternalStore so the two
  * gate components re-render (mount/unmount their WebGL) the instant it flips. */

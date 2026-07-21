@@ -1,23 +1,28 @@
 /* ────────────────────────────────────────────────────────────────────────────
- * LiquidMedia.webgl — a client-only WebGL2 "liquid surface" that lives ONLY over
+ * LiquidMedia.webgl — a client-only WebGL2 "water surface" that lives ONLY over
  * media. Scoped to elements tagged [data-liquid] (reel posters now, idea-images
- * later): when the pointer moves over one, the WHOLE media becomes a still body
- * of water — a gentle ambient swell everywhere — and the cursor is a HAND touching
- * it: a soft push under the pointer plus expanding ripple rings left along its
- * path. It REFRACTS the media itself (no fixed colour, the distortion is whatever
- * image or video frame sits underneath), goes silent the instant a <video> starts
- * playing (you want to watch, not warp), and eases away when the pointer leaves.
+ * later). When the pointer moves over one, the IMAGE ITSELF becomes water: a
+ * slow, gentle swell that ripples across the WHOLE surface and refracts the
+ * media's own pixels — no fixed colour. It does NOT follow the cursor (per
+ * request): the pointer only chooses WHICH element wakes; the ripple then lives
+ * on its own, calm and even, everywhere on the image. It goes silent the instant
+ * a <video> starts playing (you want to watch, not warp) and eases away when the
+ * pointer leaves.
+ *
+ * SIZE-INDEPENDENT: the wave field is computed in the element's NORMALISED space
+ * (0..1) with an aspect correction, so a wide film and a small tile show the SAME
+ * calm ripple density and cell shape — the effect is never pinned to a fixed
+ * pixel size (a wider video no longer ripples differently from the rest).
  *
  * ONE fixed, full-viewport, pointer-events:none canvas / ONE WebGL2 context. The
  * hovered element is uploaded to a texture (re-uploaded only when the target or,
  * for video, the frame changes — so a still poster costs one upload). The surface
  * samples that texture with an object-fit:cover mapping so the refracted copy
  * lines up pixel-for-pixel with the real element, then displaces the ENTIRE rect
- * by the surface normal and adds a soft specular that brightens near the cursor.
- * Because coverage feathers to zero at the rect edge there is never a seam against
- * the untouched media beneath.
+ * by a SMALL fraction of uv — a subtle shimmer, never a flip. Coverage feathers
+ * to zero at the rect edge, so there is never a seam against the media beneath.
  *
- * SSR/'perf gating (reduced-motion, pointer:fine, WebGL2, the cursor-fx toggle)
+ * SSR / perf gating (reduced-motion, pointer:fine, WebGL2, the cursor-fx toggle)
  * lives in the React component; this module is imported only once every gate
  * passes.
  * ──────────────────────────────────────────────────────────────────────────── */
@@ -29,15 +34,13 @@ export interface LiquidMediaController {
 const TUNING = {
   RENDER_SCALE: 0.9, //   backing-store scale vs CSS px (crisp crest lines)
   DPR_CAP: 1, //          device-pixel-ratio ceiling (integrated-GPU friendly)
-  TOUCH_RADIUS: 85, //    how far the cursor "hand" pushes the WHOLE liquid surface
-  MAX_RIPPLES: 8, //      trailing ripple seeds held in the uniform array
-  RIPPLE_STEP: 18, //     px between ripple seeds spawned along the path
-  RIPPLE_LIFE: 1.2, //    seconds a ripple lives
-  POINTER_SMOOTH: 0.32, //smoothed-pointer follow (per frame @60)
-  ACTIVE_EASE: 0.14, //   presence fade in/out (per frame @60)
-  STRENGTH: 0.03, //      whole-surface refraction, fraction of UV — subtle, like
-  //                      real water (the effect now covers the ENTIRE media)
-  AMBIENT: 0.5, //        ambient surface-wave amplitude (the media always breathes)
+  ACTIVE_EASE: 0.09, //   presence wake/sleep (per frame @60) — gentle, no snap
+  WAVES: 4.0, //          ~wave cycles across the element (NORMALISED → same on
+  //                      every size); lower = larger, calmer swells
+  SPEED: 0.4, //          time scale — slow so it reads as calm water, not busy
+  AMBIENT: 1.0, //        surface-wave amplitude feeding the slope
+  SLOPE: 12.0, //         how strongly the slope bends light (kept gentle)
+  STRENGTH: 0.008, //     refraction as a fraction of uv — subtle, never a flip
 } as const;
 
 const VERT = `#version 300 es
@@ -53,45 +56,26 @@ out vec4 outColor;
 uniform vec2      uRes;      // viewport size, css px
 uniform float     uScale;    // css px -> backing px
 uniform float     uTime;
-uniform vec2      uPointer;  // css px, y-down
 uniform vec4      uRect;     // hovered element: x, y (top-left), w, h  css px y-down
 uniform vec2      uCover;    // object-fit:cover uv scale (<=1 on the cropped axis)
-uniform float     uTouchR;   // cursor "hand" push radius, css px
 uniform float     uActive;   // 0..1 eased presence
-uniform int       uCount;    // live ripple count
-uniform vec3      uRip[${TUNING.MAX_RIPPLES}]; // x, y (css px y-down), birth time
 uniform sampler2D uTex;      // the hovered media
 
-// height contribution of one expanding ripple ring at pixel p
-float ripH(vec2 p, vec3 rip){
-  float age = uTime - rip.z;
-  if(age < 0.0 || age > ${TUNING.RIPPLE_LIFE.toFixed(1)}) return 0.0;
-  float d = distance(p, rip.xy);
-  float R = 6.0 + age * 130.0;          // ring expands outward across the surface
-  float band = exp(-pow((d - R) / 16.0, 2.0));
-  float wave = sin((d - R) * 0.28);
-  float life = exp(-age * 1.9);
-  return wave * band * life;
-}
-
-// The liquid SURFACE height across the whole media (css px). The media behaves
-// like a still body of water: a gentle ambient swell everywhere, plus the cursor
-// acting as a HAND touching it — a soft local push under the pointer and the
-// expanding ripple rings it leaves along its path.
-float heightAt(vec2 p){
-  float amb =
-      sin(p.x * 0.021 + uTime * 0.90) +
-      sin(p.y * 0.027 - uTime * 0.72) +
-      sin((p.x * 0.6 + p.y * 0.8) * 0.02 + uTime * 1.25) * 0.7;
-  amb *= ${(TUNING.AMBIENT).toFixed(2)} * 0.33;
-  float d = distance(p, uPointer);
-  float touch = exp(-d * d / (2.0 * uTouchR * uTouchR));   // the hand pressing the water
-  float rip = 0.0;
-  for(int i = 0; i < ${TUNING.MAX_RIPPLES}; i++){
-    if(i >= uCount) break;
-    rip += ripH(p, uRip[i]);
-  }
-  return amb + touch * 1.15 + rip * 0.9;
+// The image behaves like a still pool: a slow, gentle swell that ripples across
+// the WHOLE surface. Heights are computed in NORMALISED element space (q = luv,
+// 0..1) with an aspect correction, so the ripple looks the same on any size or
+// shape and the wave "cells" stay roughly square. It does NOT depend on the
+// pointer — the pool moves on its own once woken.
+float heightAt(vec2 q){
+  float aspect = uRect.z / max(uRect.w, 1.0);
+  vec2 sp = vec2(q.x * aspect, q.y) * ${TUNING.WAVES.toFixed(2)};
+  float t = uTime * ${TUNING.SPEED.toFixed(2)};
+  float h =
+      sin(sp.x + t) +
+      sin(sp.y * 1.13 - t * 0.86) * 0.85 +
+      sin((sp.x + sp.y) * 0.63 + t * 1.27) * 0.60 +
+      sin((sp.x * 0.70 - sp.y * 0.88) - t * 0.68) * 0.48;
+  return h * ${TUNING.AMBIENT.toFixed(2)};
 }
 
 void main(){
@@ -105,34 +89,31 @@ void main(){
   float rectMask =
       smoothstep(0.0, fw.x, luv.x) * smoothstep(1.0, 1.0 - fw.x, luv.x) *
       smoothstep(0.0, fw.y, luv.y) * smoothstep(1.0, 1.0 - fw.y, luv.y);
-  float presence = rectMask * uActive;            // the WHOLE media is liquid now
+  float presence = rectMask * uActive;            // the WHOLE media is water
   if(presence < 0.004){ outColor = vec4(0.0); return; }
 
-  // surface normal from the height gradient (finite differences)
-  float e = 1.6;
-  float hx = heightAt(p + vec2(e, 0.0)) - heightAt(p - vec2(e, 0.0));
-  float hy = heightAt(p + vec2(0.0, e)) - heightAt(p - vec2(0.0, e));
-  vec2 grad = vec2(hx, hy) / (2.0 * e);
-  vec3 n = normalize(vec3(-grad * 42.0, 1.0));
+  // surface normal from the height gradient. A FIXED normalised step (not a px
+  // step) keeps the slope — and thus the ripple strength — identical at any size.
+  float e = 0.0035;
+  float hx = heightAt(luv + vec2(e, 0.0)) - heightAt(luv - vec2(e, 0.0));
+  float hy = heightAt(luv + vec2(0.0, e)) - heightAt(luv - vec2(0.0, e));
+  vec2 grad = vec2(hx, hy);
+  vec3 n = normalize(vec3(-grad * ${TUNING.SLOPE.toFixed(1)}, 1.0));
 
-  // refract the media across the WHOLE surface (subtle, like water)
+  // refract the media across the WHOLE surface by a SMALL fraction of uv
   vec2 baseUv = 0.5 + (luv - 0.5) * uCover;
-  vec2 refr = baseUv + n.xy * ${TUNING.STRENGTH.toFixed(3)};
+  vec2 refr = baseUv + n.xy * ${TUNING.STRENGTH.toFixed(4)};
   vec2 texUv = vec2(refr.x, 1.0 - refr.y);           // DOM texture is y-flipped
   vec3 col = texture(uTex, clamp(texUv, 0.001, 0.999)).rgb;
 
-  // soft specular where the surface tilts to the light, lifted near the cursor so
-  // the "hand on water" reads (a bright touch that follows the pointer)
-  vec3 L = normalize(vec3(0.3, -0.5, 0.8));
+  // a faint moving sheen where the surface tilts to the light — kept very low so
+  // it reads as water catching light, not glare
+  vec3 L = normalize(vec3(0.35, -0.45, 0.82));
   vec3 H = normalize(L + vec3(0.0, 0.0, 1.0));
-  float ndh = max(dot(n, H), 0.0);
-  float dC = distance(p, uPointer);
-  float near = exp(-dC * dC / (2.0 * (uTouchR * 1.6) * (uTouchR * 1.6)));
-  float spec = pow(ndh, 42.0) * (0.32 + 0.5 * near);
-  col += spec * rectMask * vec3(1.0);
-  col *= 1.0 + 0.03 * near;
+  float spec = pow(max(dot(n, H), 0.0), 60.0) * 0.10;
+  col += spec * rectMask;
 
-  float alpha = clamp(presence + spec * rectMask * 0.4, 0.0, 1.0);
+  float alpha = clamp(presence + spec * rectMask, 0.0, 1.0);
   outColor = vec4(col * alpha, alpha);                 // premultiplied
 }`;
 
@@ -182,7 +163,7 @@ export function createLiquidMedia(canvas: HTMLCanvasElement): LiquidMediaControl
     prog = p;
     vao = gl!.createVertexArray()!;
     u = {};
-    for (const n of ["uRes", "uScale", "uTime", "uPointer", "uRect", "uCover", "uTouchR", "uActive", "uCount", "uRip", "uTex"]) {
+    for (const n of ["uRes", "uScale", "uTime", "uRect", "uCover", "uActive", "uTex"]) {
       u[n] = gl!.getUniformLocation(p, n);
     }
     tex = gl!.createTexture();
@@ -209,10 +190,10 @@ export function createLiquidMedia(canvas: HTMLCanvasElement): LiquidMediaControl
     gl!.viewport(0, 0, canvas.width, canvas.height);
   }
 
-  /* ── pointer + hovered-target state (css px, y-down) ── */
+  /* ── hovered-target state ── the pointer ONLY selects which element wakes; the
+   *    ripple never reads the pointer position. ── */
   type Media = HTMLImageElement | HTMLVideoElement;
-  let px = -1, py = -1, sx = -1, sy = -1;
-  let target: HTMLElement | null = null;   // [data-liquid] region under the pointer (drives the rect)
+  let target: HTMLElement | null = null;   // [data-liquid] region under the pointer
   let uploaded: Media | null = null;       // element whose pixels are in `tex`
   let tainted = false;                     // CORS upload failed for `uploaded`
   let active = 0;                          // eased presence
@@ -226,7 +207,7 @@ export function createLiquidMedia(canvas: HTMLCanvasElement): LiquidMediaControl
     return el.querySelector<Media>("img, video");
   }
   // "resting" = a loaded image, or a paused / not-yet-playing video. A video that
-  // is actually playing returns false → the lens goes quiet while you watch.
+  // is actually playing returns false → the surface goes quiet while you watch.
   function resting(m: Media | null): boolean {
     if (m instanceof HTMLVideoElement) return m.paused || m.readyState < 2;
     if (m instanceof HTMLImageElement) return m.complete && m.naturalWidth > 0;
@@ -238,9 +219,6 @@ export function createLiquidMedia(canvas: HTMLCanvasElement): LiquidMediaControl
   }
 
   const onPointerMove = (e: PointerEvent) => {
-    px = e.clientX;
-    py = e.clientY;
-    if (sx < 0) { sx = px; sy = py; }
     // the canvas is pointer-events:none, so e.target is the real element beneath
     const el = (e.target as HTMLElement | null)?.closest<HTMLElement>("[data-liquid]") ?? null;
     target = el && resting(mediaOf(el)) ? el : null;
@@ -259,61 +237,24 @@ export function createLiquidMedia(canvas: HTMLCanvasElement): LiquidMediaControl
     uploaded = m;
   }
 
-  /* ── ripple field (css px, y-down) ── */
-  type Ripple = { x: number; y: number; t: number };
-  const ripples: Ripple[] = [];
-  const ripFlat = new Float32Array(TUNING.MAX_RIPPLES * 3);
-  let lastSpawnX = sx, lastSpawnY = sy;
-
-  function spawnAlong(tSec: number) {
-    const dx = sx - lastSpawnX, dy = sy - lastSpawnY;
-    const dist = Math.hypot(dx, dy);
-    if (dist >= TUNING.RIPPLE_STEP) {
-      const n = Math.min(Math.floor(dist / TUNING.RIPPLE_STEP), 3);
-      for (let i = 1; i <= n; i++) {
-        const f = i / n;
-        ripples.push({ x: lastSpawnX + dx * f, y: lastSpawnY + dy * f, t: tSec });
-        if (ripples.length > TUNING.MAX_RIPPLES) ripples.shift();
-      }
-      lastSpawnX = sx;
-      lastSpawnY = sy;
-    }
-  }
-
   /* ── loop ── */
   let rafId = 0, running = false, lost = false;
   const t0 = performance.now();
-  let last = t0;
 
   function renderFrame(now: number) {
     rafId = requestAnimationFrame(renderFrame);
     if (!prog || !vao) return;
-    let dt = (now - last) / 1000; last = now; dt = Math.min(dt, 1 / 30);
     const t = (now - t0) / 1000;
-    const f = dt * 60;
 
     // ease presence toward whether we have a live, resting target
     const media = mediaOf(target);
     const want = target && resting(media) ? 1 : 0;
-    active += (want - active) * (1 - Math.pow(1 - TUNING.ACTIVE_EASE, f));
+    active += (want - active) * TUNING.ACTIVE_EASE;
 
     gl!.clearColor(0, 0, 0, 0);
     gl!.clear(gl!.COLOR_BUFFER_BIT);
 
-    if (active < 0.01 || !target || !media) {
-      // nothing to draw — let ripples die and re-anchor the spawn cursor
-      if (sx < 0) { sx = px; sy = py; }
-      lastSpawnX = sx; lastSpawnY = sy;
-      while (ripples.length && t - ripples[0].t > TUNING.RIPPLE_LIFE) ripples.shift();
-      return;
-    }
-
-    // smooth the pointer + spawn trailing ripples along the path
-    const kp = 1 - Math.pow(1 - TUNING.POINTER_SMOOTH, f);
-    sx += (px - sx) * kp;
-    sy += (py - sy) * kp;
-    spawnAlong(t);
-    while (ripples.length && t - ripples[0].t > TUNING.RIPPLE_LIFE) ripples.shift();
+    if (active < 0.01 || !target || !media) return;
 
     // (re)upload the media only when the sampled element changes; refresh a
     // paused-but-live video frame each frame it is the target (cheap, one draw)
@@ -327,12 +268,6 @@ export function createLiquidMedia(canvas: HTMLCanvasElement): LiquidMediaControl
     const cover: [number, number] =
       texA > boxA ? [boxA / texA, 1] : [1, texA / boxA];
 
-    const cnt = Math.min(ripples.length, TUNING.MAX_RIPPLES);
-    for (let i = 0; i < cnt; i++) {
-      const rp = ripples[ripples.length - cnt + i];
-      ripFlat[i * 3] = rp.x; ripFlat[i * 3 + 1] = rp.y; ripFlat[i * 3 + 2] = rp.t;
-    }
-
     gl!.useProgram(prog);
     gl!.bindVertexArray(vao);
     gl!.activeTexture(gl!.TEXTURE0);
@@ -341,19 +276,15 @@ export function createLiquidMedia(canvas: HTMLCanvasElement): LiquidMediaControl
     gl!.uniform2f(u.uRes, window.innerWidth, window.innerHeight);
     gl!.uniform1f(u.uScale, scale);
     gl!.uniform1f(u.uTime, t);
-    gl!.uniform2f(u.uPointer, sx, sy);
     gl!.uniform4f(u.uRect, r.left, r.top, r.width, r.height);
     gl!.uniform2f(u.uCover, cover[0], cover[1]);
-    gl!.uniform1f(u.uTouchR, TUNING.TOUCH_RADIUS);
     gl!.uniform1f(u.uActive, active);
-    gl!.uniform1i(u.uCount, cnt);
-    gl!.uniform3fv(u.uRip, ripFlat);
     gl!.drawArrays(gl!.TRIANGLES, 0, 3);
   }
 
   function startLoop() {
     if (running || lost) return;
-    running = true; last = performance.now();
+    running = true;
     rafId = requestAnimationFrame(renderFrame);
   }
   function stopLoop() {
