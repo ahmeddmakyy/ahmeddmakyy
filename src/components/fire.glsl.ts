@@ -108,13 +108,6 @@ float fSdRound(vec2 p, vec2 hw, float r){
   return length(max(q,0.0))+min(max(q.x,q.y),0.0)-r;
 }
 
-// classic heart implicit; <0 inside. p is normalised (heart spans ~[-1.2..1.2]).
-float fHeart(vec2 p){
-  float x=p.x, y=p.y;                 // y up: lobes on top, cusp at bottom
-  float a=x*x + y*y - 1.0;
-  return a*a*a - x*x*y*y*y;
-}
-
 // a rising teardrop flame (BLOOM / COLUMN share this). lp is already rise-shifted,
 // css px, y up. tallDiv squashes the top (bigger = taller/narrower). crownFreq
 // sets how many sharp licking tongues carve the crown.
@@ -198,11 +191,11 @@ float fBurst(vec2 uv, vec4 b, float prof, float uTime, out float smoke){
 
   if(prof < 0.5){
     // ── BLOOM (default) ──
-    vec2 lp=local; lp.y-=t*70.0 + t*t*70.0;
-    heat=fTeardrop(lp, 70.0*grow, 1.9, seed, uTime, 0.075);
+    vec2 lp=local; lp.y-=t*58.0 + t*t*58.0;
+    heat=fTeardrop(lp, 56.0*grow, 1.9, seed, uTime, 0.075);
     // spark ring: thin broken annulus, early only
     float rr=length(local);
-    float ringR=26.0+age*170.0, rw=6.0+age*13.0;
+    float ringR=22.0+age*135.0, rw=5.0+age*10.0;
     float sparkN=smoothstep(0.35,0.75,fNoise(vec2(atan(local.y,local.x)*4.0+seed*20.0,3.0)));
     heat+=exp(-pow((rr-ringR)/rw,2.0))*(1.0-smoothstep(0.0,0.5,age))*(0.35+0.9*sparkN)*1.1;
     // wisp of smoke, late
@@ -212,24 +205,24 @@ float fBurst(vec2 uv, vec4 b, float prof, float uTime, out float smoke){
 
   } else if(prof < 1.5){
     // ── RING / portal (Videos) ── expanding hollow ring + brief centre flash
-    vec2 lp=local; lp.y-=t*32.0;
+    vec2 lp=local; lp.y-=t*28.0;
     float d=length(lp);
     float ang=atan(lp.y,lp.x);
-    float RR=16.0 + age*130.0;
-    float w=22.0*(1.0-0.45*age);
+    float RR=14.0 + age*100.0;
+    float w=18.0*(1.0-0.45*age);
     vec2 nc=vec2(cos(ang),sin(ang))*5.0 + vec2(uTime*0.6,-uTime*0.9) + seed*3.0;
     float n=fFbm(nc+fFbm(nc));
     float band=exp(-pow((d-RR)/w,2.0));
     heat=band*(0.7+1.15*n);
     heat+=smoothstep(0.55,0.95,n)*exp(-abs(d-RR)/(w*2.2))*0.7;      // outward licks
-    heat+=exp(-d/34.0)*(1.0-smoothstep(0.0,0.30,age))*0.45;         // brief centre flash
+    heat+=exp(-d/28.0)*(1.0-smoothstep(0.0,0.30,age))*0.45;         // brief centre flash
 
   } else if(prof < 2.5){
     // ── SLASH (top-nav buttons) ── wide short horizontal streak, licking up
-    vec2 lp=local; lp.y-=t*30.0;
-    float hw=80.0*mix(0.7,1.05,smoothstep(0.0,0.3,age));
+    vec2 lp=local; lp.y-=t*26.0;
+    float hw=64.0*mix(0.7,1.05,smoothstep(0.0,0.3,age));
     float ex=1.0-smoothstep(0.55,1.05,abs(lp.x)/hw);
-    float ny=lp.y/30.0;
+    float ny=lp.y/26.0;
     float vy = ny>0.0 ? ny/1.3 : ny/0.7;
     float env=ex*(1.0-smoothstep(0.5,1.1,abs(vy)));
     vec2 np=vec2(local.x*0.030-uTime*0.4, local.y*0.020-uTime*2.2)+seed*7.0;
@@ -241,24 +234,30 @@ float fBurst(vec2 uv, vec4 b, float prof, float uTime, out float smoke){
     heat+=smoothstep(0.50,0.90,cr)*up*ex*1.1;
 
   } else if(prof < 3.5){
-    // ── HEART (Let's-talk CTA + Contact) ── a heart drawn in flame
-    vec2 lp=local; lp.y-=t*46.0 + 22.0;
-    float S=54.0*grow;
+    // ── HEART (Let's-talk CTA + Contact) ── a clean heart-shaped RING of flame.
+    // Uses the analytic gradient of the heart implicit to get an EVEN signed
+    // distance, so the fire hugs the outline as a crisp ring (not a noisy blob),
+    // reaches OUTWARD, stays thin inward, with a soft hollow-warm centre.
+    vec2 lp=local; lp.y-=t*38.0 + 8.0;   // gentle rise, sits on the click
+    float S=44.0*grow;
     vec2 hp=lp/S;
-    float hf=fHeart(hp);                 // <0 inside
-    float ang=atan(lp.y,lp.x);
-    vec2 nc=vec2(cos(ang),sin(ang))*4.0 + vec2(-uTime*0.5,uTime*0.7) + seed*3.0;
+    float x=hp.x, y=hp.y;
+    float A=x*x + y*y - 1.0;
+    float hf=A*A*A - x*x*y*y*y;          // <0 inside the heart
+    vec2 g=vec2(6.0*x*A*A - 2.0*x*y*y*y, 6.0*y*A*A - 3.0*x*x*y*y);
+    float sd=hf/(length(g)+0.001);       // ~signed distance (hp units), <0 inside
+    float band = sd>0.0 ? exp(-sd/0.24) : exp(sd/0.09);  // hug boundary, thin inward
+    float ang=atan(hp.y, hp.x);
+    vec2 nc=vec2(cos(ang),sin(ang))*4.5 + vec2(-uTime*0.5,uTime*0.7) + seed*3.0;
     float n=fFbm(nc+fFbm(nc));
-    float outline=smoothstep(0.55,0.0,abs(hf))*(0.85+0.55*n);
-    float inner=smoothstep(0.0,-0.7,hf)*(0.45+0.5*n);
-    heat=outline*1.3 + inner*0.6;
-    float up=smoothstep(-0.2,1.0,hp.y);
-    heat+=smoothstep(0.55,0.95,n)*up*smoothstep(0.55,-0.2,hf)*0.7;  // licks off the lobes
+    heat = band*(0.55+1.05*n);
+    heat+= smoothstep(0.55,0.95,n)*exp(-max(0.0,sd)/0.5)*0.5;   // outward licking tongues
+    heat+= smoothstep(0.0,-0.5,sd)*(0.55+0.45*n)*0.22;          // soft hollow-warm centre
 
   } else {
     // ── COLUMN (hero / mid-band CTAs) ── tall rising bonfire jet
-    vec2 lp=local; lp.y-=t*66.0 + t*t*90.0;
-    heat=fTeardrop(lp, 42.0*grow, 3.4, seed, uTime, 0.090);
+    vec2 lp=local; lp.y-=t*56.0 + t*t*76.0;
+    heat=fTeardrop(lp, 34.0*grow, 3.4, seed, uTime, 0.090);
     vec2 sp=vec2(local.x*0.014,(local.y-150.0)*0.010-uTime*0.8)+seed*7.0;
     float sm=fFbm(sp+fFbm(sp));
     smoke=max(0.0,sm-0.56)*smoothstep(0.45,0.9,age)*(1.0-smoothstep(0.9,1.0,age))*0.55;

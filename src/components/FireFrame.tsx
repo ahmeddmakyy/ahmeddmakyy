@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { RefObject } from "react";
 import type { FireFrameController } from "./FireFrame.webgl";
+import { useCursorFxReduced } from "./cursorFx";
 
 /* FireFrame — SSR-safe gate + lazy loader for the anime-fire "portal" that rings
  * an open modal frame (video lightbox / morph card). Mirrors the AuroraCursor
@@ -31,6 +32,9 @@ export default function FireFrame({
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [mount, setMount] = useState(false);
+  // Shares the hero "calm the cursor" toggle with AuroraCursor — the frame-wrap
+  // fire is part of the same mouse-fire family, so it goes silent together.
+  const reduced = useCursorFxReduced();
 
   // Keep the latest onDark/radius readable by the imperative loop without
   // re-initialising the WebGL core.
@@ -56,13 +60,13 @@ export default function FireFrame({
 
     const decide = () => {
       setMount(
-        !mqReduce.matches && mqFine.matches && !mqCoarse.matches && probeWebGL2(),
+        !reduced && !mqReduce.matches && mqFine.matches && !mqCoarse.matches && probeWebGL2(),
       );
     };
     decide();
     mqReduce.addEventListener("change", decide);
     return () => mqReduce.removeEventListener("change", decide);
-  }, []);
+  }, [reduced]);
 
   useEffect(() => {
     if (!mount) return;

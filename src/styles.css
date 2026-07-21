@@ -32,6 +32,10 @@
    Chromium, which silently kills position:sticky (the stacking cards). clip
    crops the same without creating a scroll container. */
 html { scroll-behavior: smooth; overflow-x: hidden; overflow-x: clip; scroll-padding-top: 6rem; }
+/* Kill the browser's vertical rubber-band / pull-to-refresh at the document
+   edges — native apps don't bounce the shell. Modal scrollers set their own
+   overscroll-behavior, so they stay isolated. */
+html, body { overscroll-behavior-y: none; }
 
 /* Global design scale. Every length in this sheet is rem, so shrinking the
    root font-size shrinks the entire layout uniformly. The design was authored
@@ -187,25 +191,38 @@ ul, ol { list-style: none; }
          THROUGH the bar, refracted below. The glass cues come from the thin
          bright rim, the dispersion edge, and the refraction — not from a tint
          gradient. White text stays legible via the dimmed backdrop + link shadow. */
-      background: linear-gradient(180deg, rgba(28, 28, 34, 0.34), rgba(16, 16, 20, 0.42));
-      backdrop-filter: blur(9px) saturate(175%) brightness(0.8);
-      -webkit-backdrop-filter: blur(9px) saturate(175%) brightness(0.8);
-      border: 1px solid rgba(255, 255, 255, 0.24);
+      background:
+        linear-gradient(180deg, rgba(40, 40, 48, 0.30), rgba(14, 14, 18, 0.46)),
+        radial-gradient(120% 140% at 50% -20%, rgba(255, 255, 255, 0.10), transparent 55%);
+      backdrop-filter: blur(12px) saturate(190%) brightness(0.82);
+      -webkit-backdrop-filter: blur(12px) saturate(190%) brightness(0.82);
+      border: 1px solid rgba(255, 255, 255, 0.22);
       box-shadow:
-        inset 0 1px 0.5px rgba(255, 255, 255, 0.55), /* thin bright top rim */
-        inset 0 -6px 13px -8px rgba(0, 0, 0, 0.42), /* faint bottom depth */
-        0 18px 44px rgba(5, 5, 5, 0.3);
+        inset 0 1.5px 0.5px rgba(255, 255, 255, 0.62), /* crisp bright top rim */
+        inset 0 6px 14px -8px rgba(255, 255, 255, 0.22), /* inner glass glow */
+        inset 0 -8px 16px -10px rgba(0, 0, 0, 0.5), /* bottom thickness/depth */
+        0 24px 56px -12px rgba(5, 5, 5, 0.42); /* deep floating shadow */
     }
-    /* A single soft specular highlight up top — a wet-glass glint, not a sheen. */
+    /* Specular: a soft top glint, plus a bright light-streak parked off-frame
+       that SWEEPS across on hover — reads as light catching real glass, with
+       zero idle cost (it only repaints during the brief hover transition). */
     .nav::before {
       content: "";
       position: absolute;
       inset: 0;
       border-radius: inherit;
-      background: radial-gradient(110% 70% at 50% -35%, rgba(255, 255, 255, 0.14), transparent 58%);
+      overflow: hidden;
+      background-image:
+        radial-gradient(120% 76% at 50% -35%, rgba(255, 255, 255, 0.18), transparent 58%),
+        linear-gradient(100deg, transparent 42%, rgba(255, 255, 255, 0.22) 50%, transparent 58%);
+      background-size: 100% 100%, 250% 100%;
+      background-repeat: no-repeat;
+      background-position: 0 0, 205% 0;
       mix-blend-mode: screen;
       pointer-events: none;
+      transition: background-position 0.95s var(--ease);
     }
+    .nav:hover::before { background-position: 0 0, -55% 0; }
     /* Chromatic dispersion at the rim — the prism edge that says "real glass".
        A 1.2px gradient border (cool → warm) revealed by an xor mask ring. */
     .nav::after {
@@ -231,6 +248,63 @@ ul, ol { list-style: none; }
       .nav { backdrop-filter: blur(7px) saturate(185%) brightness(0.84) url("#lg-refract"); }
     }
   }
+}
+
+/* ── "Calm the cursor" toggle — a standalone liquid-glass pill in the hero's
+   top-left, matching the desktop nav glass. Desktop-only, since the fire+liquid
+   it controls are themselves desktop-only. ── */
+.fx-toggle { display: none; }
+@media (min-width: 981px) {
+  .fx-toggle {
+    position: fixed;
+    top: 1.4rem;
+    left: 1.4rem;
+    z-index: 101;
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background:
+      linear-gradient(180deg, rgba(40, 40, 48, 0.30), rgba(14, 14, 18, 0.46)),
+      radial-gradient(120% 140% at 50% -20%, rgba(255, 255, 255, 0.10), transparent 55%);
+    backdrop-filter: blur(12px) saturate(190%) brightness(0.82);
+    -webkit-backdrop-filter: blur(12px) saturate(190%) brightness(0.82);
+    color: rgba(255, 255, 255, 0.92);
+    cursor: pointer;
+    box-shadow:
+      inset 0 1.5px 0.5px rgba(255, 255, 255, 0.62),
+      inset 0 -7px 14px -9px rgba(0, 0, 0, 0.5),
+      0 16px 36px -12px rgba(5, 5, 5, 0.42);
+    transition: transform 0.25s var(--ease), color 0.25s var(--ease), box-shadow 0.25s var(--ease);
+    animation: navDrop 0.7s var(--ease) both;
+  }
+  .fx-toggle:hover {
+    transform: translateY(-2px) scale(1.05);
+    color: #fff;
+    box-shadow:
+      inset 0 1.5px 0.5px rgba(255, 255, 255, 0.72),
+      0 20px 44px -12px rgba(5, 5, 5, 0.5),
+      0 0 22px -4px rgba(253, 111, 0, 0.38);
+  }
+  .fx-toggle:active { transform: scale(0.92); }
+  .fx-toggle svg { width: 1.4rem; height: 1.4rem; overflow: visible; }
+  .fx-toggle .fx-spark-main,
+  .fx-toggle .fx-spark-a,
+  .fx-toggle .fx-spark-b { transition: opacity 0.25s var(--ease); }
+  .fx-toggle .fx-slash {
+    opacity: 0;
+    transform: scale(0.4);
+    transform-origin: center;
+    transition: opacity 0.25s var(--ease), transform 0.25s var(--ease);
+  }
+  /* reduced state: dim the sparks, reveal the slash */
+  .fx-toggle.is-reduced { color: rgba(255, 255, 255, 0.58); }
+  .fx-toggle.is-reduced .fx-spark-main,
+  .fx-toggle.is-reduced .fx-spark-a,
+  .fx-toggle.is-reduced .fx-spark-b { opacity: 0.4; }
+  .fx-toggle.is-reduced .fx-slash { opacity: 0.92; transform: scale(1); }
 }
 
 /* ── Mobile app chrome: liquid-glass tab bar (≤980px) ──
@@ -320,13 +394,22 @@ ul, ol { list-style: none; }
   line-height: 1;
   transition: color 0.25s var(--ease), background 0.25s var(--ease), transform 0.18s var(--ease);
 }
-.gt-item svg { width: 1.375rem; height: 1.375rem; display: block; }
-.gt-label { white-space: nowrap; }
+.gt-item svg { width: 1.375rem; height: 1.375rem; display: block; position: relative; z-index: 1; }
+.gt-label { white-space: nowrap; position: relative; z-index: 1; }
 .gt-item:active { transform: scale(0.9); }
-.gt-item.active {
-  background: var(--orange);
-  color: #fff;
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.4), 0 6px 16px rgba(253, 111, 0, 0.4);
+.gt-item.active { color: #fff; }
+/* the single shared highlight that SLIDES between tabs (framer layoutId). It
+   carries the glossy orange fill; sits BEHIND the icon/label. */
+.gt-active-pill {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--orange), var(--orange-deep));
+  box-shadow:
+    inset 0 1.5px 1px rgba(255, 255, 255, 0.5), /* glossy top edge */
+    inset 0 -3px 6px -2px rgba(120, 40, 0, 0.4), /* inner base shade = depth */
+    0 6px 18px rgba(253, 111, 0, 0.45); /* orange glow lift */
 }
 /* the Let's-talk tab reads as the accent action even when idle */
 .gt-cta { color: var(--orange-soft); }
@@ -907,6 +990,16 @@ svg.doodle { display: inline-block; vertical-align: middle; overflow: visible; }
   color: #fff;
 }
 .section.light { background: var(--paper); }
+/* Videos gets its own "room": Services + Videos were two identical dark bands
+   back-to-back, so the flagship blended in. Deeper base + a stronger warm
+   corner-glow + a hairline top rule give it a clear boundary. */
+.section.dark.videos {
+  background:
+    radial-gradient(58% 44% at 84% 10%, rgba(253, 111, 0, 0.10), transparent 62%),
+    radial-gradient(48% 40% at 12% 94%, rgba(253, 111, 0, 0.055), transparent 60%),
+    #060606;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
 
 .section-head {
   display: flex;
@@ -2140,6 +2233,10 @@ html[lang="ar"] .name-reveal { direction: rtl; }
   padding: 0.375rem 2px 1.5rem;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+  /* soft right-edge fade = a "there's more, scroll →" cue the arrows alone don't
+     give; the track is dir=ltr so this always reads on the trailing edge */
+  -webkit-mask-image: linear-gradient(90deg, #000 92%, transparent 100%);
+  mask-image: linear-gradient(90deg, #000 92%, transparent 100%);
 }
 .reels-track::-webkit-scrollbar { display: none; }
 
@@ -2220,12 +2317,18 @@ html.js .reel-thumb img:not(.is-loaded) { opacity: 0; }
   color: #fff;
   display: grid;
   place-items: center;
-  opacity: 0.9;
+  opacity: 0;
   box-shadow: 0 10px 30px rgba(253, 111, 0, 0.35);
   transition: transform 0.3s var(--ease), opacity 0.3s var(--ease);
 }
+/* On pointer devices the play button appears on hover/focus only — a calmer
+   resting grid where the posters lead (fewer competing orange blobs). */
 .reel-card:hover .reel-play,
 .reel-card:focus-visible .reel-play { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+/* Touch has no hover, so keep it visible there as the "this is a video" cue. */
+@media (hover: none) {
+  .reel-play { opacity: 0.92; transform: translate(-50%, -50%) scale(1); }
+}
 .reel-play svg { width: 1.375rem; height: 1.375rem; margin-left: 2px; }
 
 .reel-shade {
@@ -2255,7 +2358,7 @@ html.js .reel-thumb img:not(.is-loaded) { opacity: 0; }
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.reel-client { color: rgba(255, 255, 255, 0.6); font-size: 0.75rem; }
+.reel-client { color: rgba(255, 255, 255, 0.78); font-size: 0.75rem; }
 
 /* Lightbox player */
 .reel-lightbox {
@@ -2265,7 +2368,13 @@ html.js .reel-thumb img:not(.is-loaded) { opacity: 0; }
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.5rem;
+  /* respect the notch / home-indicator so the film + caption never sit under
+     the status bar or gesture bar on a phone */
+  padding:
+    max(1.5rem, env(safe-area-inset-top))
+    max(1.5rem, env(safe-area-inset-right))
+    max(1.5rem, env(safe-area-inset-bottom))
+    max(1.5rem, env(safe-area-inset-left));
   background: rgba(3, 3, 3, 0.82);
   backdrop-filter: blur(14px);
   animation: reelFade 0.25s var(--ease);
@@ -2273,8 +2382,8 @@ html.js .reel-thumb img:not(.is-loaded) { opacity: 0; }
 @keyframes reelFade { from { opacity: 0; } to { opacity: 1; } }
 .reel-lightbox-close {
   position: absolute;
-  top: 1.25rem;
-  right: 1.25rem;
+  top: max(1.25rem, env(safe-area-inset-top));
+  right: max(1.25rem, env(safe-area-inset-right));
   width: 3rem;
   height: 3rem;
   border-radius: 999px;

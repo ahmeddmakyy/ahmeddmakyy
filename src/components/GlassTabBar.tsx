@@ -5,6 +5,13 @@
 // + specular highlight, matching the video player's glass controls.
 // About/Process stay reachable by scroll; while they're on screen no tab lights.
 // Icons are bespoke stroke SVGs to match the site's hand-drawn icon language.
+//
+// App-feel details: a SINGLE shared highlight pill (framer layoutId) SLIDES
+// between tabs instead of blinking; the tapped tab lights up OPTIMISTICALLY on
+// touchdown (before the scroll resolves) so the selection never lags the finger;
+// and a subtle haptic tick fires on tap where supported.
+import { useEffect, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 
 const TabIcons = {
   home: () => (
@@ -67,18 +74,50 @@ export default function GlassTabBar({
     { id: "contact", label: labels.talk, cta: true },
   ];
 
+  const reduce = useReducedMotion();
+  // Optimistic selection: light the tapped tab immediately, then let the parent's
+  // scroll-spy `active` reconcile (and clear the override once it agrees).
+  const [optimistic, setOptimistic] = useState<string | null>(null);
+  useEffect(() => {
+    if (optimistic && active === optimistic) setOptimistic(null);
+  }, [active, optimistic]);
+  const current = optimistic ?? active;
+
+  const onTap = (id: string) => {
+    setOptimistic(id);
+    // subtle native-style tick (Android/Chrome honour it; iOS Safari no-ops)
+    try {
+      navigator.vibrate?.(id === "contact" ? 12 : 8);
+    } catch {
+      /* ignore */
+    }
+  };
+
   return (
     <nav className="glass-tabbar" aria-label={ariaLabel}>
       {tabs.map((t) => {
         const Icon = TabIcons[t.id];
-        const isActive = active === t.id;
+        const isActive = current === t.id;
         return (
           <a
             key={t.id}
             href={`#${t.id}`}
             className={`gt-item${t.cta ? " gt-cta" : ""}${isActive ? " active" : ""}`}
             aria-current={isActive ? "location" : undefined}
+            onClick={() => onTap(t.id)}
           >
+            {isActive && (
+              <motion.span
+                className="gt-active-pill"
+                layoutId="gt-active-pill"
+                aria-hidden="true"
+                transition={
+                  reduce
+                    ? { duration: 0 }
+                    : { type: "spring", stiffness: 520, damping: 40 }
+                }
+              />
+            )}
             <Icon />
             <span className="gt-label">{t.label}</span>
           </a>

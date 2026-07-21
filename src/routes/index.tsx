@@ -18,6 +18,7 @@ import VideoReels from "@/components/VideoReels";
 import NameReveal from "@/components/NameReveal";
 import HeroField from "@/components/HeroField";
 import AuroraCursor from "@/components/AuroraCursor";
+import CursorFxToggle from "@/components/CursorFxToggle";
 import { useLang, LangToggle } from "@/i18n";
 import type { Rich as RichText } from "@/content";
 
@@ -271,6 +272,10 @@ function Index() {
           itself over the hero. Mounted once, above section backgrounds but
           below the nav and modals (z-index 40). */}
       <AuroraCursor />
+      {/* Standalone glass button in the hero's top-left (beside the floating
+          nav) that calms JUST the cursor fire + liquid for anyone who prefers
+          less motion; desktop-only, persisted. */}
+      <CursorFxToggle />
       {/* Liquid-glass refraction filter — referenced via backdrop-filter:
           url(#lg-refract) (Chromium only) by the DESKTOP nav bar, so it lives at
           page level. Deliberately NOT used on the mobile tab bar: an SVG

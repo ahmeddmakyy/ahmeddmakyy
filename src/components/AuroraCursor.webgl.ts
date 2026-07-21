@@ -61,7 +61,9 @@ const TUNING = {
   MASTER_EASE: 0.05, //       hero-suppression ramp speed
 
   // — housekeeping —
-  LUM_EVERY: 3, //            run the elementFromPoint luminance probe every N frames
+  LUM_EVERY: 8, //            elementFromPoint luminance probe every N frames. This
+  //                          forces a hit-test/style flush, so keep it sparse; the
+  //                          result is eased (uOnDark) so 8 is still smooth.
 
   // — click fire —
   MASTER_VOLUME: 0.5, //      tasteful trim on the fwoosh (fires on EVERY click)
@@ -488,11 +490,22 @@ export function createAurora(canvas: HTMLCanvasElement, opts: AuroraOptions): Au
     sx += (px - sx) * kp;
     sy += (py - sy) * kp;
 
-    // spawn ripples along the smoothed path, cull expired
-    spawnAlong(now, t);
+    // hero suppression (liquid only) — computed early so we can SKIP all of the
+    // pass-1 liquid work while the hero owns the cursor (the shader would just be
+    // multiplied by master≈0 → full GPU cost for zero visible pixels).
+    const masterTarget = opts.heroVisible.current ? 0 : TUNING.MASTER_INTENSITY;
+    master += (masterTarget - master) * (1 - Math.pow(1 - TUNING.MASTER_EASE, f));
+    const liquidActive = master >= 0.01;
+
+    // spawn ripples along the smoothed path only when the liquid is visible;
+    // cull expired ones regardless (cheap). Re-anchor the spawn cursor while
+    // suppressed so un-suppressing never dumps a burst of catch-up ripples.
+    if (liquidActive) spawnAlong(now, t);
+    else { lastSpawnX = sx; lastSpawnY = sy; }
     while (ripples.length && t - ripples[0].t > TUNING.RIPPLE_LIFE) ripples.shift();
 
-    // background luminance under the smoothed pointer (throttled) -> crossfade
+    // background luminance under the smoothed pointer (throttled) — feeds BOTH the
+    // liquid and the fire's onDark, so it runs even while the liquid is hidden.
     if (frameNo % TUNING.LUM_EVERY === 0) {
       lastLum = bgLumAt(
         Math.max(0, Math.min(window.innerWidth - 1, sx)),
@@ -503,32 +516,30 @@ export function createAurora(canvas: HTMLCanvasElement, opts: AuroraOptions): Au
     onDarkTarget = lastLum < 0.5 ? 1 : 0;
     onDark += (onDarkTarget - onDark) * (1 - Math.pow(1 - TUNING.ONDARK_EASE, f));
 
-    // hero suppression (liquid only)
-    const masterTarget = opts.heroVisible.current ? 0 : TUNING.MASTER_INTENSITY;
-    master += (masterTarget - master) * (1 - Math.pow(1 - TUNING.MASTER_EASE, f));
-
     gl!.clearColor(0, 0, 0, 0);
     gl!.clear(gl!.COLOR_BUFFER_BIT);
     gl!.bindVertexArray(vao);
 
-    // ── pass 1: liquid ripple cursor ──
-    const cnt = Math.min(ripples.length, TUNING.MAX_RIPPLES);
-    for (let i = 0; i < cnt; i++) {
-      const r = ripples[ripples.length - cnt + i];
-      ripFlat[i * 3] = r.x;
-      ripFlat[i * 3 + 1] = r.y;
-      ripFlat[i * 3 + 2] = r.t;
+    // ── pass 1: liquid ripple cursor (skipped entirely while suppressed) ──
+    if (liquidActive) {
+      const cnt = Math.min(ripples.length, TUNING.MAX_RIPPLES);
+      for (let i = 0; i < cnt; i++) {
+        const r = ripples[ripples.length - cnt + i];
+        ripFlat[i * 3] = r.x;
+        ripFlat[i * 3 + 1] = r.y;
+        ripFlat[i * 3 + 2] = r.t;
+      }
+      const lu = liquid.u;
+      gl!.useProgram(liquid.prog);
+      gl!.uniform2f(lu.uResCss, window.innerWidth, window.innerHeight);
+      gl!.uniform1f(lu.uScale, scale);
+      gl!.uniform1f(lu.uTime, t);
+      gl!.uniform1i(lu.uCount, cnt);
+      gl!.uniform3fv(lu.uRip, ripFlat);
+      gl!.uniform1f(lu.uOnDark, onDark);
+      gl!.uniform1f(lu.uMaster, master);
+      gl!.drawArrays(gl!.TRIANGLES, 0, 3);
     }
-    const lu = liquid.u;
-    gl!.useProgram(liquid.prog);
-    gl!.uniform2f(lu.uResCss, window.innerWidth, window.innerHeight);
-    gl!.uniform1f(lu.uScale, scale);
-    gl!.uniform1f(lu.uTime, t);
-    gl!.uniform1i(lu.uCount, cnt);
-    gl!.uniform3fv(lu.uRip, ripFlat);
-    gl!.uniform1f(lu.uOnDark, onDark);
-    gl!.uniform1f(lu.uMaster, master);
-    gl!.drawArrays(gl!.TRIANGLES, 0, 3);
 
     // ── pass 2: click fire bursts (only while any are alive) ──
     if (activeBursts) {
@@ -599,7 +610,8 @@ export function createAurora(canvas: HTMLCanvasElement, opts: AuroraOptions): Au
   resize();
 
   window.addEventListener("resize", resize);
-  window.addEventListener("mousemove", onPointer, { passive: true });
+  // pointermove alone covers mouse (pointer:fine gated) — binding mousemove too
+  // would double the handler rate for every move on a real mouse.
   window.addEventListener("pointermove", onPointer, { passive: true });
   window.addEventListener("mousedown", onMouseDown);
   document.addEventListener("visibilitychange", onVisibility);
@@ -613,7 +625,6 @@ export function createAurora(canvas: HTMLCanvasElement, opts: AuroraOptions): Au
       stopLoop();
       lost = true;
       window.removeEventListener("resize", resize);
-      window.removeEventListener("mousemove", onPointer);
       window.removeEventListener("pointermove", onPointer);
       window.removeEventListener("mousedown", onMouseDown);
       document.removeEventListener("visibilitychange", onVisibility);
