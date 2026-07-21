@@ -354,87 +354,65 @@ ul, ol { list-style: none; }
   .fx-toggle, .fx-toggle-label { transition: none; animation: none; }
 }
 
-/* ── Mobile app chrome: the "LUMEN DOCK" (≤980px, GlassTabBar.tsx) ──
-   A dark liquid-glass dock holding four icon-only nav glyphs and one always-on
-   orange CTA "ember", split by a hairline. Selection is a BRIGHT CREAM LENS that
-   rises out of the dark glass and SLIDES between the four equal nav slots (framer
-   layoutId → pure translateX), carrying the ONLY visible label — so its contrast
-   is guaranteed by construction (ink on cream ≈ 15:1) whatever scrolls behind,
-   which lets the glass stay lighter/more translucent than a label-bearing bar
-   could. Orange means one thing only: the action. Exactly ONE backdrop-filter
-   (this capsule) — the lens, CTA and gloss are plain paint, and only transform/
-   opacity ever animate, so it stays smooth on low-end Android. */
+/* ── Mobile app chrome: the "STICKER DOCK" (≤980px, GlassTabBar.tsx) ──
+   A cream, hand-drawn "sticker" dock (the Figr-inspired mobile theme) — NO glass
+   anywhere: a warm-cream capsule with a bold ink outline and a hard offset shadow
+   (it sits like a sticker on the page). Four nav glyphs (icon + label, ink) with
+   a solid INK "selection chip" that SLIDES between them (framer layoutId → pure
+   translateX), plus one solid ORANGE CTA pill (the brand action colour). Solid
+   paint only, transforms/opacity only → smooth on low-end Android, iOS-safe. */
 .glass-tabbar {
   position: fixed;
   left: 50%;
-  bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  bottom: calc(0.85rem + env(safe-area-inset-bottom, 0px));
   transform: translateX(-50%);
   z-index: 110;
   display: none;                 /* shown ≤980px */
   align-items: stretch;
   gap: 0;
-  padding: 6px;
-  border-radius: 30px;           /* squircle capsule — more iOS-modern than a pill */
-  border: 1px solid rgba(255, 255, 255, 0.20);
-  /* lighter & more translucent than before — no label depends on the glass now,
-     only idle icons (which need just 3:1), so it can read more like real liquid */
-  background:
-    linear-gradient(180deg, rgba(38, 38, 44, 0.74), rgba(12, 12, 15, 0.82)),
-    radial-gradient(120% 160% at 50% -30%, rgba(255, 255, 255, 0.10), transparent 60%);
-  backdrop-filter: blur(18px) saturate(180%) brightness(0.90) contrast(1.04);
-  -webkit-backdrop-filter: blur(18px) saturate(180%) brightness(0.90) contrast(1.04);
+  padding: 5px;
+  border-radius: 22px;
+  border: 2px solid var(--heading);        /* the sticker ink outline */
+  background: #FFFDF8;                      /* warm cream, SOLID — no glass */
   max-width: calc(100vw - 1.5rem - env(safe-area-inset-left) - env(safe-area-inset-right));
+  /* hard sticker offset (an ink base beneath) + a soft float shadow */
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.22),      /* top bevel */
-    inset 0 -6px 12px -8px rgba(0, 0, 0, 0.50),    /* base thickness */
-    0 2px 8px rgba(0, 0, 0, 0.28),                 /* contact */
-    0 20px 44px -12px rgba(0, 0, 0, 0.55);         /* deep float */
-  contain: paint;                /* isolate from page repaints */
+    0 3px 0 0 var(--heading),
+    0 12px 22px -10px rgba(23, 23, 24, 0.30);
+  contain: paint;
   animation: tabbarRise 0.7s var(--ease) both;
 }
 @keyframes tabbarRise {
   from { opacity: 0; transform: translateX(-50%) translateY(1.125rem); }
   to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
-/* Soft specular sheen — a single top-light streak, plain paint (no backdrop
-   effect, so nothing recomputes on scroll). The old chromatic-dispersion ::after
-   rim was dropped: the clean bevel + float reads more Apple and paints one layer
-   fewer. url(#lg-refract) is intentionally NOT used here — an SVG displacement
-   backdrop-filter re-runs its shader every scroll frame (mobile jank) and iOS
-   doesn't support url() backdrop filters at all. */
-.glass-tabbar::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.03) 22%, transparent 46%);
-  pointer-events: none;
-}
 
-/* the four nav glyphs sit in a row; the divider + CTA follow it */
+/* the four nav glyphs sit in a row; a subtle divider + the CTA follow */
 .gt-nav { display: flex; align-items: stretch; gap: 0; }
 .gt-divider {
   flex: none;
   align-self: center;
-  width: 1px;
-  height: 1.5rem;
-  margin: 0 6px;
-  background: rgba(255, 255, 255, 0.14);
+  width: 2px;
+  height: 1.6rem;
+  margin: 0 5px;
+  border-radius: 2px;
+  background: rgba(23, 23, 24, 0.14);
 }
 
-/* NAV ITEM — icon-only when idle; EQUAL fixed width so the cream lens slides as a
-   pure translateX. The label lives at the bottom, revealed only when active. */
+/* NAV ITEM — icon + label always shown (ink on cream reads everywhere). Equal
+   fixed width so the ink selection chip slides as a pure translateX. */
 .gt-item {
   position: relative;
-  z-index: 1;              /* above the sheen */
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 3.5rem;           /* 56px equal slots */
-  height: 3.25rem;         /* 52px → ≥44 touch */
-  border-radius: 22px;
-  color: rgba(245, 245, 245, 0.84);   /* off-white idle glyph ≈4:1 on dark glass */
+  gap: 0.18rem;
+  width: 3.75rem;
+  height: 3.35rem;         /* ≥44 touch */
+  border-radius: 16px;
+  color: var(--heading);   /* ink on cream — high contrast idle */
   -webkit-touch-callout: none;
   user-select: none;
   -webkit-user-select: none;
@@ -443,109 +421,86 @@ ul, ol { list-style: none; }
   position: relative;
   z-index: 1;
   display: block;
-  transition: transform 0.28s var(--ease), color 0.28s var(--ease);
+  transition: transform 0.24s var(--ease), color 0.24s var(--ease);
 }
 .gt-item svg, .gt-cta svg { display: block; }
-.gt-item svg { width: 1.5rem; height: 1.5rem; }
-.gt-item svg :is(path, rect) { transition: fill 0.25s var(--ease), stroke 0.25s var(--ease); }
+.gt-item svg { width: 1.4rem; height: 1.4rem; }
+.gt-item svg :is(path, rect) { transition: stroke 0.24s var(--ease), fill 0.24s var(--ease); }
 .gt-label {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0.34rem;
+  position: relative;
   z-index: 1;
-  text-align: center;
-  font-size: 0.6875rem;    /* 11px */
-  font-weight: 600;
+  font-size: 0.625rem;     /* 10px — with the icon; ink on cream is razor-legible */
+  font-weight: 650;
   letter-spacing: -0.01em;
   line-height: 1;
   white-space: nowrap;
-  opacity: 0;
-  transition: opacity 0.24s var(--ease);
   pointer-events: none;
 }
-/* ACTIVE nav item — the outline glyph fills in with maroon, lifts to seat on the
-   lens, and its label fades in (ink on cream). The row height is fixed, so the
-   lift is transform-only: no reflow. */
-.gt-item.active { color: var(--maroon); }
-.gt-item.active .gt-icon { transform: translateY(-0.5rem) scale(1.04); }
-.gt-item.active svg :is(path, rect) { fill: rgba(122, 21, 18, 0.12); }
-.gt-item.active svg { filter: drop-shadow(0 1px 1px rgba(90, 30, 0, 0.3)); }
-.gt-item.active .gt-label { opacity: 1; color: var(--ink); }
-.gt-item:active .gt-icon { transform: scale(0.9); }               /* press feedback */
-.gt-item.active:active .gt-icon { transform: translateY(-0.5rem) scale(0.96); }
+/* ACTIVE nav item — its icon + label turn cream (they sit on the ink chip) */
+.gt-item.active { color: #FFFDF8; }
+.gt-item.active .gt-icon { transform: translateY(-1px); }
+.gt-item:active .gt-icon { transform: scale(0.9); }   /* press feedback */
 
-/* the CREAM LENS — the single shared highlight that SLIDES between the nav slots
-   (framer layoutId). A bright raised tile, inset from the slot so a thin glass
-   gutter reads it as a lit key rising out of the dark glass. Sits BEHIND glyph. */
+/* the INK SELECTION CHIP — the single shared highlight that SLIDES between the
+   nav slots (framer layoutId). A solid ink sticker tile behind the active glyph. */
 .gt-lens {
   position: absolute;
-  inset: 3px;
+  inset: 2px;
   z-index: 0;
-  border-radius: 19px;
-  background: linear-gradient(180deg, rgba(255, 250, 244, 0.97), rgba(244, 240, 232, 0.93));
+  border-radius: 13px;
+  background: var(--heading);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),         /* lit top edge */
-    inset 0 -3px 6px -3px rgba(120, 60, 20, 0.14),    /* seated base */
-    0 3px 8px -2px rgba(0, 0, 0, 0.28),               /* casts on the dark glass */
-    0 8px 18px -6px rgba(253, 111, 0, 0.14);          /* faint brand-warm underglow */
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 2px 5px -1px rgba(23, 23, 24, 0.4);
 }
 
-/* THE ORANGE EMBER (CTA) — the one accent action, always labelled, INK text
-   (white-on-orange fails AA; ink-on-orange ≈6.6:1). Its own state, never a lens. */
+/* THE ORANGE CTA — the brand action pill, always labelled, INK text (white-on-
+   orange fails AA; ink-on-orange ≈6.6:1). A solid sticker, no glass. */
 .gt-cta {
   position: relative;
   z-index: 1;
   display: flex;
-  flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
-  min-width: 4.25rem;      /* 68px */
-  height: 3.25rem;
+  gap: 0.35rem;
+  min-width: 4rem;
   padding: 0 0.85rem;
-  border-radius: 22px;
-  color: var(--ink);
+  margin-left: 1px;
+  border-radius: 14px;
+  color: var(--heading);
   font-size: 0.6875rem;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: -0.01em;
   line-height: 1;
-  background: linear-gradient(180deg, #FF8A2B 0%, var(--orange) 45%, var(--orange-deep) 100%);
+  background: var(--orange);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.45),
-    0 3px 10px -2px rgba(253, 111, 0, 0.45);
-  transition: transform 0.14s var(--ease), box-shadow 0.2s var(--ease);
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -2px 0 rgba(120, 50, 0, 0.28);
+  transition: transform 0.12s var(--ease), background 0.2s var(--ease);
   -webkit-touch-callout: none;
   user-select: none;
   -webkit-user-select: none;
 }
 .gt-cta .gt-icon { transition: none; }
-.gt-cta svg { width: 1.25rem; height: 1.25rem; }
-.gt-cta .gt-label { position: static; opacity: 1; color: var(--ink); font-weight: 700; }
-.gt-cta:active { transform: scale(0.96); }
+.gt-cta svg { width: 1.2rem; height: 1.2rem; }
+.gt-cta .gt-label { color: var(--heading); font-weight: 800; }
+.gt-cta:active { transform: scale(0.95); }
 /* engaged (contact section in view): deepen the fill + an inset ink ring */
 .gt-cta.active {
-  background: linear-gradient(180deg, var(--orange) 0%, var(--orange-deep) 70%, #B24A00 100%);
+  background: var(--orange-deep);
   box-shadow:
-    inset 0 0 0 2px rgba(23, 23, 24, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.35),
-    0 3px 10px -2px rgba(253, 111, 0, 0.5);
+    inset 0 0 0 2px rgba(23, 23, 24, 0.5),
+    inset 0 -2px 0 rgba(120, 50, 0, 0.3);
 }
 @media (max-width: 360px) {
-  .glass-tabbar { padding: 5px; }
-  .gt-item { width: 3rem; }
-  .gt-divider { margin: 0 4px; }
+  .gt-item { width: 3.15rem; }
+  .gt-divider { margin: 0 3px; }
   .gt-cta { min-width: 0; padding: 0 0.7rem; }
-  .gt-cta .gt-label { display: none; }   /* icon-only ember on the tiniest screens */
+  .gt-cta .gt-label { display: none; }   /* icon-only CTA on the tiniest screens */
 }
 
-/* Glass needs something to refract — where backdrop-filter doesn't exist fall
-   back to near-solid ink. (The prefers-reduced-transparency fallback lives at
-   the very END of this file: it must out-cascade the ≤980px glass nav rules,
-   which share its specificity and would otherwise win by source order.) */
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .glass-tabbar { background: rgba(20, 20, 22, 0.97); }
-}
+/* (The Sticker Dock is solid cream with no backdrop-filter, so it needs no
+   no-backdrop-filter fallback anymore.) */
 
 /* ══════════ HERO ══════════ */
 .hero {
@@ -944,13 +899,23 @@ svg.doodle { display: inline-block; vertical-align: middle; overflow: visible; }
   opacity: 0.9;
 }
 
-/* Mobile: keep only the small inline/centred marks; positioned ones off. */
+/* Mobile doodles. NOTE: `svg.doodle` (specificity 0,1,1) out-specifies a lone
+   class (0,1,0), so any mobile override MUST use two classes (`.doodle.x` = 0,2,0)
+   to actually win — otherwise the desktop positions leak onto phones. */
 @media (max-width: 1023px) {
-  .cta-band-arrow,
-  .videos-hero-swirl,
-  .contact-star, .contact-swirl, .contact-cta-arrow { display: none; }
+  /* the two arrows point at exact DESKTOP button spots (CTA band / WhatsApp),
+     which stack/centre differently on small screens → drop them there */
+  .doodle.cta-band-arrow,
+  .doodle.contact-cta-arrow { display: none; }
 }
-@media (max-width: 760px) { .videos-hero-spark { display: none; } }
+@media (max-width: 760px) {
+  /* re-seat the flanking accents to the narrower headline corners (they frame the
+     videos + contact headings, matching the doodle-rich cream mobile theme) */
+  .doodle.videos-hero-spark { top: -0.35rem; right: 0.5rem; width: 1.3rem; height: 1.3rem; }
+  .doodle.videos-hero-swirl { top: 0.15rem; left: 0.5rem; width: 1.65rem; height: 1.65rem; }
+  .doodle.contact-star { top: 0.35rem; right: 1rem; width: 1.2rem; height: 1.2rem; }
+  .doodle.contact-swirl { top: 1.4rem; left: 1rem; width: 1.6rem; height: 1.6rem; }
+}
 @media (prefers-reduced-motion: reduce) {
   .videos-hero-spark, .contact-star { animation: none; }
 }
@@ -2051,8 +2016,9 @@ html.js [data-reveal].revealed {
   .nav-links { display: none; }
   .brand { padding: 0 0.25rem; }
 
-  /* App chrome: glass tab bar on, top bar slims to brand + language and turns
-     into the same liquid glass (the solid ink block reads website, not app). */
+  /* App chrome (the Figr-inspired mobile theme): the sticker dock shows; the top
+     bar slims to brand + language and becomes a matching CREAM sticker — ink
+     outline + hard offset, solid, NO glass/backdrop-filter. */
   .glass-tabbar { display: flex; }
   /* viewport-fit=cover pulls the layout under the notch — keep the fixed pill
      and the flowing content inside the horizontal safe area in landscape */
@@ -2064,49 +2030,46 @@ html.js [data-reveal].revealed {
   main .container { padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px); }
   .nav {
     position: relative;
-    padding: 0.5rem 0.875rem;
-    border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.24);
-    /* dense smoke — the white brand word must stay ≥4.5:1 over paper sections */
-    background: linear-gradient(150deg, rgba(44, 44, 48, 0.64), rgba(10, 10, 12, 0.84) 72%);
-    backdrop-filter: blur(18px) saturate(195%) brightness(0.87) contrast(1.05);
-    -webkit-backdrop-filter: blur(18px) saturate(195%) brightness(0.87) contrast(1.05);
+    padding: 0.5rem 0.9rem;
+    border-radius: 16px;
+    border: 2px solid var(--heading);      /* sticker ink outline */
+    background: #FFFDF8;                    /* warm cream, solid — no glass */
+    color: var(--heading);
     box-shadow:
-      inset 0 1px 0 var(--glass-rim-hi),          /* crisp bevel top rim */
-      inset 0 3px 6px rgba(255, 255, 255, 0.12),  /* soft inner glow under it */
-      inset 0 -1px 3px rgba(0, 0, 0, 0.3),
-      0 2px 5px rgba(0, 0, 0, 0.22),              /* tight contact shadow */
-      0 14px 34px rgba(5, 5, 5, 0.36);
-  }
-  .nav::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background: linear-gradient(150deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.05) 40%, rgba(255, 255, 255, 0) 62%);
-    pointer-events: none;
-  }
-  /* dispersion rim the mobile nav was missing — same prism recipe as the tab bar */
-  .nav::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: 1.3px;
-    background: var(--glass-disp);
-    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor;
-    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    mask-composite: exclude;
-    pointer-events: none;
+      0 3px 0 0 var(--heading),
+      0 10px 20px -10px rgba(23, 23, 24, 0.28);
   }
   .nav > * { position: relative; z-index: 1; }
-  /* No url(#lg-refract) here on purpose — see the note by .glass-tabbar: an SVG
-     displacement backdrop-filter on this fixed bar repaints every scroll frame. */
-  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-    .nav { background: var(--ink); }
+  .nav .brand-word { color: var(--heading); text-shadow: none; }  /* ink on cream */
+
+  /* Sticker buttons on the light hero: drop the frosted glass container and give
+     the pills a solid fill + ink outline + hard offset (the Figr sticker look). */
+  .glass-cta {
+    background: transparent;
+    border: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+    gap: 0.5rem;
+    padding: 0;
   }
-  /* the last scrollable content must clear the floating tab bar */
+  .btn-primary {
+    color: #fff;
+    border: 2px solid var(--heading);
+    box-shadow: 0 3px 0 0 var(--heading);
+  }
+  .btn-ghost {
+    background: #FFFDF8;
+    color: var(--heading);
+    border: 2px solid var(--heading);
+    box-shadow: 0 3px 0 0 var(--heading);
+  }
+  .btn-primary:active, .btn-ghost:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 0 var(--heading);
+  }
+
+  /* the last scrollable content must clear the floating dock */
   .footer { padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px)); }
 
   .cards-grid { grid-template-columns: repeat(2, 1fr); }
@@ -2120,7 +2083,11 @@ html.js [data-reveal].revealed {
 
 @media (max-width: 760px) {
   .hero { padding-top: 6.75rem; }
-  .hero-stage { height: clamp(25rem, 110vw, 32.5rem); margin-top: 1.625rem; }
+  /* EN only (AR gets its own larger push at html[lang=ar] .hero-stage): the EN
+     title wraps to a 3rd line ("Video Editor") that overlapped the portrait's
+     head — drop the stage a touch so that line clears the head and stays readable
+     while the deliberate overlap look is kept. */
+  .hero-stage { height: clamp(25rem, 110vw, 32.5rem); margin-top: clamp(2.5rem, 8vw, 3.25rem); }
   .hero-circle { width: min(86vw, 26.25rem); }
   .hero-photo { height: 114%; }
   .hero-spot { height: 114%; }
@@ -2163,12 +2130,12 @@ html.js [data-reveal].revealed {
   .reel-thumb, .reel-tag, .reel-play, .reel-copy, .fx-toggle-label { transition: none; }
   .reel-card:hover .reel-thumb { transform: none; }   /* no hover lift */
   .reel-thumb::after { display: none; }               /* no sheen sweep */
-  /* Lumen Dock: keep the state readable but drop the motion. The lens still
-     shows (framer transition is set to duration:0 in the component); the glyph
-     lift stays as a static offset, and press-scale + icon tweens are killed. */
+  /* Sticker Dock: keep the state readable but drop the motion. The ink chip still
+     shows (framer transition is set to duration:0 in the component); press-scale
+     + icon tweens are killed. */
   .gt-icon, .gt-label, .gt-cta { transition: none; }
   .gt-item:active .gt-icon, .gt-cta:active { transform: none; }
-  .gt-item.active .gt-icon { transform: translateY(-0.5rem); }
+  .gt-item.active .gt-icon { transform: translateY(-1px); }
 }
 
 /* ══════════ VIDEOS — 3D CAROUSEL ══════════ */
@@ -2335,16 +2302,18 @@ html[lang="ar"] .name-reveal { direction: rtl; }
    transform (Lightning) collapses backdrop-filter prefix pairs, which silently
    demoted an order-based override of the same specificity. */
 @media (prefers-reduced-transparency: reduce) {
-  .glass-tabbar,
-  .nav {
-    /* standard property ONLY — writing the -webkit- twin here makes Lightning
-       merge the pair and emit just the prefixed alias, which loses to the
-       standard declarations in the glass rules */
-    backdrop-filter: none !important;
-    background: var(--ink) !important;
+  /* The mobile sticker dock + cream top nav are already SOLID (no transparency),
+     so they need no fallback. Only the DESKTOP glass nav collapses to solid ink. */
+  @media (min-width: 981px) {
+    .nav {
+      /* standard property ONLY — writing the -webkit- twin here makes Lightning
+         merge the pair and emit just the prefixed alias, which loses to the
+         standard declarations in the glass rules */
+      backdrop-filter: none !important;
+      background: var(--ink) !important;
+    }
+    .nav::before { content: none; }
   }
-  .glass-tabbar::before,
-  .nav::before { content: none; }
 }
 
 /* ══════════ NAME REVEAL (About signature — TrueFocus port) ══════════ */
@@ -2855,5 +2824,77 @@ html.js .reel-thumb img:not(.is-loaded) { opacity: 0; }
 @media (max-width: 760px) {
   .reel-card { width: 68vw; max-width: 16.25rem; }
   .reels-title { font-size: 1.25rem; }
+
+  /* MOBILE LIGHTBOX — everything (film + meta + close + copy-link) fits ONE
+     screen with NO scroll. The inner fills the padded viewport as a centred flex
+     column; the portrait film is height-capped so the compact meta always fits
+     beneath it, and the desktop glass meta panel is dropped for a clean sheet. */
+  .reel-lightbox {
+    align-items: stretch;
+    padding:
+      max(0.75rem, env(safe-area-inset-top))
+      max(0.9rem, env(safe-area-inset-right))
+      max(0.9rem, env(safe-area-inset-bottom))
+      max(0.9rem, env(safe-area-inset-left));
+  }
+  .reel-lightbox-inner,
+  .reel-lightbox-inner.is-ar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8rem;
+    width: 100%;
+    max-width: 30rem;
+    height: 100%;
+    max-height: none;
+    margin: 0 auto;
+    overflow: visible;            /* NO scroll — it all fits */
+    grid-template-columns: none;  /* reset the desktop grid */
+  }
+  .reel-lightbox-video {
+    flex: 0 1 auto;
+    min-height: 0;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 56vh;
+    max-height: 56dvh;
+    border-radius: 16px;
+  }
+  .reel-lightbox-meta,
+  .reel-lightbox-inner:not(.is-ar) .reel-lightbox-meta {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: 26rem;
+    max-height: none;
+    overflow: visible;
+    gap: 0.4rem;
+    padding: 0;                   /* drop the glass panel — clean on mobile */
+    background: transparent;
+    border: none;
+    text-align: center;
+    align-items: center;
+  }
+  .reel-lightbox-tag { align-self: center; }
+  .reel-lightbox-meta h4 { font-size: 1.3rem; line-height: 1.15; }
+  .reel-lightbox-client { font-size: 0.9rem; }
+  .reel-lightbox-desc {
+    font-size: 0.875rem;
+    line-height: 1.45;
+    max-width: 36ch;
+    /* clamp a long description so it can never force the sheet to scroll */
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .reel-copy { margin-top: 0.1rem; }
+}
+/* Very short screens: trim the film + clamp harder so it still fits with no scroll */
+@media (max-width: 760px) and (max-height: 700px) {
+  .reel-lightbox-video { max-height: 48vh; max-height: 48dvh; }
+  .reel-lightbox-desc { -webkit-line-clamp: 2; }
+  .reel-lightbox-meta h4 { font-size: 1.15rem; }
 }
 

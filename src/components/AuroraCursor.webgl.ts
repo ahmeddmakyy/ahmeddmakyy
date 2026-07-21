@@ -37,7 +37,7 @@ const TUNING = {
   ONDARK_EASE: 0.15, //       light↔dark crossfade speed at the pointer
   LUM_EVERY: 8, //            elementFromPoint luminance probe every N frames (it
   //                          forces a hit-test/style flush, so keep it sparse).
-  MASTER_VOLUME: 0.42, //     tasteful trim on the ignite whoosh (fires on EVERY click)
+  MASTER_VOLUME: 0.45, //     tasteful trim on the whoomp (fires on EVERY click)
 } as const;
 
 /* ── the controller ───────────────────────────────────────────────────────── */
@@ -182,13 +182,11 @@ export function createAurora(canvas: HTMLCanvasElement): AuroraController {
   /* ── eased state ── */
   let onDark = 0, onDarkTarget = 0;
 
-  /* ── WebAudio "ice-ignite" whoosh (lazy) ──────────────────────────────────
-   * A premium ignite: a soft, rounded LOWPASS-swept air whoosh (not the old
-   * harsh bandpass), widened with a ~12ms Haas layer; a pitch-swept whoomp body
-   * with an octave-down sub for weight; and a crystalline cluster of 3 detuned
-   * "ice" partials that REPLACE the old crackle stab — all summed into a bus fed
-   * through a soft-knee limiter (glue, not pump) and a short airy reverb send.
-   * ~0.38s, wide, never harsh. */
+  /* ── WebAudio "whoomp" (lazy) ──────────────────────────────────────────────
+   * A DEEP, SOFT, warm ignite — a pitch-swept sine body + an octave-down sub for
+   * weight + a whisper of dark lowpassed breath (the soft "f" of a "boof"). No
+   * bright/harsh partials at all. Summed into a bus → soft-knee limiter (glue,
+   * not pump) + a faint airy reverb send. ~0.25s, gentle, never harsh. */
   let AC: AudioContext | null = null;
   let busGain: GainNode | null = null; //   every layer sums here
   let noiseBuf: AudioBuffer | null = null;
@@ -267,67 +265,37 @@ export function createAurora(canvas: HTMLCanvasElement): AuroraController {
     const t = AC.currentTime;
     const bus = busGain;
 
-    // 1) AIR WHOOSH — soft, rounded, LOWPASS sweep (not a harsh bandpass)
-    const air = AC.createBufferSource(); air.buffer = getNoise(AC);
-    const airHP = AC.createBiquadFilter(); airHP.type = "highpass"; airHP.frequency.value = 220;
-    const airLP = AC.createBiquadFilter(); airLP.type = "lowpass"; airLP.Q.value = 0.6;
-    airLP.frequency.setValueAtTime(7000, t);
-    airLP.frequency.exponentialRampToValueAtTime(900, t + 0.30);
-    const airPan = AC.createStereoPanner(); airPan.pan.value = -0.15;
-    const airG = AC.createGain();
-    airG.gain.setValueCurveAtTime(easeCurve(0.0001, 0.42, 24), t, 0.032); // rounded 32ms attack
-    airG.gain.setTargetAtTime(0.0001, t + 0.034, 0.09);                   // natural exp tail
-    air.connect(airHP); airHP.connect(airLP); airLP.connect(airPan); airPan.connect(airG); airG.connect(bus);
-    air.start(t); air.stop(t + 0.42);
-
-    // 1b) HAAS WIDENER — darker, ~12ms-delayed copy on the opposite side
-    const air2 = AC.createBufferSource(); air2.buffer = getNoise(AC);
-    const air2LP = AC.createBiquadFilter(); air2LP.type = "lowpass"; air2LP.frequency.value = 3000;
-    const haas = AC.createDelay(); haas.delayTime.value = 0.012;
-    const air2Pan = AC.createStereoPanner(); air2Pan.pan.value = 0.35;
-    const air2G = AC.createGain();
-    air2G.gain.setValueCurveAtTime(easeCurve(0.0001, 0.20, 24), t, 0.034);
-    air2G.gain.setTargetAtTime(0.0001, t + 0.036, 0.09);
-    air2.connect(air2LP); air2LP.connect(haas); haas.connect(air2Pan); air2Pan.connect(air2G); air2G.connect(bus);
-    air2.start(t); air2.stop(t + 0.42);
-
-    // 2) WHOOMP BODY — pitch-swept sine + octave-down sub for weight
+    // 1) BODY — a pitch-swept sine "whoomp", rounded attack, soft exponential tail
     const body = AC.createOscillator(); body.type = "sine";
-    body.frequency.setValueAtTime(190, t);
-    body.frequency.exponentialRampToValueAtTime(58, t + 0.20);
-    const sub = AC.createOscillator(); sub.type = "sine";
-    sub.frequency.setValueAtTime(95, t);
-    sub.frequency.exponentialRampToValueAtTime(40, t + 0.20);
+    body.frequency.setValueAtTime(168, t);
+    body.frequency.exponentialRampToValueAtTime(46, t + 0.19);
     const bodyG = AC.createGain();
-    bodyG.gain.setValueCurveAtTime(easeCurve(0.0001, 0.50, 16), t, 0.016);
-    bodyG.gain.setTargetAtTime(0.0001, t + 0.017, 0.075);
-    const subG = AC.createGain();
-    subG.gain.setValueCurveAtTime(easeCurve(0.0001, 0.22, 16), t, 0.016);
-    subG.gain.setTargetAtTime(0.0001, t + 0.017, 0.075);
+    bodyG.gain.setValueCurveAtTime(easeCurve(0.0001, 0.58, 20), t, 0.022); // rounded 22ms attack
+    bodyG.gain.setTargetAtTime(0.0001, t + 0.024, 0.075);                  // warm soft tail
     body.connect(bodyG); bodyG.connect(bus);
-    sub.connect(subG); subG.connect(bus);
-    body.start(t); body.stop(t + 0.30);
-    sub.start(t); sub.stop(t + 0.30);
+    body.start(t); body.stop(t + 0.34);
 
-    // 3) ICE SHIMMER — 3 detuned crystalline partials (REPLACES the harsh crackle)
-    const shimLP = AC.createBiquadFilter(); shimLP.type = "lowpass"; shimLP.frequency.value = 9000;
-    shimLP.connect(bus);
-    const parts = [
-      { f: 5240, det: 0, pan: -0.40 },
-      { f: 6280, det: 7, pan: 0.35 }, //   +7 cents → glassy/metallic
-      { f: 7460, det: -5, pan: 0.10 },
-    ];
-    for (const p of parts) {
-      const o = AC.createOscillator(); o.type = "sine";
-      o.frequency.setValueAtTime(p.f, t); o.detune.value = p.det;
-      o.frequency.exponentialRampToValueAtTime(p.f * 0.985, t + 0.13); // tiny down micro-sweep
-      const g = AC.createGain();
-      g.gain.setValueCurveAtTime(easeCurve(0.0001, 0.09, 12), t, 0.006);
-      g.gain.setTargetAtTime(0.0001, t + 0.007, 0.035);               // fast glassy decay
-      const pan = AC.createStereoPanner(); pan.pan.value = p.pan;
-      o.connect(g); g.connect(pan); pan.connect(shimLP);
-      o.start(t); o.stop(t + 0.16);
-    }
+    // 2) SUB — an octave down for weight (kept lower so it never booms)
+    const sub = AC.createOscillator(); sub.type = "sine";
+    sub.frequency.setValueAtTime(84, t);
+    sub.frequency.exponentialRampToValueAtTime(30, t + 0.19);
+    const subG = AC.createGain();
+    subG.gain.setValueCurveAtTime(easeCurve(0.0001, 0.34, 20), t, 0.022);
+    subG.gain.setTargetAtTime(0.0001, t + 0.024, 0.08);
+    sub.connect(subG); subG.connect(bus);
+    sub.start(t); sub.stop(t + 0.34);
+
+    // 3) BREATH — a quiet, dark, rounded puff of lowpassed noise (the soft "f" of
+    // a "boof"); gives the whoomp body without any bright/harsh transient
+    const air = AC.createBufferSource(); air.buffer = getNoise(AC);
+    const airLP = AC.createBiquadFilter(); airLP.type = "lowpass"; airLP.Q.value = 0.5;
+    airLP.frequency.setValueAtTime(1500, t);
+    airLP.frequency.exponentialRampToValueAtTime(420, t + 0.16);
+    const airG = AC.createGain();
+    airG.gain.setValueCurveAtTime(easeCurve(0.0001, 0.12, 24), t, 0.028);
+    airG.gain.setTargetAtTime(0.0001, t + 0.03, 0.06);
+    air.connect(airLP); airLP.connect(airG); airG.connect(bus);
+    air.start(t); air.stop(t + 0.3);
   }
 
   // reduced-motion is already gated by the component, but re-check so a live

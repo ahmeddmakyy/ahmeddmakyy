@@ -200,6 +200,10 @@ float fBurst(vec2 uv, vec4 b, float prof, float uTime, out float smoke){
   float age=t/life;                 // 0..1
   float seed=b.w;
   vec2 local=uv-b.xy;               // css px, y up (relative to click)
+  // Bursts made much SMALLER (~1-2x the cursor) per request. Scaling the local
+  // space up shrinks EVERY profile — teardrop, ring, heart, slash, rise,
+  // ignition pop and embers — uniformly, so the silhouettes/meanings are intact.
+  local *= 2.8;
   float grow=mix(0.55,1.10,smoothstep(0.0,0.32,age));
   float lenv=smoothstep(0.0,0.05,age)*(1.0-smoothstep(0.60,1.0,age));
   float heat=0.0;

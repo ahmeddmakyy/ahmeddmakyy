@@ -1,20 +1,21 @@
 /* ────────────────────────────────────────────────────────────────────────────
- * LiquidMedia.webgl — a client-only WebGL2 "liquid lens" that lives ONLY over
- * media. Unlike the old site-wide warm ripple (removed), this effect is scoped
- * to elements tagged [data-liquid] (reel posters now, idea-images later): when
- * the pointer moves over one, a molten-glass lens follows the cursor and
- * REFRACTS the media itself — no fixed colour, the distortion is whatever image
- * or video frame sits underneath. It goes silent the instant a <video> starts
- * playing (you want to watch, not warp) and eases away when the pointer leaves.
+ * LiquidMedia.webgl — a client-only WebGL2 "liquid surface" that lives ONLY over
+ * media. Scoped to elements tagged [data-liquid] (reel posters now, idea-images
+ * later): when the pointer moves over one, the WHOLE media becomes a still body
+ * of water — a gentle ambient swell everywhere — and the cursor is a HAND touching
+ * it: a soft push under the pointer plus expanding ripple rings left along its
+ * path. It REFRACTS the media itself (no fixed colour, the distortion is whatever
+ * image or video frame sits underneath), goes silent the instant a <video> starts
+ * playing (you want to watch, not warp), and eases away when the pointer leaves.
  *
  * ONE fixed, full-viewport, pointer-events:none canvas / ONE WebGL2 context. The
  * hovered element is uploaded to a texture (re-uploaded only when the target or,
- * for video, the frame changes — so a still poster costs one upload). The lens
+ * for video, the frame changes — so a still poster costs one upload). The surface
  * samples that texture with an object-fit:cover mapping so the refracted copy
- * lines up pixel-for-pixel with the real element, then displaces it by a bulge +
- * trailing ripples and adds thin white specular crests. Because coverage feathers
- * to zero at the blob edge (where displacement is also zero) there is never a
- * seam against the untouched media beneath.
+ * lines up pixel-for-pixel with the real element, then displaces the ENTIRE rect
+ * by the surface normal and adds a soft specular that brightens near the cursor.
+ * Because coverage feathers to zero at the rect edge there is never a seam against
+ * the untouched media beneath.
  *
  * SSR/'perf gating (reduced-motion, pointer:fine, WebGL2, the cursor-fx toggle)
  * lives in the React component; this module is imported only once every gate
@@ -28,15 +29,15 @@ export interface LiquidMediaController {
 const TUNING = {
   RENDER_SCALE: 0.9, //   backing-store scale vs CSS px (crisp crest lines)
   DPR_CAP: 1, //          device-pixel-ratio ceiling (integrated-GPU friendly)
-  RADIUS: 90, //          lens blob radius in css px — a small, delicate water
-  //                      film (was 130: too big, read as a heavy warp)
-  MAX_RIPPLES: 12, //     trailing ripple seeds held in the uniform array
-  RIPPLE_STEP: 14, //     px between ripple seeds spawned along the path (finer)
-  RIPPLE_LIFE: 1.0, //    seconds a ripple lives
-  POINTER_SMOOTH: 0.3, // smoothed-pointer follow (per frame @60)
-  ACTIVE_EASE: 0.18, //   presence fade in/out (per frame @60)
-  STRENGTH: 0.034, //     refraction displacement, as a fraction of UV — soft,
-  //                      real-water bend (was 0.07: too much distortion)
+  TOUCH_RADIUS: 85, //    how far the cursor "hand" pushes the WHOLE liquid surface
+  MAX_RIPPLES: 8, //      trailing ripple seeds held in the uniform array
+  RIPPLE_STEP: 18, //     px between ripple seeds spawned along the path
+  RIPPLE_LIFE: 1.2, //    seconds a ripple lives
+  POINTER_SMOOTH: 0.32, //smoothed-pointer follow (per frame @60)
+  ACTIVE_EASE: 0.14, //   presence fade in/out (per frame @60)
+  STRENGTH: 0.03, //      whole-surface refraction, fraction of UV — subtle, like
+  //                      real water (the effect now covers the ENTIRE media)
+  AMBIENT: 0.5, //        ambient surface-wave amplitude (the media always breathes)
 } as const;
 
 const VERT = `#version 300 es
@@ -55,7 +56,7 @@ uniform float     uTime;
 uniform vec2      uPointer;  // css px, y-down
 uniform vec4      uRect;     // hovered element: x, y (top-left), w, h  css px y-down
 uniform vec2      uCover;    // object-fit:cover uv scale (<=1 on the cropped axis)
-uniform float     uRadius;   // lens blob radius, css px
+uniform float     uTouchR;   // cursor "hand" push radius, css px
 uniform float     uActive;   // 0..1 eased presence
 uniform int       uCount;    // live ripple count
 uniform vec3      uRip[${TUNING.MAX_RIPPLES}]; // x, y (css px y-down), birth time
@@ -64,28 +65,33 @@ uniform sampler2D uTex;      // the hovered media
 // height contribution of one expanding ripple ring at pixel p
 float ripH(vec2 p, vec3 rip){
   float age = uTime - rip.z;
-  if(age < 0.0 || age > 1.0) return 0.0;
+  if(age < 0.0 || age > ${TUNING.RIPPLE_LIFE.toFixed(1)}) return 0.0;
   float d = distance(p, rip.xy);
-  float R = 6.0 + age * 96.0;           // ring expansion (px/sec) — tighter for a small film
-  float band = exp(-pow((d - R) / 11.0, 2.0));
-  float wave = sin((d - R) * 0.36);     // finer concentric crests
-  float life = exp(-age * 2.2);
+  float R = 6.0 + age * 130.0;          // ring expands outward across the surface
+  float band = exp(-pow((d - R) / 16.0, 2.0));
+  float wave = sin((d - R) * 0.28);
+  float life = exp(-age * 1.9);
   return wave * band * life;
 }
 
-// full height field at p (css px): a cursor bulge + trailing ripples,
-// all confined to the lens blob
+// The liquid SURFACE height across the whole media (css px). The media behaves
+// like a still body of water: a gentle ambient swell everywhere, plus the cursor
+// acting as a HAND touching it — a soft local push under the pointer and the
+// expanding ripple rings it leaves along its path.
 float heightAt(vec2 p){
+  float amb =
+      sin(p.x * 0.021 + uTime * 0.90) +
+      sin(p.y * 0.027 - uTime * 0.72) +
+      sin((p.x * 0.6 + p.y * 0.8) * 0.02 + uTime * 1.25) * 0.7;
+  amb *= ${(TUNING.AMBIENT).toFixed(2)} * 0.33;
   float d = distance(p, uPointer);
-  float blob = smoothstep(uRadius, uRadius * 0.12, d);
-  // a slow breathing bulge so a still cursor still reads as molten glass
-  float bulge = blob * (0.9 + 0.1 * sin(uTime * 1.6));
-  float h = bulge;
+  float touch = exp(-d * d / (2.0 * uTouchR * uTouchR));   // the hand pressing the water
+  float rip = 0.0;
   for(int i = 0; i < ${TUNING.MAX_RIPPLES}; i++){
     if(i >= uCount) break;
-    h += ripH(p, uRip[i]) * 0.42;   // quieter wavelets — a light water film
+    rip += ripH(p, uRip[i]);
   }
-  return h * blob;   // never leak height outside the blob
+  return amb + touch * 1.15 + rip * 0.9;
 }
 
 void main(){
@@ -94,42 +100,39 @@ void main(){
 
   // local uv inside the element (0..1, y-down)
   vec2 luv = (p - uRect.xy) / uRect.zw;
-  // feathered rect mask so the lens never shows a hard element edge
-  vec2 fw = vec2(6.0) / uRect.zw;
+  // feathered rect mask so the surface fades into the untouched media at the edge
+  vec2 fw = vec2(7.0) / uRect.zw;
   float rectMask =
       smoothstep(0.0, fw.x, luv.x) * smoothstep(1.0, 1.0 - fw.x, luv.x) *
       smoothstep(0.0, fw.y, luv.y) * smoothstep(1.0, 1.0 - fw.y, luv.y);
-
-  float d = distance(p, uPointer);
-  float blob = smoothstep(uRadius, uRadius * 0.12, d);
-  float presence = blob * rectMask * uActive;
+  float presence = rectMask * uActive;            // the WHOLE media is liquid now
   if(presence < 0.004){ outColor = vec4(0.0); return; }
 
-  // surface normal from the height gradient (finite differences). A gentler
-  // gradient gain than before (was 60) so the film bends light softly, not sharply.
-  float e = 1.5;
+  // surface normal from the height gradient (finite differences)
+  float e = 1.6;
   float hx = heightAt(p + vec2(e, 0.0)) - heightAt(p - vec2(e, 0.0));
   float hy = heightAt(p + vec2(0.0, e)) - heightAt(p - vec2(0.0, e));
   vec2 grad = vec2(hx, hy) / (2.0 * e);
-  vec3 n = normalize(vec3(-grad * 44.0, 1.0));
+  vec3 n = normalize(vec3(-grad * 42.0, 1.0));
 
-  // object-fit:cover sample uv, then refract along the surface normal
+  // refract the media across the WHOLE surface (subtle, like water)
   vec2 baseUv = 0.5 + (luv - 0.5) * uCover;
-  vec2 refr = baseUv + n.xy * (${TUNING.STRENGTH.toFixed(3)} * blob);
+  vec2 refr = baseUv + n.xy * ${TUNING.STRENGTH.toFixed(3)};
   vec2 texUv = vec2(refr.x, 1.0 - refr.y);           // DOM texture is y-flipped
   vec3 col = texture(uTex, clamp(texUv, 0.001, 0.999)).rgb;
 
-  // A delicate water film, not liquid-glass: one crisp pinpoint glint + a whisper
-  // of sheen (was a broad blown-out highlight), and a faint edge meniscus.
-  vec3 L = normalize(vec3(0.35, -0.5, 0.78));
+  // soft specular where the surface tilts to the light, lifted near the cursor so
+  // the "hand on water" reads (a bright touch that follows the pointer)
+  vec3 L = normalize(vec3(0.3, -0.5, 0.8));
   vec3 H = normalize(L + vec3(0.0, 0.0, 1.0));
   float ndh = max(dot(n, H), 0.0);
-  float spec = pow(ndh, 96.0) * 0.75 + pow(ndh, 26.0) * 0.09;
-  float rim  = smoothstep(0.20, 0.0, abs(blob - 0.5) - 0.30) * 0.11; // soft meniscus
-  col += (spec * blob + rim) * vec3(1.0);
-  col *= 1.0 + 0.035 * blob;                           // barely-there brightening
+  float dC = distance(p, uPointer);
+  float near = exp(-dC * dC / (2.0 * (uTouchR * 1.6) * (uTouchR * 1.6)));
+  float spec = pow(ndh, 42.0) * (0.32 + 0.5 * near);
+  col += spec * rectMask * vec3(1.0);
+  col *= 1.0 + 0.03 * near;
 
-  float alpha = clamp(presence + spec * blob * 0.32, 0.0, 1.0);
+  float alpha = clamp(presence + spec * rectMask * 0.4, 0.0, 1.0);
   outColor = vec4(col * alpha, alpha);                 // premultiplied
 }`;
 
@@ -179,7 +182,7 @@ export function createLiquidMedia(canvas: HTMLCanvasElement): LiquidMediaControl
     prog = p;
     vao = gl!.createVertexArray()!;
     u = {};
-    for (const n of ["uRes", "uScale", "uTime", "uPointer", "uRect", "uCover", "uRadius", "uActive", "uCount", "uRip", "uTex"]) {
+    for (const n of ["uRes", "uScale", "uTime", "uPointer", "uRect", "uCover", "uTouchR", "uActive", "uCount", "uRip", "uTex"]) {
       u[n] = gl!.getUniformLocation(p, n);
     }
     tex = gl!.createTexture();
@@ -341,7 +344,7 @@ export function createLiquidMedia(canvas: HTMLCanvasElement): LiquidMediaControl
     gl!.uniform2f(u.uPointer, sx, sy);
     gl!.uniform4f(u.uRect, r.left, r.top, r.width, r.height);
     gl!.uniform2f(u.uCover, cover[0], cover[1]);
-    gl!.uniform1f(u.uRadius, TUNING.RADIUS);
+    gl!.uniform1f(u.uTouchR, TUNING.TOUCH_RADIUS);
     gl!.uniform1f(u.uActive, active);
     gl!.uniform1i(u.uCount, cnt);
     gl!.uniform3fv(u.uRip, ripFlat);
