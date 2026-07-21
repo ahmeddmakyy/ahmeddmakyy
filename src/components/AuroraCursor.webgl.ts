@@ -26,6 +26,7 @@ import {
   FIRE_VERT,
   FIRE_MAX_BURSTS,
   FIRE_TUNING,
+  FIRE_PROFILE,
   buildBurstFragment,
 } from "./fire.glsl";
 
@@ -50,10 +51,11 @@ const TUNING = {
   //                          most pixels so full-ish res stays cheap)
   DPR_CAP: 1, //              device-pixel-ratio ceiling (integrated GPU friendly)
 
-  // — liquid ripple field —
+  // — liquid ripple field (finer + smaller per feedback: tighter footprint,
+  //   shorter wavelength, thinner crest lines) —
   MAX_RIPPLES: 28, //         ripple sources held in the uniform array
-  RIPPLE_STEP: 13, //         px between ripple seeds spawned along the path
-  RIPPLE_LIFE: 1.5, //        seconds a ripple lives before it is culled
+  RIPPLE_STEP: 12, //         px between ripple seeds spawned along the path
+  RIPPLE_LIFE: 1.15, //       seconds a ripple lives before it is culled (was 1.5)
   POINTER_SMOOTH: 0.25, //    smoothed-pointer follow (per frame @60)
   ONDARK_EASE: 0.15, //       light↔dark crossfade speed at the pointer
   MASTER_EASE: 0.05, //       hero-suppression ramp speed
@@ -93,16 +95,16 @@ const vec3 AMBER       = vec3(1.000,0.620,0.180);
 // single ripple wave-height contribution at pixel p (css px)
 float rippleH(vec2 p, vec3 rip){
   float age = uTime - rip.z;
-  if(age < 0.0 || age > 1.5) return 0.0;
+  if(age < 0.0 || age > 1.15) return 0.0;
   vec2 d2 = p - rip.xy;
   float d = length(d2);
-  float speed = 94.0;              // px/sec expansion
-  float R = 14.0 + age * speed;    // current ring radius
-  float ringW = 26.0;              // gaussian band width
+  float speed = 72.0;              // px/sec expansion (smaller = tighter rings)
+  float R = 10.0 + age * speed;    // current ring radius
+  float ringW = 17.0;              // gaussian band width (finer band)
   float env  = exp(-pow((d - R)/ringW, 2.0));
-  float wave = sin((d - R) * 0.17);// wavelength ~ 37px -> a couple of rings
-  float life = exp(-age * 1.45);   // fade ripple over ~0.7s
-  float loc  = exp(-d / 70.0);     // keep it tight around cursor
+  float wave = sin((d - R) * 0.23);// shorter wavelength ~27px -> finer rings
+  float life = exp(-age * 1.85);   // fade ripple faster (smaller footprint)
+  float loc  = exp(-d / 48.0);     // keep it tight around cursor
   return wave * env * life * loc;
 }
 
@@ -113,14 +115,14 @@ float heightAt(vec2 p, out float mask){
     if(i>=uCount) break;
     vec3 rip = uRip[i];
     float age = uTime - rip.z;
-    if(age < 0.0 || age > 1.5) continue;
+    if(age < 0.0 || age > 1.15) continue;
     float hi = rippleH(p, rip);
     h += hi;
     vec2 d2 = p - rip.xy; float d = length(d2);
-    float R = 14.0 + age*94.0;
-    float env = exp(-pow((d - R)/34.0,2.0));
-    float life = exp(-age*1.45);
-    float loc = exp(-d/70.0);
+    float R = 10.0 + age*72.0;
+    float env = exp(-pow((d - R)/22.0,2.0));
+    float life = exp(-age*1.85);
+    float loc = exp(-d/48.0);
     m = max(m, env*life*loc);
   }
   mask = m;
@@ -144,7 +146,7 @@ void main(){
   float hy1 = heightAt(p + vec2(0.0,e), md);
   float hy0 = heightAt(p - vec2(0.0,e), md);
   vec2 grad = vec2(hx1-hx0, hy1-hy0) / (2.0*e);
-  float amp = 26.0;
+  float amp = 20.0;                   // gentler relief -> finer, less bulgy
   vec3 n = normalize(vec3(-grad.x*amp, -grad.y*amp, 1.0));
 
   // lighting
@@ -152,9 +154,9 @@ void main(){
   vec3 V = vec3(0.0,0.0,1.0);
   vec3 H = normalize(L + V);
   float ndh = max(dot(n,H),0.0);
-  float spec     = pow(ndh, 70.0);    // sharp specular glint
-  float specThin = pow(ndh, 170.0);   // razor-thin crest LINE (engraving)
-  float caustic  = pow(ndh, 10.0);    // broader warm sheen
+  float spec     = pow(ndh, 95.0);    // sharp specular glint (finer)
+  float specThin = pow(ndh, 230.0);   // razor-thin crest LINE (engraving, finer)
+  float caustic  = pow(ndh, 12.0);    // broader warm sheen
   float diff = max(dot(n,L),0.0);
 
   // height -> crest(+) vs trough(-)
@@ -257,7 +259,7 @@ export function createAurora(canvas: HTMLCanvasElement, opts: AuroraOptions): Au
     liquid = { prog: lprog, u: lu };
 
     const fprog = link(VERT, buildBurstFragment());
-    const fNames = ["uScale", "uTime", "uOnDark", "uBursts"];
+    const fNames = ["uScale", "uTime", "uOnDark", "uBursts", "uBurstProf"];
     const fu: Record<string, WebGLUniformLocation | null> = {};
     for (const n of fNames) fu[n] = gl!.getUniformLocation(fprog, n);
     fire = { prog: fprog, u: fu };
@@ -316,17 +318,34 @@ export function createAurora(canvas: HTMLCanvasElement, opts: AuroraOptions): Au
 
   /* ── click fire bursts (css px, y-UP; matches the burst shader) ── */
   const bursts = new Float32Array(FIRE_MAX_BURSTS * 4);
+  const burstProf = new Float32Array(FIRE_MAX_BURSTS); // per-burst silhouette
   for (let i = 0; i < FIRE_MAX_BURSTS; i++) bursts[i * 4 + 2] = -999.0; // inactive
   let bhead = 0;
   let activeBursts = false;
 
-  function spawnBurst(clientX: number, clientY: number, tSec: number) {
-    const i = (bhead++ % FIRE_MAX_BURSTS) * 4;
+  function spawnBurst(clientX: number, clientY: number, tSec: number, profile: number) {
+    const slot = bhead++ % FIRE_MAX_BURSTS;
+    const i = slot * 4;
     bursts[i + 0] = clientX;
     bursts[i + 1] = window.innerHeight - clientY; // y-up css px
     bursts[i + 2] = tSec;
     bursts[i + 3] = Math.random() * 10.0;
+    burstProf[slot] = profile;
     activeBursts = true;
+  }
+
+  /* Which flame shape a click carries, chosen by WHAT was clicked. The user asked
+   * for a distinct fire per context; order matters (the CTA lives inside the nav,
+   * so it must be tested before the nav). */
+  function pickProfile(target: HTMLElement | null): number {
+    if (!target) return FIRE_PROFILE.BLOOM;
+    if (target.closest(".nav-cta")) return FIRE_PROFILE.HEART; // "Let's talk" in the bar
+    if (target.closest("#contact")) return FIRE_PROFILE.HEART; // whole contact section
+    if (target.closest(".btn-primary, .btn-ghost, .btn-cta-band"))
+      return FIRE_PROFILE.COLUMN; // hero + mid-band marketing CTAs
+    if (target.closest("#videos")) return FIRE_PROFILE.RING; // films = portal ring
+    if (target.closest(".nav-wrap")) return FIRE_PROFILE.SLASH; // rest of the top bar
+    return FIRE_PROFILE.BLOOM;
   }
 
   /* ── luminance detection -> uOnDark target ── */
@@ -434,9 +453,15 @@ export function createAurora(canvas: HTMLCanvasElement, opts: AuroraOptions): Au
     if (target && target.closest("input, textarea, select")) return;
     if (prefersReduced()) return;
     const t = (performance.now() - t0) / 1000;
-    initAudio();
-    fwoosh();
-    spawnBurst(e.clientX, e.clientY, t);
+    // Spawn the flame FIRST so a throwing/blocked AudioContext (some headless /
+    // autoplay-restricted contexts) can never swallow the visual burst.
+    spawnBurst(e.clientX, e.clientY, t, pickProfile(target));
+    try {
+      initAudio();
+      fwoosh();
+    } catch {
+      /* sound is optional; the flame already fired */
+    }
   };
 
   /* ── loop ── */
@@ -519,6 +544,7 @@ export function createAurora(canvas: HTMLCanvasElement, opts: AuroraOptions): Au
         gl!.uniform1f(fu.uTime, t);
         gl!.uniform1f(fu.uOnDark, onDark);
         gl!.uniform4fv(fu.uBursts, bursts);
+        gl!.uniform1fv(fu.uBurstProf, burstProf);
         gl!.drawArrays(gl!.TRIANGLES, 0, 3);
       } else {
         activeBursts = false;

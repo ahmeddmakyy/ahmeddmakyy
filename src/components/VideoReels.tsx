@@ -269,6 +269,7 @@ function VideoLightbox({ gi, onClose }: { gi: number | null; onClose: () => void
   // motion and only exists while the lightbox is mounted, so its transient WebGL
   // context is disposed the moment the film closes.
   const innerRef = useRef<HTMLDivElement>(null);
+  const filmRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     if (gi === null) return;
@@ -303,10 +304,11 @@ function VideoLightbox({ gi, onClose }: { gi: number | null; onClose: () => void
       {/* Fiery portal ringing the film frame. Behind the inner in DOM so the
           video paints over the inner glow and the flames lick around its edges;
           pointer-events:none, so the player controls stay clickable. */}
-      <FireFrame targetRef={innerRef} onDark={1} radius={16} />
+      <FireFrame targetRef={filmRef} onDark={1} radius={16} />
       <div className="reel-lightbox-inner" ref={innerRef} onClick={(e) => e.stopPropagation()}>
         {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
         <video
+          ref={filmRef}
           className="reel-lightbox-video"
           src={media.src}
           poster={media.poster}

@@ -2292,7 +2292,7 @@ html.js .reel-thumb img:not(.is-loaded) { opacity: 0; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.125rem;
+  gap: 1.5rem;
   /* The player is the one thing that must NOT follow the global design scale —
      a film you clicked to watch should fill the screen it's playing on. The rem
      cap still governs small/short viewports; max() lets a tall desktop viewport
