@@ -256,6 +256,13 @@ const en: SiteContent = {
       description:
         "A cinematic AI reel for the electric Geely EX2 launch: a cafe know-it-all warns against Chinese cars, until the man who actually drove one answers him with the keys in his hand. Characters, shots and Arabic voice-over all AI-directed, shot by shot.",
     },
+    {
+      title: "Trust Motors — The Opportunity Won't Wait",
+      tag: "AI Film",
+      client: "Car Showroom · Cairo",
+      description:
+        "A cinematic AI teaser for a multi-brand Cairo dealership — one gleaming car held under a spotlight while a warehouse of dust-covered classics looks on, all on a single line: some opportunities won't wait. AI cinematic footage, Arabic voice-over and kinetic Arabic type, directed shot by shot.",
+    },
   ],
   about: {
     name: "Ahmed Maki",
@@ -507,6 +514,13 @@ const ar: SiteContent = {
       client: "معرض عربيات · جيلي EX2",
       description:
         "ريلز سينمائي بالذكاء الاصطناعي لإطلاق جيلي EX2 الكهربائية: فزلوكة القهوة قاعد يخوّف من العربيات الصيني، لحد ما الراجل اللي ساقها فعلاً يرد عليه والمفتاح في إيده. الشخصيات واللقطات والڤويس أوفر العربي كلهم بتوجيه الذكاء الاصطناعي، لقطة لقطة.",
+    },
+    {
+      title: "تراست موتورز — الفرصة الحلوة ما بتستناش",
+      tag: "فيلم AI",
+      client: "معرض عربيات · القاهرة",
+      description:
+        "تيزر سينمائي بالذكاء الاصطناعي لمعرض عربيات متعدد الماركات في القاهرة — عربية واحدة لامعة واقفة تحت سبوت لايت وسط مخزن مليان عربيات قديمة متغطية بالتراب، على جملة واحدة: في فرص ما بتستناش. اللقطات السينمائية والڤويس أوفر العربي والتايبوغرافي المتحركة كلها بتوجيه الذكاء الاصطناعي، لقطة لقطة.",
     },
   ],
   about: {

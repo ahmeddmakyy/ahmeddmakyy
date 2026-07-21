@@ -18,6 +18,7 @@ import abbasAppPoster from "@/assets/posters/abbas_app.webp";
 import abbasChatPoster from "@/assets/posters/abbas_chatgpt.webp";
 import quickLoanPoster from "@/assets/posters/quick_loan.webp";
 import demoStarPoster from "@/assets/posters/demo_star.webp";
+import trustMotorsPoster from "@/assets/posters/trust_motors.webp";
 
 // Every film is hosted on Cloudinary (cloud "ahmedmakyy") so the source tree
 // carries no video weight. Posters stay bundled (a few KB of webp each) for an
@@ -42,6 +43,7 @@ const VIDEO_MEDIA = [
   { slug: "quick-loan", src: `${CLOUD}/v1784334687/quick-loan-ui-animation_ebdlro.mp4`, poster: quickLoanPoster },
   { slug: "demo-star", src: `${CLOUD}/v1784334649/demo-star-ui-animation_k10svm.mp4`, poster: demoStarPoster },
   { slug: "alwassef-geely", src: `${CLOUD}/v1784573775/ELWASEEF_GEELY_biqo85.mp4`, poster: alwassefGeelyPoster },
+  { slug: "trust-motors", src: `${CLOUD}/v1784673874/chance_v2_oxaram.mp4`, poster: trustMotorsPoster },
 ];
 
 // Each labelled reel group shows this list of indices (into VIDEO_MEDIA /
@@ -49,11 +51,11 @@ const VIDEO_MEDIA = [
 //   0 Renew Story · 1 Renew Star · 2 Easy Way · 3 Golf City · 4 Alwassef · 5 Dr. ElKashef
 //   6 It's a Story Problem · 7 Let's Go Big · 8 Portfolio in Motion
 //   9 Abbas App · 10 Abbas Chat · 11 Quick Loan · 12 Demo Star
-//   13 Alwassef Geely EX2
+//   13 Alwassef Geely EX2 · 14 Trust Motors
 // Group 0 (Cinematic AI Films) leads as a FEATURED bento — its first index is
 // the hero tile, so put the strongest film there.
 const VIDEO_GROUPS: number[][] = [
-  [0, 1, 2, 3, 4, 5, 13], // Cinematic AI Films  → featured bento
+  [0, 1, 2, 3, 4, 5, 13, 14], // Cinematic AI Films  → featured bento
   [6, 7, 8],              // Motion Graphics & Type
   [9, 10, 11, 12],        // UI Animation
 ];
