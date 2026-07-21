@@ -523,10 +523,13 @@ function Index() {
         {/* ══════════ CONTACT ══════════ */}
         <section className="section dark contact" id="contact">
           <div className="container contact-inner" data-reveal>
+            <Doodle shape="star" className="contact-star" />
+            <Doodle shape="swirl" className="contact-swirl" />
             <p className="eyebrow eyebrow-dark"><Doodle shape="sparkle" />{c.contact.eyebrow}</p>
             <h2 className="contact-title"><Rich parts={c.contact.title} /></h2>
             <p className="contact-lede">{c.contact.lede}</p>
             <div className="contact-cta">
+              <Doodle shape="arrow" className="contact-cta-arrow" />
               <a
                 className="morph-btn morph-btn-primary"
                 href={WHATSAPP}

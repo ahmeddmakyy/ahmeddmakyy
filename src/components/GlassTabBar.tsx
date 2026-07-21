@@ -1,15 +1,22 @@
-// iOS-style floating tab bar for the mobile/app experience (≤980px, see CSS).
-// It replaces the hamburger menu: the five destinations that matter on a phone
-// (Home / Services / Videos / Work / Let's talk) sit in the thumb zone inside a
-// liquid-glass capsule — frosted blur + refraction (url(#lg-refract), Chromium)
-// + specular highlight, matching the video player's glass controls.
-// About/Process stay reachable by scroll; while they're on screen no tab lights.
-// Icons are bespoke stroke SVGs to match the site's hand-drawn icon language.
+// "LUMEN DOCK" — the mobile/app navigation (≤980px, see CSS). A dark liquid-glass
+// dock that holds FOUR icon-only nav glyphs (Home / Services / Videos / Work) and,
+// past a hairline divider, ONE always-on orange "ember" CTA (Let's talk). It
+// replaces the hamburger and lives in the thumb zone.
 //
-// App-feel details: a SINGLE shared highlight pill (framer layoutId) SLIDES
-// between tabs instead of blinking; the tapped tab lights up OPTIMISTICALLY on
-// touchdown (before the scroll resolves) so the selection never lags the finger;
-// and a subtle haptic tick fires on tap where supported.
+// The idea that makes it feel native, not web: selection is a BRIGHT CREAM LENS
+// that rises out of the dark glass and SLIDES between the four equal nav slots
+// (framer layoutId → pure translateX, the cheapest possible), carrying the ONLY
+// visible label. Because the label always rides its own near-opaque cream tile,
+// its contrast (ink-on-cream ≈ 15:1) is guaranteed no matter what scrolls behind —
+// which lets the glass itself stay light/translucent. Orange means exactly ONE
+// thing here: the action. Navigation never turns orange.
+//
+// App-feel + perf: the tapped tab lights OPTIMISTICALLY on touchdown (before the
+// scroll resolves) with a subtle haptic tick; the active glyph lifts and its
+// outline fills in (the native "seats on select" moment); only transform/opacity
+// ever animate and there is exactly ONE backdrop-filter (the capsule) — smooth on
+// low-end Android. About/Process stay reachable by scroll; while they're on screen
+// no tab lights. Idle glyphs are icon-only, so each carries an aria-label.
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
@@ -45,14 +52,12 @@ const TabIcons = {
       <path d="M3.5 12.5h17" stroke="currentColor" strokeWidth="2" />
     </svg>
   ),
+  // CTA glyph: a paper-plane ("start the conversation / send") — more action-forward
+  // than a chat bubble, reinforcing that the orange ember is a DIFFERENT job.
   contact: () => (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M12 4.5c-4.7 0-8 3.1-8 7 0 2.2 1.1 4.1 2.9 5.4-.1.9-.5 2-1.4 2.9 1.7.1 3.1-.5 4.1-1.2.8.2 1.6.3 2.4.3 4.7 0 8-3.1 8-7s-3.3-7.4-8-7.4Z"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinejoin="round"
-      />
+      <path d="M20.5 3.5 3.8 10.2c-.8.3-.8 1.5.05 1.7l6.35 1.7 1.7 6.35c.25.85 1.45.85 1.75.05L20.5 3.5Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M20.5 3.5 10.2 13.6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
 };
@@ -66,12 +71,11 @@ export default function GlassTabBar({
   labels: { home: string; services: string; videos: string; work: string; talk: string };
   ariaLabel: string;
 }) {
-  const tabs: { id: keyof typeof TabIcons; label: string; cta?: boolean }[] = [
+  const navTabs: { id: keyof typeof TabIcons; label: string }[] = [
     { id: "home", label: labels.home },
     { id: "services", label: labels.services },
     { id: "videos", label: labels.videos },
     { id: "work", label: labels.work },
-    { id: "contact", label: labels.talk, cta: true },
   ];
 
   const reduce = useReducedMotion();
@@ -82,13 +86,13 @@ export default function GlassTabBar({
     if (optimistic && active === optimistic) setOptimistic(null);
   }, [active, optimistic]);
   const current = optimistic ?? active;
+  const ctaActive = current === "contact";
 
-  // Fire on POINTERDOWN, not click: the pill + haptic land on touchdown (<100ms,
-  // native feel) instead of after the ~50–120ms synthetic click. The <a href>
-  // still handles the real navigation on click.
+  // Fire on POINTERDOWN, not click: the lens slide + haptic land on touchdown
+  // (<100ms, native feel) instead of after the synthetic click. The <a href> still
+  // handles the real navigation on click.
   const onDown = (id: string) => {
     setOptimistic(id);
-    // subtle native-style tick (Android/Chrome honour it; iOS Safari no-ops)
     try {
       navigator.vibrate?.(id === "contact" ? 12 : 8);
     } catch {
@@ -98,34 +102,52 @@ export default function GlassTabBar({
 
   return (
     <nav className="glass-tabbar" aria-label={ariaLabel}>
-      {tabs.map((t) => {
-        const Icon = TabIcons[t.id];
-        const isActive = current === t.id;
-        return (
-          <a
-            key={t.id}
-            href={`#${t.id}`}
-            className={`gt-item${t.cta ? " gt-cta" : ""}${isActive ? " active" : ""}`}
-            aria-current={isActive ? "location" : undefined}
-            onPointerDown={() => onDown(t.id)}
-          >
-            {isActive && (
-              <motion.span
-                className="gt-active-pill"
-                layoutId="gt-active-pill"
-                aria-hidden="true"
-                transition={
-                  reduce
-                    ? { duration: 0 }
-                    : { type: "spring", stiffness: 520, damping: 40 }
-                }
-              />
-            )}
-            <Icon />
-            <span className="gt-label">{t.label}</span>
-          </a>
-        );
-      })}
+      <div className="gt-nav">
+        {navTabs.map((t) => {
+          const Icon = TabIcons[t.id];
+          const isActive = current === t.id;
+          return (
+            <a
+              key={t.id}
+              href={`#${t.id}`}
+              className={`gt-item${isActive ? " active" : ""}`}
+              aria-label={t.label}
+              aria-current={isActive ? "location" : undefined}
+              onPointerDown={() => onDown(t.id)}
+            >
+              {isActive && (
+                <motion.span
+                  className="gt-lens"
+                  layoutId="gt-lens"
+                  aria-hidden="true"
+                  style={{ willChange: "transform" }}
+                  transition={
+                    reduce ? { duration: 0 } : { type: "spring", stiffness: 500, damping: 38, mass: 0.9 }
+                  }
+                />
+              )}
+              <span className="gt-icon">
+                <Icon />
+              </span>
+              <span className="gt-label">{t.label}</span>
+            </a>
+          );
+        })}
+      </div>
+
+      <span className="gt-divider" aria-hidden="true" />
+
+      <a
+        href="#contact"
+        className={`gt-cta${ctaActive ? " active" : ""}`}
+        aria-current={ctaActive ? "location" : undefined}
+        onPointerDown={() => onDown("contact")}
+      >
+        <span className="gt-icon">
+          <TabIcons.contact />
+        </span>
+        <span className="gt-label">{labels.talk}</span>
+      </a>
     </nav>
   );
 }

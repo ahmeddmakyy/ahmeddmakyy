@@ -3,10 +3,11 @@
 // squiggle underlines), rebuilt in the site's own orange so they read as one
 // system rather than scattered stickers. All are decorative (aria-hidden); the
 // colour comes from `currentColor` so a placement can recolour if needed.
-type Shape = "sparkle" | "arrow" | "squiggle";
+type Shape = "sparkle" | "arrow" | "squiggle" | "star" | "swirl" | "underline";
 
 export default function Doodle({ shape, className }: { shape: Shape; className?: string }) {
   const cls = `doodle doodle-${shape}${className ? " " + className : ""}`;
+
   if (shape === "sparkle") {
     return (
       <svg className={cls} viewBox="0 0 24 24" aria-hidden="true">
@@ -14,6 +15,16 @@ export default function Doodle({ shape, className }: { shape: Shape; className?:
       </svg>
     );
   }
+
+  // crisp four-point star — a sharper accent than the rounded twinkle above
+  if (shape === "star") {
+    return (
+      <svg className={cls} viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 1l2.1 8.9L23 12l-8.9 2.1L12 23l-2.1-8.9L1 12l8.9-2.1L12 1Z" />
+      </svg>
+    );
+  }
+
   if (shape === "arrow") {
     // a hand-drawn curly arrow, echoing the reference's d3 doodle
     return (
@@ -34,7 +45,37 @@ export default function Doodle({ shape, className }: { shape: Shape; className?:
       </svg>
     );
   }
-  // squiggle underline
+
+  // a small hand-drawn spiral curl — for empty corners; mirrors the star's weight
+  if (shape === "swirl") {
+    return (
+      <svg className={cls} viewBox="0 0 30 30" fill="none" aria-hidden="true">
+        <path
+          d="M5 19C4 11 11 5 18 7c5.6 1.6 8 8 4.6 12-2.7 3.2-8 2.4-9.4-1.4-1-2.9 1-6.2 4.2-6"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+        />
+      </svg>
+    );
+  }
+
+  // a confident single-stroke underline that flicks up at the tail (for accenting
+  // a word); the wavy multi-bump `squiggle` below stays the softer rule variant
+  if (shape === "underline") {
+    return (
+      <svg className={cls} viewBox="0 0 120 16" fill="none" preserveAspectRatio="none" aria-hidden="true">
+        <path
+          d="M4 10C34 4 74 4 104 9c7 1.2 12 1.6 12-3"
+          stroke="currentColor"
+          strokeWidth="3.2"
+          strokeLinecap="round"
+        />
+      </svg>
+    );
+  }
+
+  // squiggle underline (soft multi-bump rule)
   return (
     <svg className={cls} viewBox="0 0 96 12" fill="none" aria-hidden="true" preserveAspectRatio="none">
       <path

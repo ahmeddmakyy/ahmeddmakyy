@@ -37,7 +37,7 @@ const TUNING = {
   ONDARK_EASE: 0.15, //       light↔dark crossfade speed at the pointer
   LUM_EVERY: 8, //            elementFromPoint luminance probe every N frames (it
   //                          forces a hit-test/style flush, so keep it sparse).
-  MASTER_VOLUME: 0.5, //      tasteful trim on the fwoosh (fires on EVERY click)
+  MASTER_VOLUME: 0.42, //     tasteful trim on the ignite whoosh (fires on EVERY click)
 } as const;
 
 /* ── the controller ───────────────────────────────────────────────────────── */
@@ -182,30 +182,64 @@ export function createAurora(canvas: HTMLCanvasElement): AuroraController {
   /* ── eased state ── */
   let onDark = 0, onDarkTarget = 0;
 
-  /* ── WebAudio "fwoosh" (lazy, ported verbatim from the fire prototype) ── */
+  /* ── WebAudio "ice-ignite" whoosh (lazy) ──────────────────────────────────
+   * A premium ignite: a soft, rounded LOWPASS-swept air whoosh (not the old
+   * harsh bandpass), widened with a ~12ms Haas layer; a pitch-swept whoomp body
+   * with an octave-down sub for weight; and a crystalline cluster of 3 detuned
+   * "ice" partials that REPLACE the old crackle stab — all summed into a bus fed
+   * through a soft-knee limiter (glue, not pump) and a short airy reverb send.
+   * ~0.38s, wide, never harsh. */
   let AC: AudioContext | null = null;
-  let masterGain: GainNode | null = null;
+  let busGain: GainNode | null = null; //   every layer sums here
   let noiseBuf: AudioBuffer | null = null;
+  let impulseBuf: AudioBuffer | null = null;
+
+  // raised-cosine ramp → a click-free rounded attack (WebAudio lacks an ease)
+  function easeCurve(from: number, to: number, n = 24): Float32Array {
+    const a = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      const x = i / (n - 1);
+      a[i] = from + (to - from) * (0.5 - 0.5 * Math.cos(Math.PI * x));
+    }
+    return a;
+  }
 
   function initAudio() {
     if (AC) return;
     const Ctor = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!Ctor) return;
     AC = new Ctor();
-    // graph: gain(0.9) -> compressor -> MASTER_VOLUME trim -> destination
-    masterGain = AC.createGain();
-    masterGain.gain.value = 0.9;
-    const comp = AC.createDynamicsCompressor();
-    comp.threshold.value = -14;
-    comp.knee.value = 18;
-    comp.ratio.value = 6;
-    comp.attack.value = 0.002;
-    comp.release.value = 0.18;
+    // graph: [layers] -> busGain -> limiter -> MASTER_VOLUME trim -> destination
+    //        busGain -> revHP -> convolver -> revReturn -> limiter  (parallel wet)
+    busGain = AC.createGain();
+    busGain.gain.value = 1.0;
+    const limiter = AC.createDynamicsCompressor();
+    limiter.threshold.value = -8;
+    limiter.knee.value = 30; //   soft knee = glue, not the old pump
+    limiter.ratio.value = 4;
+    limiter.attack.value = 0.003;
+    limiter.release.value = 0.12;
     const trim = AC.createGain();
     trim.gain.value = TUNING.MASTER_VOLUME;
-    masterGain.connect(comp);
-    comp.connect(trim);
+    busGain.connect(limiter);
+    limiter.connect(trim);
     trim.connect(AC.destination);
+    // short, airy reverb send for premium space (skip silently if unsupported)
+    try {
+      const revHP = AC.createBiquadFilter();
+      revHP.type = "highpass";
+      revHP.frequency.value = 500; //   keep the tail airy, no mud
+      const conv = AC.createConvolver();
+      conv.buffer = getImpulse(AC);
+      const revReturn = AC.createGain();
+      revReturn.gain.value = 0.16; //   ~16% wet
+      busGain.connect(revHP);
+      revHP.connect(conv);
+      conv.connect(revReturn);
+      revReturn.connect(limiter);
+    } catch {
+      /* no reverb — the dry layers still play */
+    }
   }
   function getNoise(ac: AudioContext): AudioBuffer {
     if (noiseBuf) return noiseBuf;
@@ -215,43 +249,85 @@ export function createAurora(canvas: HTMLCanvasElement): AuroraController {
     for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
     return noiseBuf;
   }
+  // a short, airy stereo impulse response for the reverb send
+  function getImpulse(ac: AudioContext): AudioBuffer {
+    if (impulseBuf) return impulseBuf;
+    const dur = 0.34, decay = 3.0;
+    const len = Math.floor(ac.sampleRate * dur);
+    impulseBuf = ac.createBuffer(2, len, ac.sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const d = impulseBuf.getChannelData(ch);
+      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+    }
+    return impulseBuf;
+  }
   function fwoosh() {
-    if (!AC || !masterGain) return;
+    if (!AC || !busGain) return;
     if (AC.state === "suspended") AC.resume();
     const t = AC.currentTime;
+    const bus = busGain;
 
-    // 1) filtered noise burst, downward-swept bandpass
-    const src = AC.createBufferSource(); src.buffer = getNoise(AC);
-    const bp = AC.createBiquadFilter(); bp.type = "bandpass"; bp.Q.value = 0.9;
-    bp.frequency.setValueAtTime(3200, t);
-    bp.frequency.exponentialRampToValueAtTime(300, t + 0.26);
-    const hp = AC.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 170;
-    const g = AC.createGain();
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(0.85, t + 0.018);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.30);
-    src.connect(bp); bp.connect(hp); hp.connect(g); g.connect(masterGain);
-    src.start(t); src.stop(t + 0.34);
+    // 1) AIR WHOOSH — soft, rounded, LOWPASS sweep (not a harsh bandpass)
+    const air = AC.createBufferSource(); air.buffer = getNoise(AC);
+    const airHP = AC.createBiquadFilter(); airHP.type = "highpass"; airHP.frequency.value = 220;
+    const airLP = AC.createBiquadFilter(); airLP.type = "lowpass"; airLP.Q.value = 0.6;
+    airLP.frequency.setValueAtTime(7000, t);
+    airLP.frequency.exponentialRampToValueAtTime(900, t + 0.30);
+    const airPan = AC.createStereoPanner(); airPan.pan.value = -0.15;
+    const airG = AC.createGain();
+    airG.gain.setValueCurveAtTime(easeCurve(0.0001, 0.42, 24), t, 0.032); // rounded 32ms attack
+    airG.gain.setTargetAtTime(0.0001, t + 0.034, 0.09);                   // natural exp tail
+    air.connect(airHP); airHP.connect(airLP); airLP.connect(airPan); airPan.connect(airG); airG.connect(bus);
+    air.start(t); air.stop(t + 0.42);
 
-    // 2) soft low thump
-    const osc = AC.createOscillator(); osc.type = "sine";
-    osc.frequency.setValueAtTime(170, t);
-    osc.frequency.exponentialRampToValueAtTime(48, t + 0.17);
-    const og = AC.createGain();
-    og.gain.setValueAtTime(0.0001, t);
-    og.gain.exponentialRampToValueAtTime(0.55, t + 0.014);
-    og.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
-    osc.connect(og); og.connect(masterGain);
-    osc.start(t); osc.stop(t + 0.24);
+    // 1b) HAAS WIDENER — darker, ~12ms-delayed copy on the opposite side
+    const air2 = AC.createBufferSource(); air2.buffer = getNoise(AC);
+    const air2LP = AC.createBiquadFilter(); air2LP.type = "lowpass"; air2LP.frequency.value = 3000;
+    const haas = AC.createDelay(); haas.delayTime.value = 0.012;
+    const air2Pan = AC.createStereoPanner(); air2Pan.pan.value = 0.35;
+    const air2G = AC.createGain();
+    air2G.gain.setValueCurveAtTime(easeCurve(0.0001, 0.20, 24), t, 0.034);
+    air2G.gain.setTargetAtTime(0.0001, t + 0.036, 0.09);
+    air2.connect(air2LP); air2LP.connect(haas); haas.connect(air2Pan); air2Pan.connect(air2G); air2G.connect(bus);
+    air2.start(t); air2.stop(t + 0.42);
 
-    // 3) crackle transient (very short highpassed noise)
-    const cs = AC.createBufferSource(); cs.buffer = getNoise(AC);
-    const cf = AC.createBiquadFilter(); cf.type = "highpass"; cf.frequency.value = 2200;
-    const cg = AC.createGain();
-    cg.gain.setValueAtTime(0.5, t);
-    cg.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
-    cs.connect(cf); cf.connect(cg); cg.connect(masterGain);
-    cs.start(t); cs.stop(t + 0.1);
+    // 2) WHOOMP BODY — pitch-swept sine + octave-down sub for weight
+    const body = AC.createOscillator(); body.type = "sine";
+    body.frequency.setValueAtTime(190, t);
+    body.frequency.exponentialRampToValueAtTime(58, t + 0.20);
+    const sub = AC.createOscillator(); sub.type = "sine";
+    sub.frequency.setValueAtTime(95, t);
+    sub.frequency.exponentialRampToValueAtTime(40, t + 0.20);
+    const bodyG = AC.createGain();
+    bodyG.gain.setValueCurveAtTime(easeCurve(0.0001, 0.50, 16), t, 0.016);
+    bodyG.gain.setTargetAtTime(0.0001, t + 0.017, 0.075);
+    const subG = AC.createGain();
+    subG.gain.setValueCurveAtTime(easeCurve(0.0001, 0.22, 16), t, 0.016);
+    subG.gain.setTargetAtTime(0.0001, t + 0.017, 0.075);
+    body.connect(bodyG); bodyG.connect(bus);
+    sub.connect(subG); subG.connect(bus);
+    body.start(t); body.stop(t + 0.30);
+    sub.start(t); sub.stop(t + 0.30);
+
+    // 3) ICE SHIMMER — 3 detuned crystalline partials (REPLACES the harsh crackle)
+    const shimLP = AC.createBiquadFilter(); shimLP.type = "lowpass"; shimLP.frequency.value = 9000;
+    shimLP.connect(bus);
+    const parts = [
+      { f: 5240, det: 0, pan: -0.40 },
+      { f: 6280, det: 7, pan: 0.35 }, //   +7 cents → glassy/metallic
+      { f: 7460, det: -5, pan: 0.10 },
+    ];
+    for (const p of parts) {
+      const o = AC.createOscillator(); o.type = "sine";
+      o.frequency.setValueAtTime(p.f, t); o.detune.value = p.det;
+      o.frequency.exponentialRampToValueAtTime(p.f * 0.985, t + 0.13); // tiny down micro-sweep
+      const g = AC.createGain();
+      g.gain.setValueCurveAtTime(easeCurve(0.0001, 0.09, 12), t, 0.006);
+      g.gain.setTargetAtTime(0.0001, t + 0.007, 0.035);               // fast glassy decay
+      const pan = AC.createStereoPanner(); pan.pan.value = p.pan;
+      o.connect(g); g.connect(pan); pan.connect(shimLP);
+      o.start(t); o.stop(t + 0.16);
+    }
   }
 
   // reduced-motion is already gated by the component, but re-check so a live
@@ -398,7 +474,7 @@ export function createAurora(canvas: HTMLCanvasElement): AuroraController {
       canvas.removeEventListener("webglcontextrestored", onRestored, false);
       if (fire) { gl!.deleteProgram(fire.prog); fire = null; }
       if (vao) { gl!.deleteVertexArray(vao); vao = null; }
-      if (AC) { AC.close().catch(() => {}); AC = null; masterGain = null; noiseBuf = null; }
+      if (AC) { AC.close().catch(() => {}); AC = null; busGain = null; noiseBuf = null; impulseBuf = null; }
       gl!.getExtension("WEBGL_lose_context")?.loseContext();
     },
   };

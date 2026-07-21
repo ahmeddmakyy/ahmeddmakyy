@@ -100,6 +100,12 @@ function ReelCard({
       type="button"
       className={`reel-card${variant === "hero" ? " reel-card--hero" : ""}`}
       onClick={() => onPlay(gi)}
+      // Don't let a mouse click focus-scroll a tall, partly-off-screen card into
+      // view (it shifted the page behind the lightbox). preventDefault on
+      // mousedown suppresses the focus-scroll for pointer users; keyboard
+      // activation (Enter/Space) never fires mousedown, so tab-focus + its
+      // focus-return on close are untouched.
+      onMouseDown={(e) => e.preventDefault()}
       aria-label={`${c.player.play}: ${v.title}`}
     >
       {/* data-liquid marks the whole tile as a liquid-lens region; the lens
@@ -463,22 +469,19 @@ export default function VideoReels() {
   const { content: c } = useLang();
   const [active, setActive] = useState<number | null>(null);
 
+  // Open/close DELIBERATELY do NOT touch window.history. TanStack Router
+  // monkey-patches window.history, so a replaceState here is read as a navigation
+  // and triggers scroll restoration — which yanked the page behind the lightbox up
+  // to the hero every time a reel opened. The shareable link is built on demand
+  // from the slug inside copyLink() (it never reads the live URL), so dropping the
+  // history write costs nothing but the ?v= in the address bar while a reel is open
+  // — and the deep-link read below still lets a fresh ?v=<slug> visit open the reel.
   const openReel = useCallback((gi: number) => {
     setActive(gi);
-    try {
-      window.history.replaceState(null, "", `?v=${VIDEO_MEDIA[gi].slug}`);
-    } catch {
-      /* history blocked — the lightbox still opens */
-    }
   }, []);
 
   const closeReel = useCallback(() => {
     setActive(null);
-    try {
-      window.history.replaceState(null, "", window.location.pathname);
-    } catch {
-      /* ignore */
-    }
   }, []);
 
   // Deep link: ?v=<slug> opens that film straight away and scrolls it into view,
@@ -497,7 +500,8 @@ export default function VideoReels() {
     <section className="section dark videos" id="videos">
       <div className="container">
         <div className="videos-hero" data-reveal>
-          <Doodle shape="sparkle" className="videos-hero-spark" />
+          <Doodle shape="star" className="videos-hero-spark" />
+          <Doodle shape="swirl" className="videos-hero-swirl" />
           <h2>
             {c.videosSection.head[0].t}
             <MorphWord words={c.videosSection.cycle} className="accent" />

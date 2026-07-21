@@ -122,8 +122,11 @@ float fTeardrop(vec2 lp, float R, float tallDiv, float seed, float uTime, float 
   float n=fFbm(np+warp*1.5);
   float heat=env*(0.75+0.9*(n-0.35));
   float up=smoothstep(0.0,1.5,sy);
-  float cr=fFbm(vec2(lp.x*crownFreq, lp.y*0.026 - uTime*3.2)+seed*4.0);
-  heat+=smoothstep(0.50,0.90,cr)*up*(1.0-smoothstep(1.5,3.0,dist))*1.2;
+  // crown licks pinched into POINTED manga tongues (pow) that reach up and taper
+  float cr   = fFbm(vec2(lp.x*crownFreq, lp.y*0.026 - uTime*3.2)+seed*4.0);
+  float lick = pow(smoothstep(0.55, 0.86, cr), 1.6);
+  float tip  = smoothstep(0.0, 2.2, sy);
+  heat += lick*up*tip*(1.0-smoothstep(1.4,3.2,dist))*1.35;
   return max(heat,0.0);
 }
 
@@ -134,11 +137,11 @@ vec4 fireShade(float heat, float smoke, float onDark){
   // (The raw field already peaks ~0.9 in the body; big multipliers blow it white.)
   heat=clamp(heat*1.15, 0.0, 1.9);
 
-  // cover (alpha) is a near-opaque body with a thin soft feather; temp is the
-  // colour position: saturated azure to cyan through the body, white-pink core.
-  float cover = fCel(smoothstep(0.10, 0.42, heat));
-  // temp ramp tuned so the BODY sits in the saturated azure-cyan band and only
-  // the very hottest core (crown tongues, flash) reaches white-pink.
+  // cover is a clean, ANTI-ALIASED silhouette (we no longer cel the alpha, which
+  // used to stair-step the edge). temp is the colour position: saturated azure to
+  // cyan through the body, white-pink core — and THAT is what gets cel-banded, so
+  // the fills read flat/manga while the outline stays razor-sharp.
+  float cover = smoothstep(0.10, 0.42, heat);
   float temp  = smoothstep(0.20, 1.55, heat);
   // on LIGHT paper bias cooler/darker so the flame reads as blue strokes on #F5F5F5
   temp = mix(temp*0.74, temp, onDark);
@@ -146,20 +149,32 @@ vec4 fireShade(float heat, float smoke, float onDark){
 
   vec3 col=fRamp(temp);
 
-  // deep-indigo INK outline on the outer feather (the anime line-art edge)
-  float outline=smoothstep(0.02,0.13,cover)*(1.0-smoothstep(0.13,0.36,cover));
-  col=mix(col, vec3(0.03,0.03,0.15), outline*0.6);
+  // ── anime lineart: a screen-space-CONSTANT ink stroke (fwidth-locked to ~1.6px
+  // regardless of how soft the heat gradient is) riding the silhouette, plus a
+  // cool iridescent RIM light just inside it. This crisp drawn edge + rim is the
+  // single biggest premium-cel lever.
+  float aa   = fwidth(cover) + 1e-4;
+  float ink  = 1.0 - smoothstep(0.0, 1.6*aa, abs(cover - 0.16));
+  float rim  = 1.0 - smoothstep(0.0, 3.0*aa, abs(cover - 0.40));
+  col = mix(col, vec3(0.02, 0.03, 0.16), ink*0.92);   // deep-indigo drawn stroke
+  // rim shimmer stays inside the blue/pink identity: cyan to periwinkle
+  float irid = fNoise(vec2(cover*26.0, uTime*1.7));
+  vec3  iri  = mix(vec3(0.45, 0.90, 1.00), vec3(0.78, 0.62, 1.00), irid);
+  col += iri * rim * mix(0.20, 0.42, onDark);
 
-  // additive cyan-white bloom on the hottest core — self-lit (brighter on dark)
-  float hot=smoothstep(0.70,1.0,temp);
-  col+=vec3(0.55,0.90,1.0)*pow(hot,1.7)*mix(0.40,0.85,onDark);
+  // ── two-tier bloom: a tight white-hot core + a soft cool halo → real depth
+  float core = smoothstep(0.80, 1.00, temp);
+  float halo = smoothstep(0.52, 0.95, temp);
+  col += vec3(0.72, 0.95, 1.00) * pow(core, 2.0) * mix(0.55, 1.00, onDark); // hot core
+  col += vec3(0.30, 0.70, 1.00) * pow(halo, 2.6) * mix(0.10, 0.30, onDark); // cool halo
   // pink kiss just under the crest
-  col+=vec3(0.95,0.45,0.90)*smoothstep(0.44,0.70,temp)*(1.0-hot)*0.20;
+  col += vec3(0.95, 0.45, 0.90) * smoothstep(0.44, 0.70, temp) * (1.0-core) * 0.20;
 
   // lift the cyan body so it pops on the void
   col*=mix(1.02, 1.14, onDark);
 
-  float alpha=cover;
+  // the ink stroke lifts alpha so it reads as an opaque DRAWN line, not a tint
+  float alpha = max(cover, ink*0.92);
 
   // smoke — cool blue-grey wisp (quieter, cooler than the old warm smoke)
   vec3 smokeDark  = vec3(0.05,0.06,0.10);
@@ -193,11 +208,18 @@ float fBurst(vec2 uv, vec4 b, float prof, float uTime, out float smoke){
     // ── BLOOM (default) ──
     vec2 lp=local; lp.y-=t*58.0 + t*t*58.0;
     heat=fTeardrop(lp, 56.0*grow, 1.9, seed, uTime, 0.075);
-    // spark ring: thin broken annulus, early only
-    float rr=length(local);
-    float ringR=22.0+age*135.0, rw=5.0+age*10.0;
-    float sparkN=smoothstep(0.35,0.75,fNoise(vec2(atan(local.y,local.x)*4.0+seed*20.0,3.0)));
-    heat+=exp(-pow((rr-ringR)/rw,2.0))*(1.0-smoothstep(0.0,0.5,age))*(0.35+0.9*sparkN)*1.1;
+    // discrete flying EMBERS riding the blast front (no loop: 24 angular buckets,
+    // ~40% emit, each at its own radius, twinkling) — reads as scattered sparks
+    float rr    = length(local);
+    float ringR = 22.0 + age*135.0;
+    float ea    = atan(local.y, local.x);
+    float aidx  = floor((ea + PI) / (2.0*PI) * 24.0);
+    float eh    = fHash(vec2(aidx, seed*11.0));
+    float er    = ringR * (0.65 + 0.7*eh);
+    float on    = step(0.60, fHash(vec2(aidx, 7.0)));
+    float ed    = rr - er;
+    float tw    = 0.6 + 0.4*sin(uTime*30.0 + aidx);
+    heat += on*exp(-ed*ed/(2.0*3.0*3.0))*exp(-age*4.0)*tw*1.3;
     // wisp of smoke, late
     vec2 sp=vec2(local.x*0.013,(local.y-120.0)*0.011-uTime*0.7)+seed*7.0;
     float sm=fFbm(sp+fFbm(sp));
@@ -263,7 +285,12 @@ float fBurst(vec2 uv, vec4 b, float prof, float uTime, out float smoke){
     smoke=max(0.0,sm-0.56)*smoothstep(0.45,0.9,age)*(1.0-smoothstep(0.9,1.0,age))*0.55;
   }
 
-  return max(heat,0.0)*lenv;
+  // bright white-hot IGNITION pop at the click point — bypasses lenv (which is
+  // zero at birth), so a click always POPS for the first ~120ms before the shape
+  // envelope takes over. One central term → every profile gets the ignite.
+  float rC     = length(local);
+  float ignite = exp(-rC*rC/(2.0*18.0*18.0)) * exp(-age*16.0);
+  return max(heat,0.0)*lenv + ignite*2.2;
 }
 `;
 

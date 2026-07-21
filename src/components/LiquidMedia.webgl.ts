@@ -28,13 +28,15 @@ export interface LiquidMediaController {
 const TUNING = {
   RENDER_SCALE: 0.9, //   backing-store scale vs CSS px (crisp crest lines)
   DPR_CAP: 1, //          device-pixel-ratio ceiling (integrated-GPU friendly)
-  RADIUS: 130, //         lens blob radius in css px
+  RADIUS: 90, //          lens blob radius in css px — a small, delicate water
+  //                      film (was 130: too big, read as a heavy warp)
   MAX_RIPPLES: 12, //     trailing ripple seeds held in the uniform array
-  RIPPLE_STEP: 16, //     px between ripple seeds spawned along the path
-  RIPPLE_LIFE: 1.1, //    seconds a ripple lives
+  RIPPLE_STEP: 14, //     px between ripple seeds spawned along the path (finer)
+  RIPPLE_LIFE: 1.0, //    seconds a ripple lives
   POINTER_SMOOTH: 0.3, // smoothed-pointer follow (per frame @60)
   ACTIVE_EASE: 0.18, //   presence fade in/out (per frame @60)
-  STRENGTH: 0.07, //      refraction displacement, as a fraction of UV
+  STRENGTH: 0.034, //     refraction displacement, as a fraction of UV — soft,
+  //                      real-water bend (was 0.07: too much distortion)
 } as const;
 
 const VERT = `#version 300 es
@@ -62,12 +64,12 @@ uniform sampler2D uTex;      // the hovered media
 // height contribution of one expanding ripple ring at pixel p
 float ripH(vec2 p, vec3 rip){
   float age = uTime - rip.z;
-  if(age < 0.0 || age > 1.1) return 0.0;
+  if(age < 0.0 || age > 1.0) return 0.0;
   float d = distance(p, rip.xy);
-  float R = 8.0 + age * 120.0;          // ring expansion (px/sec)
-  float band = exp(-pow((d - R) / 15.0, 2.0));
-  float wave = sin((d - R) * 0.30);
-  float life = exp(-age * 2.0);
+  float R = 6.0 + age * 96.0;           // ring expansion (px/sec) — tighter for a small film
+  float band = exp(-pow((d - R) / 11.0, 2.0));
+  float wave = sin((d - R) * 0.36);     // finer concentric crests
+  float life = exp(-age * 2.2);
   return wave * band * life;
 }
 
@@ -81,7 +83,7 @@ float heightAt(vec2 p){
   float h = bulge;
   for(int i = 0; i < ${TUNING.MAX_RIPPLES}; i++){
     if(i >= uCount) break;
-    h += ripH(p, uRip[i]) * 0.7;
+    h += ripH(p, uRip[i]) * 0.42;   // quieter wavelets — a light water film
   }
   return h * blob;   // never leak height outside the blob
 }
@@ -103,12 +105,13 @@ void main(){
   float presence = blob * rectMask * uActive;
   if(presence < 0.004){ outColor = vec4(0.0); return; }
 
-  // surface normal from the height gradient (finite differences)
+  // surface normal from the height gradient (finite differences). A gentler
+  // gradient gain than before (was 60) so the film bends light softly, not sharply.
   float e = 1.5;
   float hx = heightAt(p + vec2(e, 0.0)) - heightAt(p - vec2(e, 0.0));
   float hy = heightAt(p + vec2(0.0, e)) - heightAt(p - vec2(0.0, e));
   vec2 grad = vec2(hx, hy) / (2.0 * e);
-  vec3 n = normalize(vec3(-grad * 60.0, 1.0));
+  vec3 n = normalize(vec3(-grad * 44.0, 1.0));
 
   // object-fit:cover sample uv, then refract along the surface normal
   vec2 baseUv = 0.5 + (luv - 0.5) * uCover;
@@ -116,16 +119,17 @@ void main(){
   vec2 texUv = vec2(refr.x, 1.0 - refr.y);           // DOM texture is y-flipped
   vec3 col = texture(uTex, clamp(texUv, 0.001, 0.999)).rgb;
 
-  // thin white specular crest + a soft rim highlight = "liquid glass"
+  // A delicate water film, not liquid-glass: one crisp pinpoint glint + a whisper
+  // of sheen (was a broad blown-out highlight), and a faint edge meniscus.
   vec3 L = normalize(vec3(0.35, -0.5, 0.78));
   vec3 H = normalize(L + vec3(0.0, 0.0, 1.0));
   float ndh = max(dot(n, H), 0.0);
-  float spec = pow(ndh, 60.0) * 1.4 + pow(ndh, 14.0) * 0.25;
-  float rim  = smoothstep(0.22, 0.0, abs(blob - 0.5) - 0.28) * 0.25; // ring near blob edge
+  float spec = pow(ndh, 96.0) * 0.75 + pow(ndh, 26.0) * 0.09;
+  float rim  = smoothstep(0.20, 0.0, abs(blob - 0.5) - 0.30) * 0.11; // soft meniscus
   col += (spec * blob + rim) * vec3(1.0);
-  col *= 1.0 + 0.10 * blob;                            // gentle lift so it lenses brighter
+  col *= 1.0 + 0.035 * blob;                           // barely-there brightening
 
-  float alpha = clamp(presence + spec * blob * 0.5, 0.0, 1.0);
+  float alpha = clamp(presence + spec * blob * 0.32, 0.0, 1.0);
   outColor = vec4(col * alpha, alpha);                 // premultiplied
 }`;
 

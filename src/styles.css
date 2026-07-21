@@ -354,142 +354,189 @@ ul, ol { list-style: none; }
   .fx-toggle, .fx-toggle-label { transition: none; animation: none; }
 }
 
-/* ── Mobile app chrome: liquid-glass tab bar (≤980px) ──
-   The hamburger menu is gone. Navigation lives in an Apple-style liquid-glass
-   capsule floating in the thumb zone: frosted blur + saturation, specular top
-   light, rim border and — on Chromium — real refraction through the
-   #lg-refract SVG displacement filter (same glass as the video player). */
+/* ── Mobile app chrome: the "LUMEN DOCK" (≤980px, GlassTabBar.tsx) ──
+   A dark liquid-glass dock holding four icon-only nav glyphs and one always-on
+   orange CTA "ember", split by a hairline. Selection is a BRIGHT CREAM LENS that
+   rises out of the dark glass and SLIDES between the four equal nav slots (framer
+   layoutId → pure translateX), carrying the ONLY visible label — so its contrast
+   is guaranteed by construction (ink on cream ≈ 15:1) whatever scrolls behind,
+   which lets the glass stay lighter/more translucent than a label-bearing bar
+   could. Orange means one thing only: the action. Exactly ONE backdrop-filter
+   (this capsule) — the lens, CTA and gloss are plain paint, and only transform/
+   opacity ever animate, so it stays smooth on low-end Android. */
 .glass-tabbar {
   position: fixed;
   left: 50%;
-  bottom: calc(0.875rem + env(safe-area-inset-bottom, 0px));
+  bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
   transform: translateX(-50%);
   z-index: 110;
-  display: none;
+  display: none;                 /* shown ≤980px */
   align-items: stretch;
-  gap: 2px;
-  padding: 0.4375rem;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  /* the smoke is dense on purpose: the bar floats over PAPER sections too, and
-     the 10.5px labels must hold ≥4.5:1 there — alphas below ~0.6 fail AA */
+  gap: 0;
+  padding: 6px;
+  border-radius: 30px;           /* squircle capsule — more iOS-modern than a pill */
+  border: 1px solid rgba(255, 255, 255, 0.20);
+  /* lighter & more translucent than before — no label depends on the glass now,
+     only idle icons (which need just 3:1), so it can read more like real liquid */
   background:
-    linear-gradient(150deg, rgba(48, 48, 54, 0.62), rgba(10, 10, 12, 0.86) 72%),
-    radial-gradient(120% 180% at 50% -40%, rgba(255, 255, 255, 0.12), transparent 60%);
-  /* contrast() thickens the frost so it reads as real optical glass; iOS-safe */
-  backdrop-filter: blur(20px) saturate(200%) brightness(0.85) contrast(1.06);
-  -webkit-backdrop-filter: blur(20px) saturate(200%) brightness(0.85) contrast(1.06);
+    linear-gradient(180deg, rgba(38, 38, 44, 0.74), rgba(12, 12, 15, 0.82)),
+    radial-gradient(120% 160% at 50% -30%, rgba(255, 255, 255, 0.10), transparent 60%);
+  backdrop-filter: blur(18px) saturate(180%) brightness(0.90) contrast(1.04);
+  -webkit-backdrop-filter: blur(18px) saturate(180%) brightness(0.90) contrast(1.04);
   max-width: calc(100vw - 1.5rem - env(safe-area-inset-left) - env(safe-area-inset-right));
   box-shadow:
-    inset 0 1px 0 var(--glass-rim-hi),            /* crisp bevel top rim */
-    inset 0 6px 10px -6px rgba(255, 255, 255, 0.22), /* inner top glow */
-    inset 0 -3px 8px -3px rgba(0, 0, 0, 0.45),    /* base thickness */
-    0 2px 6px rgba(0, 0, 0, 0.30),                /* tight contact shadow */
-    0 22px 50px -10px rgba(0, 0, 0, 0.60);        /* deep float */
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),      /* top bevel */
+    inset 0 -6px 12px -8px rgba(0, 0, 0, 0.50),    /* base thickness */
+    0 2px 8px rgba(0, 0, 0, 0.28),                 /* contact */
+    0 20px 44px -12px rgba(0, 0, 0, 0.55);         /* deep float */
+  contain: paint;                /* isolate from page repaints */
   animation: tabbarRise 0.7s var(--ease) both;
 }
 @keyframes tabbarRise {
   from { opacity: 0; transform: translateX(-50%) translateY(1.125rem); }
   to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
-/* Specular gloss — same liquid-glass surface as the desktop bar: a bright
-   diagonal streak + a top sheen, screen-blended. (No url(#lg-refract) here — see
-   the note below: SVG refraction re-runs its shader every scroll frame and would
-   reintroduce mobile jank, and iOS doesn't support it anyway.) */
+/* Soft specular sheen — a single top-light streak, plain paint (no backdrop
+   effect, so nothing recomputes on scroll). The old chromatic-dispersion ::after
+   rim was dropped: the clean bevel + float reads more Apple and paints one layer
+   fewer. url(#lg-refract) is intentionally NOT used here — an SVG displacement
+   backdrop-filter re-runs its shader every scroll frame (mobile jank) and iOS
+   doesn't support url() backdrop filters at all. */
 .glass-tabbar::before {
   content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background:
-    linear-gradient(105deg, transparent 0%, rgba(255, 255, 255, 0.34) 8%, transparent 22%),
-    linear-gradient(150deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.05) 40%, transparent 62%);
-  mix-blend-mode: screen;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.03) 22%, transparent 46%);
   pointer-events: none;
 }
-/* Chromatic dispersion rim (the glass prism edge) — matches the desktop nav */
-.glass-tabbar::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1.4px;
-  background: var(--glass-disp);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  mask-composite: exclude;
-  pointer-events: none;
-}
-/* NOTE: refraction (url(#lg-refract)) is intentionally NOT used on the fixed
-   nav + tab bar. An SVG displacement backdrop-filter re-runs its shader every
-   scroll frame over the moving page — the single biggest mobile scroll-jank
-   source here. The premium look comes from the cheaper CSS layers instead
-   (drifting specular sheen + directional bevel below), which also render on iOS,
-   where url() backdrop filters aren't supported at all. */
 
+/* the four nav glyphs sit in a row; the divider + CTA follow it */
+.gt-nav { display: flex; align-items: stretch; gap: 0; }
+.gt-divider {
+  flex: none;
+  align-self: center;
+  width: 1px;
+  height: 1.5rem;
+  margin: 0 6px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* NAV ITEM — icon-only when idle; EQUAL fixed width so the cream lens slides as a
+   pure translateX. The label lives at the bottom, revealed only when active. */
 .gt-item {
   position: relative;
-  z-index: 1; /* above the gloss */
+  z-index: 1;              /* above the sheen */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.1875rem;
-  min-width: 3.75rem;
-  min-height: 3.25rem;
-  padding: 0.4375rem 0.5rem 0.375rem;
-  border-radius: 999px;
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 0.6875rem;   /* 11px floor for legibility (was 10.5px) */
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  line-height: 1;
+  width: 3.5rem;           /* 56px equal slots */
+  height: 3.25rem;         /* 52px → ≥44 touch */
+  border-radius: 22px;
+  color: rgba(245, 245, 245, 0.84);   /* off-white idle glyph ≈4:1 on dark glass */
   -webkit-touch-callout: none;
   user-select: none;
   -webkit-user-select: none;
-  transition: color 0.25s var(--ease), background 0.25s var(--ease), transform 0.12s var(--ease);
 }
-.gt-item svg { width: 1.375rem; height: 1.375rem; display: block; position: relative; z-index: 1; }
-.gt-item svg :is(path, rect) { transition: fill 0.25s var(--ease); }
-.gt-label { white-space: nowrap; position: relative; z-index: 1; }
-.gt-item:active { transform: scale(0.92); }
-.gt-item:active .gt-label { opacity: 0.85; }
-.gt-item.active { color: #fff; }
-/* selection reads native: outline glyph fills in + seats on the pill */
-.gt-item.active svg :is(path, rect) { fill: rgba(255, 255, 255, 0.16); }
-.gt-item.active svg { filter: drop-shadow(0 1px 1px rgba(90, 30, 0, 0.45)); }
-.gt-item.active .gt-label { text-shadow: 0 1px 1px rgba(90, 30, 0, 0.35); }
-/* the single shared highlight that SLIDES between tabs (framer layoutId). It
-   carries the glossy orange fill; sits BEHIND the icon/label. */
-.gt-active-pill {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  border-radius: 999px;
-  background: linear-gradient(180deg, #FF8A2B 0%, var(--orange) 42%, var(--orange-deep) 100%);
-  box-shadow:
-    inset 0 1.5px 1px rgba(255, 255, 255, 0.62),   /* glossy top edge */
-    inset 0 0 0 1px rgba(255, 255, 255, 0.10),      /* light seat rim */
-    inset 0 -4px 8px -3px rgba(120, 40, 0, 0.5),    /* inner base shade = depth */
-    0 4px 10px -2px rgba(253, 111, 0, 0.48),        /* tight orange glow */
-    0 10px 24px -6px rgba(253, 111, 0, 0.38);       /* wide glow lift */
+.gt-icon {
+  position: relative;
+  z-index: 1;
+  display: block;
+  transition: transform 0.28s var(--ease), color 0.28s var(--ease);
 }
-/* static specular arc — rides the framer layoutId slide for free (it's a child) */
-.gt-active-pill::after {
-  content: "";
+.gt-item svg, .gt-cta svg { display: block; }
+.gt-item svg { width: 1.5rem; height: 1.5rem; }
+.gt-item svg :is(path, rect) { transition: fill 0.25s var(--ease), stroke 0.25s var(--ease); }
+.gt-label {
   position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: radial-gradient(120% 70% at 50% -12%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 55%);
-  mix-blend-mode: screen;
+  left: 0;
+  right: 0;
+  bottom: 0.34rem;
+  z-index: 1;
+  text-align: center;
+  font-size: 0.6875rem;    /* 11px */
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.24s var(--ease);
   pointer-events: none;
 }
-/* the Let's-talk tab reads as the accent action even when idle */
-.gt-cta { color: var(--orange-soft); }
-.gt-cta.active { color: #fff; }
-@media (max-width: 340px) {
-  .gt-item { min-width: 3.25rem; padding-inline: 0.3125rem; }
+/* ACTIVE nav item — the outline glyph fills in with maroon, lifts to seat on the
+   lens, and its label fades in (ink on cream). The row height is fixed, so the
+   lift is transform-only: no reflow. */
+.gt-item.active { color: var(--maroon); }
+.gt-item.active .gt-icon { transform: translateY(-0.5rem) scale(1.04); }
+.gt-item.active svg :is(path, rect) { fill: rgba(122, 21, 18, 0.12); }
+.gt-item.active svg { filter: drop-shadow(0 1px 1px rgba(90, 30, 0, 0.3)); }
+.gt-item.active .gt-label { opacity: 1; color: var(--ink); }
+.gt-item:active .gt-icon { transform: scale(0.9); }               /* press feedback */
+.gt-item.active:active .gt-icon { transform: translateY(-0.5rem) scale(0.96); }
+
+/* the CREAM LENS — the single shared highlight that SLIDES between the nav slots
+   (framer layoutId). A bright raised tile, inset from the slot so a thin glass
+   gutter reads it as a lit key rising out of the dark glass. Sits BEHIND glyph. */
+.gt-lens {
+  position: absolute;
+  inset: 3px;
+  z-index: 0;
+  border-radius: 19px;
+  background: linear-gradient(180deg, rgba(255, 250, 244, 0.97), rgba(244, 240, 232, 0.93));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),         /* lit top edge */
+    inset 0 -3px 6px -3px rgba(120, 60, 20, 0.14),    /* seated base */
+    0 3px 8px -2px rgba(0, 0, 0, 0.28),               /* casts on the dark glass */
+    0 8px 18px -6px rgba(253, 111, 0, 0.14);          /* faint brand-warm underglow */
+}
+
+/* THE ORANGE EMBER (CTA) — the one accent action, always labelled, INK text
+   (white-on-orange fails AA; ink-on-orange ≈6.6:1). Its own state, never a lens. */
+.gt-cta {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-width: 4.25rem;      /* 68px */
+  height: 3.25rem;
+  padding: 0 0.85rem;
+  border-radius: 22px;
+  color: var(--ink);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  background: linear-gradient(180deg, #FF8A2B 0%, var(--orange) 45%, var(--orange-deep) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    0 3px 10px -2px rgba(253, 111, 0, 0.45);
+  transition: transform 0.14s var(--ease), box-shadow 0.2s var(--ease);
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.gt-cta .gt-icon { transition: none; }
+.gt-cta svg { width: 1.25rem; height: 1.25rem; }
+.gt-cta .gt-label { position: static; opacity: 1; color: var(--ink); font-weight: 700; }
+.gt-cta:active { transform: scale(0.96); }
+/* engaged (contact section in view): deepen the fill + an inset ink ring */
+.gt-cta.active {
+  background: linear-gradient(180deg, var(--orange) 0%, var(--orange-deep) 70%, #B24A00 100%);
+  box-shadow:
+    inset 0 0 0 2px rgba(23, 23, 24, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 3px 10px -2px rgba(253, 111, 0, 0.5);
+}
+@media (max-width: 360px) {
+  .glass-tabbar { padding: 5px; }
+  .gt-item { width: 3rem; }
+  .gt-divider { margin: 0 4px; }
+  .gt-cta { min-width: 0; padding: 0 0.7rem; }
+  .gt-cta .gt-label { display: none; }   /* icon-only ember on the tiniest screens */
 }
 
 /* Glass needs something to refract — where backdrop-filter doesn't exist fall
@@ -801,7 +848,7 @@ ul, ol { list-style: none; }
    desktop-only. All aria-hidden + pointer-events:none. ── */
 .doodle { color: var(--orange); pointer-events: none; }
 svg.doodle { display: inline-block; vertical-align: middle; overflow: visible; }
-.doodle-sparkle { fill: currentColor; }
+.doodle-sparkle, .doodle-star { fill: currentColor; }
 
 /* eyebrow twinkle — inline, flows with the label in both LTR and RTL */
 .eyebrow .doodle-sparkle {
@@ -811,48 +858,102 @@ svg.doodle { display: inline-block; vertical-align: middle; overflow: visible; }
   vertical-align: -0.05em;
 }
 
-/* videos hero: a twinkle at the block's top corner + a squiggle rule beneath */
+/* videos hero: the headline is framed by two flanking marks — a crisp star at
+   the top-right corner and a spiral curl at the top-left — plus a squiggle rule
+   beneath the sub. Anchored to the centred text block's corners, not floating. */
 .videos-hero { position: relative; }
 .videos-hero-spark {
   position: absolute;
-  top: -0.25rem;
-  right: clamp(2px, 8vw, 5.25rem);
-  width: 1.625rem;
-  height: 1.625rem;
+  top: -1.55rem;
+  right: clamp(0.25rem, 5vw, 3.25rem);
+  width: 1.6rem;
+  height: 1.6rem;
   fill: var(--orange);
-  animation: sparkPulse 3.2s var(--ease) infinite;
+  animation: sparkPulse 3.4s var(--ease) infinite;
+}
+.videos-hero-swirl {
+  position: absolute;
+  top: -0.6rem;
+  left: clamp(0.25rem, 5vw, 3rem);
+  width: 2.05rem;
+  height: 2.05rem;
+  color: var(--orange);
+  opacity: 0.8;
+  transform: rotate(-14deg);
 }
 .videos-hero-rule {
   display: block;
-  width: 5.75rem;
+  width: 6.5rem;
   height: 0.75rem;
-  margin: 1rem auto 0;
+  margin: 1.05rem auto 0;
   color: var(--orange);
-  opacity: 0.85;
+  opacity: 0.9;
 }
 @keyframes sparkPulse {
-  0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.9; }
-  50% { transform: scale(1.16) rotate(8deg); opacity: 1; }
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.85; }
+  50% { transform: scale(1.18) rotate(10deg); opacity: 1; }
 }
 
-/* mid CTA band: a curly arrow nodding toward the button (wide desktop only, in
-   the gap between the copy and the button so it never overlaps either) */
+/* mid CTA band: a curly arrow that clearly gestures at the button — parked just
+   to its left and angled so the arrowhead lands on it (wide desktop only). */
 .cta-band-inner { position: relative; }
 .cta-band-arrow {
   position: absolute;
-  right: clamp(10rem, 20vw, 16.25rem);
-  top: 50%;
-  width: 3.625rem;
-  height: 2.375rem;
-  transform: translateY(-54%) rotate(4deg);
+  right: clamp(7.5rem, 13vw, 10.5rem);
+  top: 42%;
+  width: 3.5rem;
+  height: 2.3rem;
+  transform: translateY(-50%) rotate(9deg);
   color: #fff;
+  opacity: 0.92;
+}
+
+/* contact: two soft accents flanking the headline + a curly arrow nudging the
+   primary WhatsApp button. All decorative, orange on the dark section. */
+.contact-inner { position: relative; }
+.contact-star {
+  position: absolute;
+  top: 1.5rem;
+  right: clamp(1rem, 14vw, 10rem);
+  width: 1.4rem;
+  height: 1.4rem;
+  fill: var(--orange);
+  animation: sparkPulse 3.8s var(--ease) infinite;
+}
+.contact-swirl {
+  position: absolute;
+  top: 2.75rem;
+  left: clamp(1rem, 14vw, 10rem);
+  width: 2rem;
+  height: 2rem;
+  color: var(--orange);
+  opacity: 0.7;
+  transform: rotate(18deg) scaleX(-1);
+}
+.contact-cta { position: relative; }
+.contact-cta-arrow {
+  position: absolute;
+  left: 50%;
+  top: -3.05rem;
+  width: 3.6rem;
+  height: 2.35rem;
+  /* the row is centre-justified, so 50% sits between the two buttons; pull left
+     to hang above the primary WhatsApp button and angle the head down onto it */
+  transform: translateX(-7.75rem) rotate(30deg);
+  color: var(--orange);
   opacity: 0.9;
 }
 
 /* Mobile: keep only the small inline/centred marks; positioned ones off. */
-@media (max-width: 1023px) { .cta-band-arrow { display: none; } }
+@media (max-width: 1023px) {
+  .cta-band-arrow,
+  .videos-hero-swirl,
+  .contact-star, .contact-swirl, .contact-cta-arrow { display: none; }
+}
 @media (max-width: 760px) { .videos-hero-spark { display: none; } }
-@media (prefers-reduced-motion: reduce) { .videos-hero-spark { animation: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .videos-hero-spark, .contact-star { animation: none; }
+}
 
 .glass-cta {
   position: absolute;
@@ -2062,7 +2163,12 @@ html.js [data-reveal].revealed {
   .reel-thumb, .reel-tag, .reel-play, .reel-copy, .fx-toggle-label { transition: none; }
   .reel-card:hover .reel-thumb { transform: none; }   /* no hover lift */
   .reel-thumb::after { display: none; }               /* no sheen sweep */
-  .gt-active-pill::after { display: none; }
+  /* Lumen Dock: keep the state readable but drop the motion. The lens still
+     shows (framer transition is set to duration:0 in the component); the glyph
+     lift stays as a static offset, and press-scale + icon tweens are killed. */
+  .gt-icon, .gt-label, .gt-cta { transition: none; }
+  .gt-item:active .gt-icon, .gt-cta:active { transform: none; }
+  .gt-item.active .gt-icon { transform: translateY(-0.5rem); }
 }
 
 /* ══════════ VIDEOS — 3D CAROUSEL ══════════ */
