@@ -2263,92 +2263,269 @@ html[lang="ar"] .name-reveal { direction: rtl; }
 }
 
 /* ══════════ VIDEOS — REEL ROWS (usefayed style) ══════════ */
-.reels-block { margin-top: clamp(2.75rem, 6vw, 5rem); }
-.reels-block--featured { margin-top: clamp(2rem, 4vw, 3rem); }
-
-/* a muted tnum count beside each group title */
-.reels-count {
-  margin-left: 0.5rem;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--muted-dark);
-  font-feature-settings: "tnum";
-  vertical-align: 0.12em;
-}
-
-/* ── Featured bento: a big hero tile beside a 3×2 grid of small tiles ── */
-.reels-featured {
+/* ══════════ VIDEOS — one bounded, filterable gallery ══════════
+   The section height is decoupled from the library size: a fixed featured
+   STAGE + a hard-capped GRID (6 desktop / 4 mobile, ghost-padded to a constant
+   height) + a "Show all (N)" OVERLAY that holds every overflow reel. No group
+   grows inline again — reel #50 changes only the "(N)" count. */
+.reels-gallery {
+  margin-top: clamp(2rem, 4vw, 3rem);
   display: grid;
-  grid-template-columns: 0.92fr 1.08fr;   /* hero | rest */
-  gap: clamp(1rem, 1.5vw, 1.5rem);
-  align-items: stretch;
-  padding: clamp(0.85rem, 1.6vw, 1.35rem);
-  border-radius: calc(var(--reel-radius-lg) + 0.5rem);
-  background: var(--panel-glass);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  grid-template-columns: 0.88fr 1.12fr;
+  grid-template-areas:
+    "stage tabs"
+    "stage grid"
+    "stage foot";
+  grid-template-rows: auto 1fr auto;
+  gap: clamp(1rem, 1.6vw, 1.5rem) clamp(1.25rem, 2.4vw, 2.25rem);
 }
-.reels-featured .reel-card { width: auto; }   /* grid drives width, not the flex clamp */
-.reel-rest {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(2, 1fr);
-  gap: clamp(0.75rem, 1.4vw, 1.35rem);
-}
-.reel-rest .reel-thumb { aspect-ratio: 9 / 16; }
-/* the hero grows to the height the 3×2 grid sets → a genuinely taller, more
-   cinematic crop, with zero pixel math (object-fit:cover already on the poster) */
-.reel-card--hero .reel-thumb {
+
+/* ── Featured stage: the strongest reel, constant across every filter ── */
+.reel-card--stage { grid-area: stage; width: 100%; height: 100%; }
+.reel-card--stage .reel-thumb {
   height: 100%;
   aspect-ratio: auto;
+  min-height: clamp(20rem, 40vw, 32rem);
   border-radius: var(--reel-radius-lg);
 }
-.reel-card--hero .reel-info { padding: 1.5rem 1.375rem; gap: 0.375rem; }
-.reel-card--hero .reel-title {
-  font-size: clamp(1.25rem, 2.2vw, 1.9rem);
+.reel-card--stage .reel-info { padding: 1.6rem 1.5rem; gap: 0.35rem; }
+.reel-card--stage .reel-shade {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.45) 46%, transparent 74%);
+}
+.reel-card--stage .reel-play { width: 4.25rem; height: 4.25rem; }
+.reel-card--stage .reel-title {
+  font-size: clamp(1.35rem, 2.3vw, 2rem);
   line-height: 1.12;
   -webkit-line-clamp: 3;
 }
-.reel-card--hero .reel-client { font-size: 0.9375rem; }
-.reel-card--hero .reel-hero-teaser {
+.reel-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  align-self: flex-start;
+  margin-bottom: 0.1rem;
+  padding: 0.28rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(253, 111, 0, 0.92);
+  color: #fff;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.reel-kicker-star { width: 0.8rem; height: 0.8rem; color: #fff; animation: none; }
+.reel-stage-desc {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   margin-top: 0.4rem;
-  max-width: 36ch;
-  font-size: 0.9375rem;
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.82);
+  max-width: 46ch;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.84);
 }
-.reel-card--hero .reel-play { width: 4.25rem; height: 4.25rem; }
-.reel-card--hero .reel-shade {
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.4) 46%, transparent 72%);
-}
-
-/* hairline divider so "big showcase → kinetic rows" reads as a transition */
-.reels-block--featured + .reels-block {
-  position: relative;
-  padding-top: clamp(2.75rem, 6vw, 5rem);
-  margin-top: 0;
-}
-.reels-block--featured + .reels-block::before {
-  content: "";
+.reel-stage-swirl {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1) 20%, rgba(253, 111, 0, 0.28) 50%, rgba(255, 255, 255, 0.1) 80%, transparent);
+  top: -0.55rem;
+  right: -0.35rem;
+  width: 1.9rem;
+  height: 1.9rem;
+  color: var(--orange);
+  z-index: 4;
+  pointer-events: none;
 }
 
-@media (max-width: 1023px) and (min-width: 641px) {
-  .reels-featured { grid-template-columns: 1fr 1fr; }
-  .reel-rest { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, 1fr); }
+/* ── Sticker filter chips (real ARIA tablist) ── */
+.reels-tabs {
+  grid-area: tabs;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
 }
-@media (max-width: 640px) {
-  .reels-featured { grid-template-columns: 1fr; gap: 0.85rem; }
-  .reel-card--hero .reel-thumb { height: auto; aspect-ratio: 9 / 16; }
-  .reel-rest { grid-template-columns: 1fr 1fr; grid-template-rows: auto; }
+.reel-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.95rem;
+  border-radius: 999px;
+  border: 0;
+  outline: 2px solid var(--stk-line);
+  outline-offset: -2px;
+  background: var(--stk-cream);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 3px 0 0 var(--stk-cast);
+  transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease), background 0.2s var(--ease), color 0.2s var(--ease);
+}
+.reel-chip:hover { transform: translateY(-2px); box-shadow: 0 5px 0 0 var(--stk-cast); }
+.reel-chip:active { transform: translateY(1px); box-shadow: 0 1px 0 0 var(--stk-cast); }
+.reel-chip.is-active { background: var(--orange); color: #fff; outline-color: var(--orange); }
+.reel-chip:focus-visible { outline: 3px solid var(--orange-soft); outline-offset: 3px; }
+.reel-chip-count { font-size: 0.72rem; font-weight: 700; opacity: 0.6; font-feature-settings: "tnum"; }
+.reel-chip.is-active .reel-chip-count { opacity: 0.92; }
+
+/* ── Capped grid — ghost cells lock ONE height across every filter ── */
+.reels-grid { grid-area: grid; align-self: start; border-radius: var(--reel-radius); }
+.reels-grid:focus-visible { outline: 3px solid var(--orange-soft); outline-offset: 6px; }
+.reels-grid-inner {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: 1fr;
+  gap: clamp(0.7rem, 1.3vw, 1.2rem);
+}
+.reel-cell { min-width: 0; }
+.reel-cell .reel-card,
+.reel-allsheet-grid .reel-card { width: 100%; }
+.reel-ghost {
+  display: block;
+  aspect-ratio: 9 / 16;
+  border-radius: var(--reel-radius);
+  border: 1px dashed rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.014);
+}
+
+/* ── Foot: Show-all / all-shown ── */
+.reels-foot { grid-area: foot; display: flex; align-items: center; min-height: 3rem; }
+.btn-showall {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.7rem 1.2rem;
+  border-radius: 999px;
+  border: 0;
+  outline: 2px solid var(--stk-line);
+  outline-offset: -2px;
+  background: var(--stk-cream);
+  color: var(--orange-deep);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 3px 0 0 var(--stk-cast);
+  transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease);
+}
+.btn-showall:hover { transform: translateY(-2px); box-shadow: 0 5px 0 0 var(--stk-cast); }
+.btn-showall:active { transform: translateY(1px); box-shadow: 0 1px 0 0 var(--stk-cast); }
+.btn-showall:focus-visible { outline: 3px solid var(--orange-soft); outline-offset: 3px; }
+.btn-showall .arrow { width: 1.05rem; height: 1.05rem; }
+.reels-allshown { font-size: 0.85rem; font-weight: 600; color: var(--muted-dark); }
+
+/* ── Show-all overlay (reuses the lightbox backdrop chrome; dark card so the
+   cream chips + dark poster tiles pop, no glass) ── */
+.reel-allsheet {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding:
+    max(1.5rem, env(safe-area-inset-top))
+    max(1.5rem, env(safe-area-inset-right))
+    max(1.5rem, env(safe-area-inset-bottom))
+    max(1.5rem, env(safe-area-inset-left));
+  background: rgba(3, 3, 3, 0.82);
+  backdrop-filter: blur(14px);
+  animation: reelFade 0.25s var(--ease);
+}
+.reel-allsheet-inner {
+  width: min(96vw, 62rem);
+  max-height: min(86vh, 52rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+  padding: clamp(1.1rem, 2vw, 1.75rem);
+  border-radius: calc(var(--reel-radius-lg) + 0.25rem);
+  background: #161616;
+  outline: 2px solid var(--stk-line);
+  outline-offset: -2px;
+  box-shadow: 0 30px 70px -30px rgba(0, 0, 0, 0.7);
+}
+.reel-allsheet-head { display: flex; flex-direction: column; gap: 0.9rem; }
+.reel-allsheet-title {
+  font-size: clamp(1.2rem, 2.2vw, 1.6rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+.reel-allsheet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  gap: clamp(0.6rem, 1.2vw, 1rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 0.15rem 0.3rem 0.4rem;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 2.5%, #000 96%, transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0, #000 2.5%, #000 96%, transparent 100%);
+}
+
+/* ── Desktop lightbox side arrows: browse the whole library without closing ── */
+.reel-lightbox-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 0.25s var(--ease), border-color 0.25s var(--ease), opacity 0.25s var(--ease);
+}
+.reel-lightbox-arrow--prev { left: max(1rem, env(safe-area-inset-left)); }
+.reel-lightbox-arrow--next { right: max(1rem, env(safe-area-inset-right)); }
+.reel-lightbox-arrow:hover { background: var(--orange); border-color: var(--orange); }
+.reel-lightbox-arrow:disabled { opacity: 0.26; cursor: default; pointer-events: none; }
+.reel-lightbox-arrow svg { width: 1.4rem; height: 1.4rem; }
+/* the arrows would crowd the fit-to-screen mobile lightbox — hide there */
+@media (max-width: 899px) { .reel-lightbox-arrow { display: none; } }
+
+/* ── Tablet: stage stacks on top, grid still caps at 6 ── */
+@media (max-width: 1023px) and (min-width: 768px) {
+  .reels-gallery {
+    grid-template-columns: 1fr;
+    grid-template-areas: "stage" "tabs" "grid" "foot";
+    grid-template-rows: auto auto auto auto;
+    gap: clamp(1rem, 2vw, 1.5rem);
+  }
+  .reel-card--stage .reel-thumb { min-height: 22rem; }
+}
+
+/* ── Mobile: single column, chip rail, 2×2 grid (cap 4) ── */
+@media (max-width: 767px) {
+  .reels-gallery {
+    grid-template-columns: 1fr;
+    grid-template-areas: "stage" "tabs" "grid" "foot";
+    grid-template-rows: auto auto auto auto;
+    gap: 1rem;
+  }
+  .reel-card--stage .reel-thumb { height: auto; aspect-ratio: 9 / 16; min-height: 0; }
+  .reel-card--stage .reel-stage-desc { -webkit-line-clamp: 3; }
+  /* chips become a horizontal scroll-snap rail so all four fit one swipe */
+  .reels-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    padding-bottom: 0.15rem;
+    -webkit-mask-image: linear-gradient(90deg, #000 90%, transparent 100%);
+    mask-image: linear-gradient(90deg, #000 90%, transparent 100%);
+  }
+  .reels-tabs::-webkit-scrollbar { display: none; }
+  .reel-chip { flex: 0 0 auto; scroll-snap-align: start; }
+  .reels-grid-inner { grid-template-columns: repeat(2, 1fr); }
+  .btn-showall { width: 100%; justify-content: center; }
+  .reels-foot { min-height: 0; }
 }
 
 .reels-head {

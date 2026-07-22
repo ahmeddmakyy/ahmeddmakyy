@@ -45,6 +45,14 @@ export interface SiteContent {
     groups: string[];
     prev: string;
     next: string;
+    // Filterable capped-grid gallery (VideoReels): the "All" chip, the tablist
+    // aria-label, the "Show all (N)" overlay button, the featured-stage kicker,
+    // and the foot line shown when a filter has no overflow.
+    all: string;
+    filterLabel: string;
+    showAll: string;
+    featured: string;
+    allShown: string;
   };
   player: {
     play: string;
@@ -138,6 +146,11 @@ const en: SiteContent = {
     groups: ["Cinematic AI Ads", "Motion Graphics & Type", "UI Animation"],
     prev: "Previous reel",
     next: "Next reel",
+    all: "All",
+    filterLabel: "Filter reels by type",
+    showAll: "Show all",
+    featured: "Featured",
+    allShown: "That’s every reel",
   },
   player: {
     play: "Play",
@@ -258,6 +271,13 @@ const en: SiteContent = {
       client: "Car Showroom · Cairo",
       description:
         "A cinematic AI teaser for a multi-brand Cairo dealership — one gleaming car held under a spotlight while a warehouse of dust-covered classics looks on, all on a single line: some opportunities won’t wait. AI cinematic footage, Arabic voice-over and kinetic Arabic type, directed shot by shot.",
+    },
+    {
+      title: "Trust Motors — Summer Coast Trip",
+      tag: "AI Ad",
+      client: "Car Dealership · Social Reel",
+      description:
+        "A vertical social reel for a car dealership, made entirely with AI: an Egyptian family sets off on their North Coast summer holiday in their new car — the father shutting the packed boot in the driveway, a hood-mounted shot of the family mid-drive, and a drone sweep of the car alone on the coastal road, over an Egyptian-Arabic summer voice-over on one line: the coast is waiting, and we’re ready. The hard part was keeping the car and the four family members identical across every shot — AI tends to redraw a car’s features and move them oddly — so I locked reference sheets for the car and the family and wrote physics-aware prompts, and it holds its shape and moves believably. Directed shot by shot.",
     },
   ],
   about: {
@@ -395,6 +415,11 @@ const ar: SiteContent = {
     groups: ["إعلانات سينمائية بالذكاء الاصطناعي", "موشن جرافيك وتايبوغرافي", "أنيميشن واجهات"],
     prev: "الريلز اللي فات",
     next: "الريلز اللي بعده",
+    all: "الكل",
+    filterLabel: "فلترة الريلز حسب النوع",
+    showAll: "شوف الكل",
+    featured: "ريلز مختار",
+    allShown: "دي كل الريلز",
   },
   player: {
     play: "شغّل",
@@ -515,6 +540,13 @@ const ar: SiteContent = {
       client: "معرض عربيات · القاهرة",
       description:
         "تيزر سينمائي بالذكاء الاصطناعي لمعرض عربيات متعدد الماركات في القاهرة — عربية واحدة لامعة واقفة تحت سبوت لايت وسط مخزن مليان عربيات قديمة متغطية بالتراب، على جملة واحدة: في فرص ما بتستناش. اللقطات السينمائية والڤويس أوفر العربي والتايبوغرافي المتحركة كلها بتوجيه الذكاء الاصطناعي، لقطة لقطة.",
+    },
+    {
+      title: "تراست موتورز — رحلة صيف عالساحل",
+      tag: "إعلان AI",
+      client: "معرض عربيات · ريلز سوشيال",
+      description:
+        "ريلز سوشيال طولي لمعرض عربيات، متعمل بالكامل بالذكاء الاصطناعي: عيلة مصرية طالعة تصيّف على الساحل الشمالي في عربيتهم الجديدة — الأب بيقفل شنطة العربية المليانة في الجراج، لقطة من على كابوت العربية للعيلة وهي مبسوطة في الطريق، ولقطة درون للعربية لوحدها على طريق الساحل، وفوقها ڤويس أوفر صيفي بالمصري على جملة واحدة: الساحل مستنّي، واحنا جاهزين. أصعب حاجة كانت إني أخلّي العربية والأربع أفراد شكلهم ثابت في كل لقطة — الـ AI بيميل يعيد رسم ملامح العربية ويحرّكها غلط — فقفلت أوراق ريفرانس للعربية وللعيلة وكتبت برومبتات واعية بالفيزياء، فالعربية حافظت على شكلها واتحركت بتصديق. متخرجة لقطة لقطة.",
     },
   ],
   about: {

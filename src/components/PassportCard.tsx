@@ -130,7 +130,7 @@ export default function PassportCard() {
               <defs><path id="pp-hex" d="M66 6 L124 34 L124 84 L66 112 L8 84 L8 34 Z" fill="none" /></defs>
               <text fontSize="7" letterSpacing="1"><textPath href="#pp-hex" startOffset="0">012301230123012301230123012301230123</textPath></text>
               <path d="M66 14 L116 38 L116 80 L66 104 L16 80 L16 38 Z" fill="none" stroke="currentColor" strokeWidth="2.4" />
-              <text x="66" y="42" textAnchor="middle" fontSize="14" letterSpacing="1">AI FILMS</text>
+              <text x="66" y="42" textAnchor="middle" fontSize="14" letterSpacing="1">AI ADS</text>
               <path d="M50 50 l34 -8 -7 8 6 2 -33 7 z" fill="currentColor" />
               <text x="66" y="78" textAnchor="middle" fontSize="12">DIRECTED</text>
               <text x="66" y="92" textAnchor="middle" fontSize="8">VEO · FLUX</text>
@@ -262,7 +262,7 @@ export default function PassportCard() {
             <div className="pp-indent"><span className="pp-sub">@ AIN SHAMS UNIVERSITY</span></div>
           </div>
           <div className="pp-gap">
-            <div className="pp-val">AI FILM &amp; CONTENT CRAFT</div>
+            <div className="pp-val">AI ADS &amp; CONTENT CRAFT</div>
             <div className="pp-indent"><span className="pp-sub">@ SELF-DIRECTED</span></div>
           </div>
         </div>
