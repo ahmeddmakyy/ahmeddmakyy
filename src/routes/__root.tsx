@@ -12,6 +12,8 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { LanguageProvider } from "@/i18n";
+import { CONTENT } from "@/content";
+import { VIDEO_MEDIA, posterUrlFromSrc, uploadDateFromSrc } from "@/video-media";
 
 function NotFoundComponent() {
   return (
@@ -75,7 +77,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 
 const SITE_TITLE = "Ahmed Maki — AI Content Creator & Video Editor | Reels With Maki";
 const SITE_DESC =
-  "Ahmed Maki (Reels With Maki) directs Veo, FLUX & Gemini and edits the footage into finished films — content strategy, brand campaigns & AI video for 15+ brands across Egypt.";
+  "Ahmed Maki (Reels With Maki) directs Veo, FLUX & Gemini and edits the footage into finished ads — content strategy, brand campaigns & AI video for 15+ brands across Egypt.";
 const OG_IMAGE =
   "https://storage.googleapis.com/gpt-engineer-file-uploads/kBYrN7AScPVPxk5LcflXYJzXNIJ2/social-images/social-1783643425130-ChatGPT_Image_Jul_10,_2026,_03_30_14_AM.webp";
 
@@ -134,6 +136,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
             name: "Ahmed Maki",
             alternateName: "Reels With Maki",
             jobTitle: "AI Content Creator & Video Editor",
+            description: SITE_DESC,
             url: "https://ahmeddmakyy.lovable.app/",
             email: "ahmeddmakyy@gmail.com",
             image: OG_IMAGE,
@@ -162,11 +165,49 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
               "Content strategy",
             ],
             makesOffer: [
-              { "@type": "Offer", itemOffered: { "@type": "Service", name: "Brand Strategy & Content Planning" } },
-              { "@type": "Offer", itemOffered: { "@type": "Service", name: "AI Video Production" } },
-              { "@type": "Offer", itemOffered: { "@type": "Service", name: "Copywriting & Brand Voice" } },
+              {
+                "@type": "Offer",
+                itemOffered: { "@type": "Service", name: "Brand Strategy & Content Planning" },
+              },
+              {
+                "@type": "Offer",
+                itemOffered: { "@type": "Service", name: "AI Video Production" },
+              },
+              {
+                "@type": "Offer",
+                itemOffered: { "@type": "Service", name: "Copywriting & Brand Voice" },
+              },
             ],
           },
+        }),
+      },
+      {
+        // One VideoObject per reel (in VIDEO_MEDIA / CONTENT.en.videos order),
+        // built from the shared media list so it can never drift from the grid.
+        // thumbnailUrl + uploadDate are derived from each Cloudinary src.
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          name: "AI ads & reels by Ahmed Maki",
+          itemListElement: CONTENT.en.videos.map((v, i) => ({
+            "@type": "ListItem",
+            position: i + 1,
+            item: {
+              "@type": "VideoObject",
+              name: v.title,
+              description: v.description,
+              genre: v.tag,
+              thumbnailUrl: posterUrlFromSrc(VIDEO_MEDIA[i].src),
+              contentUrl: VIDEO_MEDIA[i].src,
+              uploadDate: uploadDateFromSrc(VIDEO_MEDIA[i].src),
+              creator: {
+                "@type": "Person",
+                name: "Ahmed Maki",
+                url: "https://ahmeddmakyy.lovable.app/",
+              },
+            },
+          })),
         }),
       },
     ],

@@ -45,8 +45,6 @@ export interface SiteContent {
     groups: string[];
     prev: string;
     next: string;
-    selectFilm: string;
-    durationLabel: string;
   };
   player: {
     play: string;
@@ -94,11 +92,11 @@ const en: SiteContent = {
     work: "Work",
     process: "Process",
     contact: "Contact",
-    talk: "Let's talk",
+    talk: "Let’s talk",
   },
   hero: {
     hello: "Hello!",
-    line1Pre: "I'm ",
+    line1Pre: "I’m ",
     name: "Ahmed",
     line1Post: ",",
     line2: "AI Content Creator & Video Editor",
@@ -107,7 +105,7 @@ const en: SiteContent = {
     ratingNum: "15+",
     ratingLabel: "Clients Served",
     ctaWork: "See My Work",
-    ctaHire: "Let's talk",
+    ctaHire: "Let’s talk",
     photoAlt: "Ahmed Maki, AI content creator and video editor",
   },
   services: {
@@ -131,17 +129,15 @@ const en: SiteContent = {
   videosSection: {
     head: [
       { t: "Every " },
-      { t: "film", accent: true },
+      { t: "reel", accent: true },
       { t: " starts with an " },
       { t: "idea.", accent: true },
     ],
-    cycle: ["film", "reel", "story", "spot", "ad"],
+    cycle: ["reel", "ad", "spot", "story", "hook"],
     sub: "Script, direction, AI production, edit.",
-    groups: ["Cinematic AI Films", "Motion Graphics & Type", "UI Animation"],
-    prev: "Previous film",
-    next: "Next film",
-    selectFilm: "Select film",
-    durationLabel: "duration",
+    groups: ["Cinematic AI Ads", "Motion Graphics & Type", "UI Animation"],
+    prev: "Previous reel",
+    next: "Next reel",
   },
   player: {
     play: "Play",
@@ -163,113 +159,113 @@ const en: SiteContent = {
       tag: "Stop-Motion",
       client: "Agency · Egypt",
       description:
-        "AI stop-motion film for the agency's own 2026 slate — nostalgic Egyptian storytelling, hand-directed shot by shot.",
+        "AI stop-motion reel for the agency’s own 2026 slate — nostalgic Egyptian storytelling, hand-directed shot by shot.",
     },
     {
       title: "Renew Media — Star of the Party",
       tag: "Stop-Motion",
       client: "Agency · KSA",
       description:
-        "AI stop-motion film written in Saudi dialect, cut to a VO-first edit — the same system, a new voice.",
+        "AI stop-motion reel written in Saudi dialect, cut to a VO-first edit — the same system, a new voice.",
     },
     {
       title: "Easy Way — The Thief Who Stole the Name",
-      tag: "AI Film",
+      tag: "AI Ad",
       client: "Legal / IP",
       description:
         "Cinematic AI reel produced end to end: script, character sheets, Veo shots, Arabic voice-over, final edit.",
     },
     {
       title: "Golf City Club — All Sports in One Place",
-      tag: "AI Film",
+      tag: "AI Ad",
       client: "Sports Club",
       description:
-        "Vertical cinematic sports film cut from Veo 3.1 clips with morph transitions for a club with 188K followers.",
+        "Vertical cinematic sports reel cut from Veo 3.1 clips with morph transitions for a club with 188K followers.",
     },
     {
       title: "Alwassef Motors — Your Day, Your Car",
-      tag: "AI Film",
+      tag: "AI Ad",
       client: "Car Showroom",
       description:
-        "A cinematic AI ad film for a car showroom — a day-in-the-life story that carries one driver from his morning coffee to the wheel of his new car, written, directed and produced end to end with AI.",
+        "A cinematic AI ad for a car showroom — a day-in-the-life story that carries one driver from his morning coffee to the wheel of his new car, written, directed and produced end to end with AI.",
     },
     {
       title: "Dr. Ahmed ElKashef — Move Without Pain",
-      tag: "AI Film",
+      tag: "AI Ad",
       client: "Spine & Joint Clinic",
       description:
-        "A cinematic AI brand film for an orthopedic spine-and-joint clinic — a father sidelined by back pain watches life move on without him, before the clinic's mark resolves in a glowing animated spine. Story, shots and logo animation all AI-directed.",
+        "A cinematic AI ad for an orthopedic spine-and-joint clinic — a father sidelined by back pain watches life move on without him, before the clinic’s mark resolves in a glowing animated spine. Story, shots and logo animation all AI-directed.",
     },
     {
-      title: "Reels With Maki — It's a Story Problem",
+      title: "Reels With Maki — It’s a Story Problem",
       tag: "Kinetic Type",
       client: "Personal Brand",
       description:
-        "A kinetic-typography pitch film for my own brand: the case for story over just “more content” — I don't hold the camera, I direct the idea, then point AI at it until it's a film.",
+        "A kinetic-typography pitch reel for my own brand: the case for story over just “more content” — I don’t hold the camera, I direct the idea, then point AI at it until it’s a reel.",
     },
     {
-      title: "Reels With Maki — Let's Go Big",
+      title: "Reels With Maki — Let’s Go Big",
       tag: "Motion Graphics",
       client: "Personal Brand",
       description:
-        "A pure motion-graphics promo built in my own orange system — equalizer bars, nodes, and kinetic shapes on one message: stop playing small, AI means no big budget, let's go big.",
+        "A pure motion-graphics promo built in my own orange system — equalizer bars, nodes, and kinetic shapes on one message: stop playing small, AI means no big budget, let’s go big.",
     },
     {
       title: "Reels With Maki — Portfolio in Motion",
-      tag: "Hyperframe",
+      tag: "Hyperframes",
       client: "Personal Brand",
       description:
-        "This very website turned into an animated film with Hyperframes — sections, tools, and selected work rebuilt as motion graphics from the site's own design.",
+        "This very website turned into an animated reel with Hyperframes — sections, tools, and selected work rebuilt as motion graphics from the site’s own design.",
     },
     {
       title: "Mohamed Abbas Motors — Finance It",
       tag: "UI Animation",
       client: "Car Showroom",
       description:
-        "A light, playful UI-animation concept for a car showroom that sells new and used cars on easy installments — not a real app. The lineup scrolls, one tap on “Finance it” under a Toyota Fortuner, and instant approval: the whole pitch as a smooth in-app flow, built entirely in code.",
+        "A light, playful UI-animation concept for a car showroom that sells new and used cars on easy installments — not a real app. The lineup scrolls, one tap on “Finance it” under a Toyota Fortuner, and instant approval: the whole pitch as a smooth in-app flow, built entirely in code, directed with AI.",
     },
     {
       title: "Mohamed Abbas Motors — Ask ChatGPT",
       tag: "UI Animation",
       client: "Car Showroom",
       description:
-        "A scroll-stopping hook built as a pixel-perfect ChatGPT recreation: ask for Egypt's best car-installment showroom — the answer reveals the brand.",
+        "A scroll-stopping hook built as a pixel-perfect ChatGPT recreation: ask for Egypt’s best car-installment showroom — the answer reveals the brand.",
     },
     {
       title: "Quick Loan — Cars & Financing",
       tag: "UI Animation",
       client: "Automotive · Finance",
       description:
-        "A UI animation reel for a car showroom and financing brand — designed and animated entirely in code from the brand's own assets.",
+        "A UI animation reel for a car showroom and financing brand — designed and animated entirely in code, directed with AI, from the brand’s own assets.",
     },
     {
-      title: "Demo Star — Men's Fashion Experience",
+      title: "Demo Star — Men’s Fashion Experience",
       tag: "UI Animation",
       client: "Menswear",
       description:
         "A product showcase animated entirely in code — HTML, CSS and JS directed with AI, rendered as a vertical fashion reel for the menswear brand.",
     },
     {
-      title: "Alwassef Motors — He's Never Driven One",
-      tag: "AI Film",
+      title: "Alwassef Motors — He’s Never Driven One",
+      tag: "AI Ad",
       client: "Car Showroom · Geely EX2",
       description:
         "A cinematic AI reel for the electric Geely EX2 launch: a cafe know-it-all warns against Chinese cars, until the man who actually drove one answers him with the keys in his hand. Characters, shots and Arabic voice-over all AI-directed, shot by shot.",
     },
     {
-      title: "Trust Motors — The Opportunity Won't Wait",
-      tag: "AI Film",
+      title: "Trust Motors — The Opportunity Won’t Wait",
+      tag: "AI Ad",
       client: "Car Showroom · Cairo",
       description:
-        "A cinematic AI teaser for a multi-brand Cairo dealership — one gleaming car held under a spotlight while a warehouse of dust-covered classics looks on, all on a single line: some opportunities won't wait. AI cinematic footage, Arabic voice-over and kinetic Arabic type, directed shot by shot.",
+        "A cinematic AI teaser for a multi-brand Cairo dealership — one gleaming car held under a spotlight while a warehouse of dust-covered classics looks on, all on a single line: some opportunities won’t wait. AI cinematic footage, Arabic voice-over and kinetic Arabic type, directed shot by shot.",
     },
   ],
   about: {
     name: "Ahmed Maki",
     eyebrow: "About Me",
     title: [{ t: "Law grad turned " }, { t: "creative", accent: true }],
-    p1: "I studied law at Ain Shams, then went where the ideas were. At Renew Media I'm the creative mind behind 15+ brands: I do the research, find the one line a brand can own, and turn it into content plans, campaigns, and films.",
-    p2: "I don't operate cameras or write code. I direct AI tools — Veo, FLUX, Gemini, Claude — the way a director runs a set, then edit the footage into the finished film: pacing, sound, and the final cut. The idea, the brief, and the final call are mine. And every word ships in real Egyptian Arabic, reviewed until nothing reads as machine-made.",
+    p1: "I studied law at Ain Shams, then went where the ideas were. At Renew Media I’m the creative mind behind 15+ brands: I do the research, find the one line a brand can own, and turn it into content plans, campaigns, and ads.",
+    p2: "I don’t operate cameras or write code. I direct AI tools — Veo, FLUX, Gemini, Claude — the way a director runs a set, then edit the footage into the finished reel: pacing, sound, and the final cut. The idea, the brief, and the final call are mine. And every word ships in real Egyptian Arabic, reviewed until nothing reads as machine-made.",
     stats: [
       { n: "15+", label: "Clients" },
       { n: "10", label: "Industries" },
@@ -286,16 +282,16 @@ const en: SiteContent = {
         body: "Repositioned a 1998 garment factory into a consumer menswear brand: a teardown of six local labels, the campaign line “Present For Your Day. Ready For Every Day.”, and a 150-idea content catalog.",
       },
       {
-        tag: "AI Film",
+        tag: "AI Ad",
         period: "Legal / IP",
         title: "Easy Way",
         body: "“The Thief Who Stole the Name” — a cinematic AI reel produced end to end: script, character sheets, Veo shots, voice-over, final edit. Plus a 24-idea post bank covering all eight services.",
       },
       {
-        tag: "AI Film",
+        tag: "AI Ad",
         period: "Sports Club",
         title: "Golf City Club",
-        body: "“All Sports in One Place” — a vertical cinematic sports film cut from Veo 3.1 clips with morph transitions, plus 20 scripted reel concepts for a club with 188K followers.",
+        body: "“All Sports in One Place” — a vertical cinematic sports reel cut from Veo 3.1 clips with morph transitions, plus 20 scripted reel concepts for a club with 188K followers.",
       },
       {
         tag: "Brand Foundation",
@@ -306,19 +302,19 @@ const en: SiteContent = {
       {
         tag: "Insight & Ideas",
         period: "Automotive",
-        title: "M.A. Motors",
+        title: "Mohamed Abbas Motors",
         body: "One insight carried the account: buyers fear the “how much do you earn?” question more than the price. Twenty scored concepts built on “no employment check”, plus a 15-second AI reel.",
       },
       {
         tag: "Content Engine",
         period: "Agency",
         title: "Renew Media",
-        body: "The agency's own engine: a 150-idea catalog for 2026 and two AI stop-motion films, “The Story You Remember” for Egypt and “Star of the Party” written in Saudi dialect.",
+        body: "The agency’s own engine: a 150-idea catalog for 2026 and two AI stop-motion reels, “The Story You Remember” for Egypt and “Star of the Party” written in Saudi dialect.",
       },
     ],
     more: "…plus Geroland, Quick Loan, Trust Motors, Access Laptop, and more across 10 industries.",
   },
-  midCta: { text: "Seen enough? Tell me what you're building.", button: "Let's talk" },
+  midCta: { text: "Seen enough? Tell me what you’re building.", button: "Let’s talk" },
   process: {
     title: [{ t: "How I " }, { t: "Work", accent: true }],
     lede: "A full content system, not one-off posts: research, strategy, ideas, and production — the same way for every brand.",
@@ -326,7 +322,7 @@ const en: SiteContent = {
       { n: "01", t: "Research & insight", b: "Market, competitors, and audience first. I dig for the one real insight a brand can build on — before a single idea." },
       { n: "02", t: "Strategy & pillars", b: "One proposition the brand can own and weighted content pillars, so the feed has a direction instead of random posts." },
       { n: "03", t: "Ideas & content plan", b: "A content plan sized to the brand and budget — a month or several — with fully specified ideas: the hook, the format, the shot, and the caption — ready to shoot." },
-      { n: "04", t: "Production", b: "From shoot lists to AI films. I direct the tools (Veo, FLUX, Gemini) and the camera the same way: idea, references, and final call are mine." },
+      { n: "04", t: "Production", b: "From shoot lists to AI ads. I direct the tools (Veo, FLUX, Gemini) and the camera the same way: idea, references, and final call are mine." },
       { n: "05", t: "Humanize & QA", b: "Review passes until nothing reads as AI — copy, pronunciation, and Arabic letter by letter, in real Egyptian dialect." },
       { n: "06", t: "Deliver & iterate", b: "Staged revisions, organized folders, nothing deleted — then read the numbers and sharpen the next batch." },
     ],
@@ -334,7 +330,7 @@ const en: SiteContent = {
   contact: {
     eyebrow: "Contact",
     title: [{ t: "Got a brand that needs a " }, { t: "voice", accent: true }, { t: "?" }],
-    lede: "Tell me what you're building — I'll tell you how it should sound.",
+    lede: "Tell me what you’re building — I’ll tell you how it should sound.",
     whatsapp: "WhatsApp",
     loc: "Cairo, Egypt",
   },
@@ -390,17 +386,15 @@ const ar: SiteContent = {
   videosSection: {
     head: [
       { t: "كل " },
-      { t: "فيلم", accent: true },
+      { t: "ريلز", accent: true },
       { t: " بيبدأ بـ" },
       { t: "فكرة.", accent: true },
     ],
-    cycle: ["فيلم", "ريلز", "حكاية", "إعلان"],
+    cycle: ["ريلز", "إعلان", "حكاية", "هوك"],
     sub: "سيناريو، إخراج، إنتاج بالـ AI، ومونتاج.",
-    groups: ["أفلام سينمائية بالذكاء الاصطناعي", "موشن جرافيك وتايبوغرافي", "أنيميشن واجهات"],
-    prev: "الفيلم اللي فات",
-    next: "الفيلم اللي بعده",
-    selectFilm: "اختار فيلم",
-    durationLabel: "المدة",
+    groups: ["إعلانات سينمائية بالذكاء الاصطناعي", "موشن جرافيك وتايبوغرافي", "أنيميشن واجهات"],
+    prev: "الريلز اللي فات",
+    next: "الريلز اللي بعده",
   },
   player: {
     play: "شغّل",
@@ -422,49 +416,49 @@ const ar: SiteContent = {
       tag: "ستوب موشن",
       client: "وكالة · مصر",
       description:
-        "فيلم ستوب موشن بالذكاء الاصطناعي لأجندة الوكالة لسنة 2026 — حكاية مصرية فيها حنية لزمان، متخرجة لقطة لقطة بإيدي.",
+        "ريلز ستوب موشن بالذكاء الاصطناعي لأجندة الوكالة لسنة 2026 — حكاية مصرية فيها حنية لزمان، متخرجة لقطة لقطة بإيدي.",
     },
     {
       title: "Renew Media — نجم الحفلة",
       tag: "ستوب موشن",
       client: "وكالة · السعودية",
       description:
-        "فيلم ستوب موشن بالذكاء الاصطناعي متكتب باللهجة السعودية، ومونتاجه ماشي ورا الڤويس أوفر — نفس النظام بصوت جديد.",
+        "ريلز ستوب موشن بالذكاء الاصطناعي متكتب باللهجة السعودية، ومونتاجه ماشي ورا الڤويس أوفر — نفس النظام بصوت جديد.",
     },
     {
       title: "Easy Way — اللص الذي سرق الاسم",
-      tag: "فيلم AI",
+      tag: "إعلان AI",
       client: "قانوني / ملكية فكرية",
       description:
         "ريلز سينمائي بالذكاء الاصطناعي متعمل من أوله لآخره: سيناريو، وأوراق شخصيات، ولقطات Veo، وڤويس أوفر عربي، ومونتاج نهائي.",
     },
     {
       title: "Golf City Club — كل الرياضات في مكان واحد",
-      tag: "فيلم AI",
+      tag: "إعلان AI",
       client: "نادي رياضي",
       description:
-        "فيلم رياضي سينمائي طولي متجمّع من لقطات Veo 3.1 بانتقالات مورف، لنادي بيتابعه 188 ألف شخص.",
+        "ريلز رياضي سينمائي طولي متجمّع من لقطات Veo 3.1 بانتقالات مورف، لنادي بيتابعه 188 ألف شخص.",
     },
     {
       title: "الوصيف موتورز — يومُك… وسيارتُك",
-      tag: "فيلم AI",
+      tag: "إعلان AI",
       client: "معرض عربيات",
       description:
-        "فيلم إعلاني سينمائي بالذكاء الاصطناعي لمعرض عربيات — حكاية يوم كامل بتمشي مع سواق من قهوة الصبح لحد ما يمسك عجلة عربيته الجديدة، متكتبة ومتخرجة ومتعملة بالكامل بالذكاء الاصطناعي.",
+        "إعلان سينمائي بالذكاء الاصطناعي لمعرض عربيات — حكاية يوم كامل بتمشي مع سواق من قهوة الصبح لحد ما يمسك عجلة عربيته الجديدة، متكتبة ومتخرجة ومتعملة بالكامل بالذكاء الاصطناعي.",
     },
     {
       title: "د. أحمد الكاشف — حركة بلا ألم",
-      tag: "فيلم AI",
+      tag: "إعلان AI",
       client: "عيادة عمود فقري ومفاصل",
       description:
-        "فيلم براند سينمائي بالذكاء الاصطناعي لعيادة عظام متخصصة في العمود الفقري والمفاصل — أب تعبان من وجع ضهره وبيتفرّج على الحياة ماشية من غيره، لحد ما لوجو العيادة يظهر في رسمة عمود فقري منوّرة. الحكاية واللقطات وأنيميشن اللوجو كلها بتوجيه الذكاء الاصطناعي.",
+        "إعلان سينمائي بالذكاء الاصطناعي لعيادة عظام متخصصة في العمود الفقري والمفاصل — أب تعبان من وجع ضهره وبيتفرّج على الحياة ماشية من غيره، لحد ما لوجو العيادة يظهر في رسمة عمود فقري منوّرة. الحكاية واللقطات وأنيميشن اللوجو كلها بتوجيه الذكاء الاصطناعي.",
     },
     {
       title: "Reels With Maki — إنها مشكلة حكاية",
       tag: "تايبوغرافي متحرّكة",
       client: "براند شخصي",
       description:
-        "فيلم تايبوغرافي متحرك عملته لبراندي الشخصي: الفكرة إن المشكلة محتاجة حكاية مش مجرد «محتوى أكتر» — أنا مش ماسك الكاميرا، أنا بوجّه الفكرة وبعدين بصوّب الذكاء الاصطناعي عليها لحد ما تبقى فيلم.",
+        "ريلز تايبوغرافي متحرك عملته لبراندي الشخصي: الفكرة إن المشكلة محتاجة حكاية مش مجرد «محتوى أكتر» — أنا مش ماسك الكاميرا، أنا بوجّه الفكرة وبعدين بصوّب الذكاء الاصطناعي عليها لحد ما تبقى ريلز.",
     },
     {
       title: "Reels With Maki — لِنُفكّر بحجم أكبر",
@@ -478,14 +472,14 @@ const ar: SiteContent = {
       tag: "هايبرفريم",
       client: "براند شخصي",
       description:
-        "الموقع ده نفسه اتحوّل لفيلم متحرك بـ Hyperframes — الأقسام والأدوات والشغل المختار اتعمل تاني موشن جرافيك من تصميم الموقع نفسه.",
+        "الموقع ده نفسه اتحوّل لريلز متحرك بـ Hyperframes — الأقسام والأدوات والشغل المختار اتعمل تاني موشن جرافيك من تصميم الموقع نفسه.",
     },
     {
       title: "محمد عباس موتورز — قسّطها",
       tag: "أنيميشن واجهات",
       client: "معرض عربيات",
       description:
-        "فكرة أنيميشن واجهات خفيفة ولذيذة لمعرض عربيات بيبيع جديد ومستعمل بالتقسيط — مش تطبيق حقيقي. العربيات بتعدّي، وضغطة على «قسّطها» تحت تويوتا فورتشنر، وموافقة فورية: العرض كله في شكل واجهة تطبيق، متعمل بالكامل بالكود.",
+        "فكرة أنيميشن واجهات خفيفة ولذيذة لمعرض عربيات بيبيع جديد ومستعمل بالتقسيط — مش تطبيق حقيقي. العربيات بتعدّي، وضغطة على «قسّطها» تحت تويوتا فورتشنر، وموافقة فورية: العرض كله في شكل واجهة تطبيق، متعمل بالكامل بالكود بتوجيه الذكاء الاصطناعي.",
     },
     {
       title: "محمد عباس موتورز — اسأل ChatGPT",
@@ -499,7 +493,7 @@ const ar: SiteContent = {
       tag: "أنيميشن واجهات",
       client: "عربيات · تمويل",
       description:
-        "ريلز أنيميشن واجهات لمعرض عربيات وشركة تمويل — متصمّم ومتحرك بالكامل بالكود من أصول البراند نفسه.",
+        "ريلز أنيميشن واجهات لمعرض عربيات وشركة تمويل — متصمّم ومتحرك بالكامل بالكود بتوجيه الذكاء الاصطناعي من أصول البراند نفسه.",
     },
     {
       title: "Demo Star — تجربة أزياء رجالية",
@@ -510,14 +504,14 @@ const ar: SiteContent = {
     },
     {
       title: "الوصيف موتورز — عمره ما ساقه",
-      tag: "فيلم AI",
+      tag: "إعلان AI",
       client: "معرض عربيات · جيلي EX2",
       description:
         "ريلز سينمائي بالذكاء الاصطناعي لإطلاق جيلي EX2 الكهربائية: فزلوكة القهوة قاعد يخوّف من العربيات الصيني، لحد ما الراجل اللي ساقها فعلاً يرد عليه والمفتاح في إيده. الشخصيات واللقطات والڤويس أوفر العربي كلهم بتوجيه الذكاء الاصطناعي، لقطة لقطة.",
     },
     {
       title: "تراست موتورز — الفرصة الحلوة ما بتستناش",
-      tag: "فيلم AI",
+      tag: "إعلان AI",
       client: "معرض عربيات · القاهرة",
       description:
         "تيزر سينمائي بالذكاء الاصطناعي لمعرض عربيات متعدد الماركات في القاهرة — عربية واحدة لامعة واقفة تحت سبوت لايت وسط مخزن مليان عربيات قديمة متغطية بالتراب، على جملة واحدة: في فرص ما بتستناش. اللقطات السينمائية والڤويس أوفر العربي والتايبوغرافي المتحركة كلها بتوجيه الذكاء الاصطناعي، لقطة لقطة.",
@@ -527,7 +521,7 @@ const ar: SiteContent = {
     name: "أحمد مكي",
     eyebrow: "شوية عنّي",
     title: [{ t: "خريج حقوق.. وبقيت " }, { t: "كرييتف", accent: true }],
-    p1: "درست حقوق في عين شمس، وبعدين مشيت ورا الأفكار. في Renew Media، أنا ورا أفكار أكتر من 15 براند: بعمل البحث، وبطلع بالـ Insight الحقيقي اللي البراند يقدر يملكه، وبحوله لخطط محتوى وحملات وأفلام.",
+    p1: "درست حقوق في عين شمس، وبعدين مشيت ورا الأفكار. في Renew Media، أنا ورا أفكار أكتر من 15 براند: بعمل البحث، وبطلع بالـ Insight الحقيقي اللي البراند يقدر يملكه، وبحوله لخطط محتوى وحملات وإعلانات.",
     p2: "أنا مش بشغّل كاميرات ولا بكتب كود. أنا بوجّه أدوات الـ AI — زي Veo وFLUX وGemini وClaude — زي ما المخرج بيدير اللوكيشن، وبعدين بمنتج اللقطات بنفسي لحد النسخة النهائية: الإيقاع، الصوت، والـ Final Cut. الفكرة والبريف والقرار النهائي بتاعي. وكل كلمة بتطلع بعامية مصرية طبيعية، متراجعة لحد ما تتأكد إن مفيهاش ريحة الـ AI.",
     stats: [
       { n: "+15", label: "عميل" },
@@ -542,19 +536,19 @@ const ar: SiteContent = {
         tag: "ريبراندنج",
         period: "أزياء رجالية",
         title: "Demo Star",
-        body: "عملنا ريبراندنج لمصنع هدوم من 1998 لبراند أزياء رجالي استهلاكي: فككنا 6 براندات محلية، طلعنا بلاين الحملة «حاضر ليومك. جاهز لكل يوم.»، وكتالوج محتوى فيه 150 فكرة.",
+        body: "ريبراندنج لمصنع هدوم من 1998 لبراند أزياء رجالي استهلاكي: تفكيك 6 براندات محلية، لاين الحملة «حاضر ليومك. جاهز لكل يوم.»، وكتالوج محتوى فيه 150 فكرة.",
       },
       {
-        tag: "فيلم AI",
+        tag: "إعلان AI",
         period: "قانوني / ملكية فكرية",
         title: "Easy Way",
         body: "«اللص الذي سرق الاسم» — ريلز سينمائي بالـ AI من أول لقطة لآخر قطع: سيناريو، بروفايل الشخصيات، لقطات Veo، ڤويس أوفر، ومونتاج نهائي. ومعاه بنك 24 فكرة بيغطي الـ 8 خدمات كلهم.",
       },
       {
-        tag: "فيلم AI",
+        tag: "إعلان AI",
         period: "نادي رياضي",
         title: "Golf City Club",
-        body: "«كل الرياضات في مكان واحد» — فيلم رياضي سينمائي بالطول متجمّع من لقطات Veo 3.1 بانتقالات Morph، مع 20 فكرة ريلز جاهزة لنادي بيتابعه 188 ألف شخص.",
+        body: "«كل الرياضات في مكان واحد» — ريلز رياضي سينمائي بالطول متجمّع من لقطات Veo 3.1 بانتقالات مورف، مع 20 فكرة ريلز جاهزة لنادي بيتابعه 188 ألف شخص.",
       },
       {
         tag: "تأسيس براند",
@@ -565,14 +559,14 @@ const ar: SiteContent = {
       {
         tag: "رؤى وأفكار",
         period: "عربيات",
-        title: "M.A. Motors",
-        body: "إنسايت واحد شال الحساب كله: “الناس بتخاف من سؤال «بتكسب كام؟» أكتر من السعر نفسه”. 20 فكرة متقيمة مبنية على «من غير إثبات دخل»، مع ريلز بالـ AI مدته 15 ثانية.",
+        title: "Mohamed Abbas Motors",
+        body: "إنسايت واحد شال الحساب كله: «الناس بتخاف من سؤال ‘بتكسب كام؟’ أكتر من السعر نفسه». 20 فكرة متقيمة مبنية على «من غير إثبات دخل»، مع ريلز بالـ AI مدته 15 ثانية.",
       },
       {
         tag: "محرّك محتوى",
         period: "وكالة",
         title: "Renew Media",
-        body: "مكنة المحتوى بتاعة الوكالة نفسها: كتالوج 150 فكرة لسنة 2026، وفيلمين ستوب موشن بالـ AI: «الحكاية التي تتذكّرها» لمصر، و«نجم الحفلة» مكتوب باللهجة السعودية.",
+        body: "مكنة المحتوى بتاعة الوكالة نفسها: كتالوج 150 فكرة لسنة 2026، واتنين ريلز ستوب موشن بالـ AI: «الحكاية التي تتذكّرها» لمصر، و«نجم الحفلة» مكتوب باللهجة السعودية.",
       },
     ],
     more: "…وكمان Geroland وQuick Loan وTrust Motors وAccess Laptop، وغيرهم في 10 مجالات.",
@@ -580,13 +574,13 @@ const ar: SiteContent = {
   midCta: { text: "شوفت كفاية؟ قوللي بتبني إيه.", button: "يلا نتكلم" },
   process: {
     title: [{ t: "طريقة " }, { t: "شغلي", accent: true }],
-    lede: "سيستم محتوى متكامل، مش بوستات متفرّقة: بحث، استراتيجية، أفكار، وإنتاج — بتطبق بنفس الطريقة على كل براند.",
+    lede: "سيستم محتوى متكامل، مش بوستات متفرّقة: بحث، استراتيجية، أفكار، وإنتاج — بطبّقها بنفس الطريقة على كل براند.",
     steps: [
       { n: "01", t: "البحث والإنسايت", b: "ببدأ بالسوق والمنافسين والجمهور. بدوّر على الإنسايت الحقيقي الواحد اللي البراند يقدر يبني عليه — قبل ما أكتب أي فكرة." },
       { n: "02", t: "الاستراتيجية وعواميد المحتوى", b: "زاوية واحدة البراند يملكها، وعواميد محتوى (Content Pillars) موزونة، عشان الحساب يبقى ليه اتجاه واضح بدل البوستات العشوائية." },
       { n: "03", t: "الأفكار وخطة المحتوى", b: "خطة محتوى متفصلة على مقاس البراند والميزانية — لشهر أو أكتر — بأفكار كاملة: الهوك، الفورمات، الريفرانس، والكابشن — جاهزة للتصوير." },
-      { n: "04", t: "الإنتاج", b: "من ليستة التصوير لأفلام الـ AI. بوجّه الأدوات (Veo وFLUX وGemini) والكاميرا بنفس العقلية: الفكرة والريفرانس والقرار النهائي بتاعي." },
-      { n: "05", t: "اللمسة البشرية والمراجعة", b: "جولات مراجعة لحد ما أتاكد إن مفيش أي حاجة تبان معمولة بالـ AI — النص، النطق، والعربي مظبوط حرف حرف بعامية مصرية حقيقية." },
+      { n: "04", t: "الإنتاج", b: "من ليستة التصوير لإعلانات الـ AI. بوجّه الأدوات (Veo وFLUX وGemini) والكاميرا بنفس العقلية: الفكرة والريفرانس والقرار النهائي بتاعي." },
+      { n: "05", t: "اللمسة البشرية والمراجعة", b: "جولات مراجعة لحد ما أتأكد إن مفيش أي حاجة تبان معمولة بالـ AI — النص، النطق، والعربي مظبوط حرف حرف بعامية مصرية حقيقية." },
       { n: "06", t: "التسليم والتحسين", b: "مراجعات على مراحل، فولدرات متقسمة صح، ومحدش بيمسح حاجة. وبعدين بحلل الأرقام عشان أحسّن الشغل في الدفعة اللي بعدها." },
     ],
   },

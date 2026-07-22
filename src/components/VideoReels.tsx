@@ -4,47 +4,7 @@ import { useLang } from "@/i18n";
 import MorphWord from "@/components/MorphWord";
 import Doodle from "@/components/Doodle";
 import FireFrame from "@/components/FireFrame";
-import renewStoryPoster from "@/assets/posters/renew_story.webp";
-import renewStarPoster from "@/assets/posters/renew_star.webp";
-import easyWayPoster from "@/assets/posters/easy_way.webp";
-import golfCityPoster from "@/assets/posters/golf_city.webp";
-import alwassefPoster from "@/assets/posters/alwassef.webp";
-import alwassefGeelyPoster from "@/assets/posters/alwassef_geely.webp";
-import drKashefPoster from "@/assets/posters/dr_kashef.webp";
-import textMotionPoster from "@/assets/posters/text_motion.webp";
-import letsGoBigPoster from "@/assets/posters/lets_go_big.webp";
-import hyperframePoster from "@/assets/posters/hyperframe.webp";
-import abbasAppPoster from "@/assets/posters/abbas_app.webp";
-import abbasChatPoster from "@/assets/posters/abbas_chatgpt.webp";
-import quickLoanPoster from "@/assets/posters/quick_loan.webp";
-import demoStarPoster from "@/assets/posters/demo_star.webp";
-import trustMotorsPoster from "@/assets/posters/trust_motors.webp";
-
-// Every film is hosted on Cloudinary (cloud "ahmedmakyy") so the source tree
-// carries no video weight. Posters stay bundled (a few KB of webp each) for an
-// instant first paint of each reel card — the mp4 only loads once a card is
-// opened in the lightbox.
-const CLOUD = "https://res.cloudinary.com/ahmedmakyy/video/upload";
-
-// Media + a stable, language-independent `slug` (used for shareable deep links,
-// ?v=<slug>). Order MUST match CONTENT[lang].videos.
-const VIDEO_MEDIA = [
-  { slug: "renew-story", src: `${CLOUD}/v1784334179/compressO-renew_media_motion_graphic_ybku0x.mp4`, poster: renewStoryPoster },
-  { slug: "renew-star", src: `${CLOUD}/v1784334122/compressO-RENEW_MEDIA_MOTION_KSA_kjlqd8.mp4`, poster: renewStarPoster },
-  { slug: "easy-way", src: `${CLOUD}/v1784335254/easy_way_iwy4h2.mp4`, poster: easyWayPoster },
-  { slug: "golf-city", src: `${CLOUD}/v1784334512/compressO-%D8%AC%D9%88%D9%84%D9%81_%D8%B3%D9%8A%D8%AA%D9%8A_zzudoe.mp4`, poster: golfCityPoster },
-  { slug: "alwassef", src: `${CLOUD}/v1784334088/elwaseef_final_hfkw8g.mp4`, poster: alwassefPoster },
-  { slug: "dr-elkashef", src: `${CLOUD}/v1784335848/0625_1_1_l1vbcl.mp4`, poster: drKashefPoster },
-  { slug: "story-problem", src: `${CLOUD}/v1784334599/text-motion_muphmj.mp4`, poster: textMotionPoster },
-  { slug: "lets-go-big", src: `${CLOUD}/v1784334583/lets-go-big_jhm6wz.mp4`, poster: letsGoBigPoster },
-  { slug: "portfolio-in-motion", src: `${CLOUD}/v1784336497/portfolio-hyperframe_ptwnet.mp4`, poster: hyperframePoster },
-  { slug: "abbas-app", src: `${CLOUD}/v1784334048/compressO-%D9%85%D8%AD%D9%85%D8%AF_%D8%B9%D8%A8%D8%A7%D8%B3_ui_animation_vid_fbcazt.mp4`, poster: abbasAppPoster },
-  { slug: "abbas-chat", src: `${CLOUD}/v1784334561/abbas-motors-chatgpt-ad_kbei7j.mp4`, poster: abbasChatPoster },
-  { slug: "quick-loan", src: `${CLOUD}/v1784334687/quick-loan-ui-animation_ebdlro.mp4`, poster: quickLoanPoster },
-  { slug: "demo-star", src: `${CLOUD}/v1784334649/demo-star-ui-animation_k10svm.mp4`, poster: demoStarPoster },
-  { slug: "alwassef-geely", src: `${CLOUD}/v1784573775/ELWASEEF_GEELY_biqo85.mp4`, poster: alwassefGeelyPoster },
-  { slug: "trust-motors", src: `${CLOUD}/v1784673874/chance_v2_oxaram.mp4`, poster: trustMotorsPoster },
-];
+import { VIDEO_MEDIA } from "@/video-media";
 
 // Each labelled reel group shows this list of indices (into VIDEO_MEDIA /
 // CONTENT[lang].videos). Order MUST match CONTENT[lang].videosSection.groups.
@@ -52,10 +12,10 @@ const VIDEO_MEDIA = [
 //   6 It's a Story Problem · 7 Let's Go Big · 8 Portfolio in Motion
 //   9 Abbas App · 10 Abbas Chat · 11 Quick Loan · 12 Demo Star
 //   13 Alwassef Geely EX2 · 14 Trust Motors
-// Group 0 (Cinematic AI Films) leads as a FEATURED bento — its first index is
-// the hero tile, so put the strongest film there.
+// Group 0 (Cinematic AI Ads) leads as a FEATURED bento — its first index is
+// the hero tile, so put the strongest reel there.
 const VIDEO_GROUPS: number[][] = [
-  [0, 1, 2, 3, 4, 5, 13, 14], // Cinematic AI Films  → featured bento
+  [0, 1, 2, 3, 4, 5, 13, 14], // Cinematic AI Ads  → featured bento
   [6, 7, 8],              // Motion Graphics & Type
   [9, 10, 11, 12],        // UI Animation
 ];
