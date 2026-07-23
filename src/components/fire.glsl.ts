@@ -342,8 +342,12 @@ float fFrameFire(vec2 uv, vec4 card, float cardR, float cardIg, float uTime, out
   heat*=0.94 + 0.10*sin(uTime*1.1 - ang*3.0);
   heat=max(heat,0.0);
 
-  // cool smoke drifting up off the TOP edge only (seamless nc-based)
-  float topband=smoothstep(0.25,1.0,up)*exp(-max(0.0,sd)/70.0);
+  // cool smoke drifting up off the TOP edge only (seamless nc-based).
+  // MUST be masked by the "outside" term: exp(-max(0.0,sd)/70.0) evaluates to 1.0 for
+  // EVERY pixel inside the frame (max(0,sd)=0 there), which painted dark wispy
+  // streaks straight across the video itself — the artefact that vanished the
+  // moment the bare <video> went native-fullscreen.
+  float topband=smoothstep(0.25,1.0,up)*exp(-max(0.0,sd)/70.0)*outside;
   float sm=fFbm(nc*0.5 + vec2(0.0,-uTime*0.4));
   smoke=max(0.0,sm-0.50)*topband*reveal*0.7;
 

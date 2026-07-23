@@ -177,17 +177,18 @@ function ReelCard({
       // activation (Enter/Space) never fires mousedown, so tab-focus + its
       // focus-return on close are untouched.
       onMouseDown={(e) => e.preventDefault()}
+      // Hover-preview arms on the WHOLE card, and listens to both the pointer
+      // and mouse families — belt-and-braces so it can never miss a hover.
+      onPointerEnter={pv.start}
+      onPointerLeave={pv.stop}
+      onMouseEnter={pv.start}
+      onMouseLeave={pv.stop}
       aria-label={`${c.player.play}: ${v.title}`}
     >
       {/* data-liquid marks the whole tile as a liquid-lens region; the lens
           samples the poster <img> inside it (the tile's overlays sit above the
           image, so the region must be the container, not the img). */}
-      <span
-        className="reel-thumb"
-        data-liquid=""
-        onPointerEnter={pv.start}
-        onPointerLeave={pv.stop}
-      >
+      <span className="reel-thumb" data-liquid="">
         <img
           ref={imgRef}
           src={media.poster}
@@ -257,14 +258,13 @@ function StageCard({ onPlay }: { onPlay: (gi: number) => void }) {
       className="reel-card reel-card--stage"
       onClick={() => onPlay(HERO_GI)}
       onMouseDown={(e) => e.preventDefault()}
+      onPointerEnter={pv.start}
+      onPointerLeave={pv.stop}
+      onMouseEnter={pv.start}
+      onMouseLeave={pv.stop}
       aria-label={`${c.player.play}: ${v.title}`}
     >
-      <span
-        className="reel-thumb"
-        data-liquid=""
-        onPointerEnter={pv.start}
-        onPointerLeave={pv.stop}
-      >
+      <span className="reel-thumb" data-liquid="">
         <img
           ref={imgRef}
           src={media.poster}
