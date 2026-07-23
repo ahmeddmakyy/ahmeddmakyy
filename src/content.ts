@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────
-// Bilingual site content (English + Modern Standard Arabic).
+// Bilingual site content (English + Egyptian colloquial Arabic).
 // Brand names, tool names, project names, emails and numbers are
 // intentionally kept in Latin script inside the Arabic copy.
 // Rich[] lets a headline mark specific words as the orange accent.
@@ -112,7 +112,7 @@ const en: SiteContent = {
       "The idea, the brief, the edit, and the final call — that part is mine. AI does the heavy lifting.",
     ratingNum: "15+",
     ratingLabel: "Clients Served",
-    ctaWork: "See My Work",
+    ctaWork: "Watch the reels",
     ctaHire: "Let’s talk",
     photoAlt: "Ahmed Maki, AI content creator and video editor",
   },
@@ -122,7 +122,7 @@ const en: SiteContent = {
     cards: [
       {
         title: "Brand Strategy & Content Planning",
-        body: "Competitor teardowns, one owned proposition per brand, weighted content pillars, and content plans sized to the brand and budget — from a single month to a multi-month catalog of fully specified ideas.",
+        body: "Competitor teardowns, one proposition each brand can own, weighted content pillars, and content plans sized to the brand and budget — from a single month to a multi-month catalog of fully specified ideas.",
       },
       {
         title: "AI Video Production",
@@ -225,10 +225,10 @@ const en: SiteContent = {
     },
     {
       title: "Reels With Maki — Portfolio in Motion",
-      tag: "Hyperframes",
+      tag: "HyperFrames",
       client: "Personal Brand",
       description:
-        "This very website turned into an animated reel with Hyperframes — sections, tools, and selected work rebuilt as motion graphics from the site’s own design.",
+        "This very website turned into an animated reel with HyperFrames — sections, tools, and selected work rebuilt as motion graphics from the site’s own design.",
     },
     {
       title: "Mohamed Abbas Motors — Finance It",
@@ -252,11 +252,11 @@ const en: SiteContent = {
         "A UI animation reel for a car dealership and financing brand — designed and animated entirely in code, directed with AI, from the brand’s own assets.",
     },
     {
-      title: "Demo Star — Men’s Fashion Experience",
+      title: "Demo Star — Men’s Fashion, In Motion",
       tag: "UI Animation",
       client: "Menswear",
       description:
-        "A product showcase animated entirely in code — HTML, CSS and JS directed with AI, rendered as a vertical fashion reel for the menswear brand.",
+        "A menswear product reel animated entirely in code — HTML, CSS and JS directed with AI, rendered as a vertical showcase for the brand.",
     },
     {
       title: "Alwassef Motors — He’s Never Driven One",
@@ -341,7 +341,7 @@ const en: SiteContent = {
     ],
     more: "…plus Geroland, Quick Loan, Trust Motors, Access Laptop, and more across 10 industries.",
   },
-  midCta: { text: "Seen enough? Tell me what you’re building.", button: "Let’s talk" },
+  midCta: { text: "Seen enough? Tell me about your brand.", button: "Let’s talk" },
   process: {
     title: [{ t: "How I " }, { t: "Work", accent: true }],
     lede: "A full content system, not one-off posts: research, strategy, ideas, and production — the same way for every brand.",
@@ -388,7 +388,7 @@ const ar: SiteContent = {
       "الفكرة، والبريف، والمونتاج، والقرار النهائي — الجزء ده بتاعي. والذكاء الاصطناعي بيشيل الحِمل التقيل.",
     ratingNum: "+15",
     ratingLabel: "عميل اشتغلت معاهم",
-    ctaWork: "شوف شغلي",
+    ctaWork: "شوف الريلز",
     ctaHire: "يلا نتكلم",
     photoAlt: "أحمد مكي، صانع محتوى بالذكاء الاصطناعي ومونتير فيديو",
   },
@@ -504,7 +504,7 @@ const ar: SiteContent = {
       tag: "هايبرفريم",
       client: "براند شخصي",
       description:
-        "الموقع ده نفسه اتحوّل لريلز متحرك بـ Hyperframes — الأقسام والأدوات والشغل المختار اتعمل تاني موشن جرافيك من تصميم الموقع نفسه.",
+        "الموقع ده نفسه اتحوّل لريلز متحرك بـ HyperFrames — الأقسام والأدوات والشغل المختار اتعمل تاني موشن جرافيك من تصميم الموقع نفسه.",
     },
     {
       title: "محمد عباس موتورز — قسّطها",
@@ -528,11 +528,11 @@ const ar: SiteContent = {
         "ريلز أنيميشن واجهات لمعرض عربيات وشركة تمويل — متصمّم ومتحرك بالكامل بالكود بتوجيه الذكاء الاصطناعي من أصول البراند نفسه.",
     },
     {
-      title: "Demo Star — تجربة أزياء رجالية",
+      title: "Demo Star — أزياء رجالية بتتحرك",
       tag: "أنيميشن واجهات",
       client: "أزياء رجالية",
       description:
-        "عرض منتج متحرك بالكامل بالكود — HTML وCSS وJS بتوجيه الذكاء الاصطناعي، كريلز أزياء طولي للبراند.",
+        "ريلز أزياء رجالية متحرك بالكامل بالكود — HTML وCSS وJS بتوجيه الذكاء الاصطناعي، معمول كعرض منتجات طولي للبراند.",
     },
     {
       title: "الوصيف موتورز — عمره ما ساقه",
@@ -566,8 +566,8 @@ const ar: SiteContent = {
   about: {
     name: "أحمد مكي",
     eyebrow: "شوية عنّي",
-    title: [{ t: "خريج حقوق.. وبقيت " }, { t: "كرييتف", accent: true }],
-    p1: "درست حقوق في عين شمس، وبعدين مشيت ورا الأفكار. في Renew Media، أنا ورا أفكار أكتر من 15 براند: بعمل البحث، وبطلع بالـ Insight الحقيقي اللي البراند يقدر يملكه، وبحوله لخطط محتوى وحملات وإعلانات.",
+    title: [{ t: "خريج حقوق… وبقيت " }, { t: "كرييتف", accent: true }],
+    p1: "درست حقوق في عين شمس، وبعدين مشيت ورا الأفكار. في Renew Media، أنا ورا أفكار أكتر من 15 براند: بعمل البحث، وبطلع بالإنسايت الحقيقي اللي البراند يقدر يملكه، وبحوله لخطط محتوى وحملات وإعلانات.",
     p2: "أنا مش بشغّل كاميرات ولا بكتب كود. أنا بوجّه أدوات الـ AI — زي Veo وFLUX وGemini وClaude — زي ما المخرج بيدير اللوكيشن، وبعدين بمنتج اللقطات بنفسي لحد النسخة النهائية: الإيقاع، الصوت، والـ Final Cut. الفكرة والبريف والقرار النهائي بتاعي. وكل كلمة بتطلع بعامية مصرية طبيعية، متراجعة لحد ما تتأكد إن مفيهاش ريحة الـ AI.",
     stats: [
       { n: "+15", label: "عميل" },
@@ -617,14 +617,14 @@ const ar: SiteContent = {
     ],
     more: "…وكمان Geroland وQuick Loan وTrust Motors وAccess Laptop، وغيرهم في 10 مجالات.",
   },
-  midCta: { text: "شوفت كفاية؟ قوللي بتبني إيه.", button: "يلا نتكلم" },
+  midCta: { text: "شوفت كفاية؟ قوللي عن البراند بتاعك.", button: "يلا نتكلم" },
   process: {
     title: [{ t: "طريقة " }, { t: "شغلي", accent: true }],
     lede: "سيستم محتوى متكامل، مش بوستات متفرّقة: بحث، استراتيجية، أفكار، وإنتاج — بطبّقها بنفس الطريقة على كل براند.",
     steps: [
       { n: "01", t: "البحث والإنسايت", b: "ببدأ بالسوق والمنافسين والجمهور. بدوّر على الإنسايت الحقيقي الواحد اللي البراند يقدر يبني عليه — قبل ما أكتب أي فكرة." },
       { n: "02", t: "الاستراتيجية وعواميد المحتوى", b: "زاوية واحدة البراند يملكها، وعواميد محتوى (Content Pillars) موزونة، عشان الحساب يبقى ليه اتجاه واضح بدل البوستات العشوائية." },
-      { n: "03", t: "الأفكار وخطة المحتوى", b: "خطة محتوى متفصلة على مقاس البراند والميزانية — لشهر أو أكتر — بأفكار كاملة: الهوك، الفورمات، الريفرانس، والكابشن — جاهزة للتصوير." },
+      { n: "03", t: "الأفكار وخطة المحتوى", b: "خطة محتوى متفصلة على مقاس البراند والميزانية — لشهر أو أكتر — بأفكار كاملة: الهوك، الفورمات، اللقطة، والكابشن — جاهزة للتصوير." },
       { n: "04", t: "الإنتاج", b: "من ليستة التصوير لإعلانات الـ AI. بوجّه الأدوات (Veo وFLUX وGemini) والكاميرا بنفس العقلية: الفكرة والريفرانس والقرار النهائي بتاعي." },
       { n: "05", t: "اللمسة البشرية والمراجعة", b: "جولات مراجعة لحد ما أتأكد إن مفيش أي حاجة تبان معمولة بالـ AI — النص، النطق، والعربي مظبوط حرف حرف بعامية مصرية حقيقية." },
       { n: "06", t: "التسليم والتحسين", b: "مراجعات على مراحل، فولدرات متقسمة صح، ومحدش بيمسح حاجة. وبعدين بحلل الأرقام عشان أحسّن الشغل في الدفعة اللي بعدها." },
