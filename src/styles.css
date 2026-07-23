@@ -2280,8 +2280,12 @@ html[lang="ar"] .name-reveal { direction: rtl; }
   gap: clamp(1rem, 1.6vw, 1.5rem) clamp(1.25rem, 2.4vw, 2.25rem);
 }
 
-/* ── Featured stage: the strongest reel, constant across every filter ── */
-.reel-card--stage { grid-area: stage; width: 100%; height: 100%; }
+/* ── Featured stage: the strongest reel, constant across every filter ──
+   NB: two classes (.reel-card.reel-card--stage) so this width beats the leftover
+   rail rule `.reel-card { width: clamp(...) }` that sits later in the file —
+   without it the stage button collapses to the rail width and the poster gets
+   squeezed to a too-tall, over-cropped sliver. */
+.reel-card.reel-card--stage { grid-area: stage; width: 100%; height: 100%; }
 .reel-card--stage .reel-thumb {
   height: 100%;
   aspect-ratio: auto;
@@ -2490,15 +2494,11 @@ html[lang="ar"] .name-reveal { direction: rtl; }
 /* the arrows would crowd the fit-to-screen mobile lightbox — hide there */
 @media (max-width: 899px) { .reel-lightbox-arrow { display: none; } }
 
-/* ── Tablet: stage stacks on top, grid still caps at 6 ── */
+/* ── Tablet keeps the 2-column, grid-driven stage (fr columns hold the 9:16);
+   full-width single-column at tablet width would make the stage far too tall. ── */
 @media (max-width: 1023px) and (min-width: 768px) {
-  .reels-gallery {
-    grid-template-columns: 1fr;
-    grid-template-areas: "stage" "tabs" "grid" "foot";
-    grid-template-rows: auto auto auto auto;
-    gap: clamp(1rem, 2vw, 1.5rem);
-  }
-  .reel-card--stage .reel-thumb { min-height: 22rem; }
+  .reels-gallery { grid-template-columns: 0.9fr 1.1fr; }
+  .reel-card--stage .reel-thumb { min-height: 0; }
 }
 
 /* ── Mobile: single column, chip rail, 2×2 grid (cap 4) ── */
@@ -2509,6 +2509,10 @@ html[lang="ar"] .name-reveal { direction: rtl; }
     grid-template-rows: auto auto auto auto;
     gap: 1rem;
   }
+  /* natural full-width 9:16 on phones. height:auto drops the desktop grid-stretch;
+     max-width:none clears the leftover rail-era cap (.reel-card{max-width:16.25rem}
+     at ≤760px) that was pinning the stage to 260px. */
+  .reel-card.reel-card--stage { height: auto; max-width: none; }
   .reel-card--stage .reel-thumb { height: auto; aspect-ratio: 9 / 16; min-height: 0; }
   .reel-card--stage .reel-stage-desc { -webkit-line-clamp: 3; }
   /* chips become a horizontal scroll-snap rail so all four fit one swipe */
