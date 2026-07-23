@@ -12,8 +12,8 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { LanguageProvider } from "@/i18n";
-import { CONTENT } from "@/content";
-import { VIDEO_MEDIA, posterUrlFromSrc, uploadDateFromSrc } from "@/video-media";
+import { posterUrlFromSrc, uploadDateFromSrc } from "@/video-media";
+import { fallbackData, loadSiteData, type SiteData } from "@/lib/site-data";
 
 function NotFoundComponent() {
   return (
@@ -82,136 +82,147 @@ const OG_IMAGE =
   "https://storage.googleapis.com/gpt-engineer-file-uploads/kBYrN7AScPVPxk5LcflXYJzXNIJ2/social-images/social-1783643425130-ChatGPT_Image_Jul_10,_2026,_03_30_14_AM.webp";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { name: "theme-color", content: "#050505" },
-      // "Add to Home Screen" launches standalone, edge-to-edge, no browser chrome
-      // — the layout already honours viewport-fit=cover + safe-area insets.
-      { name: "mobile-web-app-capable", content: "yes" },
-      { name: "apple-mobile-web-app-capable", content: "yes" },
-      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
-      { name: "apple-mobile-web-app-title", content: "Maki" },
-      { title: SITE_TITLE },
-      { name: "description", content: SITE_DESC },
-      { name: "author", content: "Ahmed Maki" },
-      { property: "og:site_name", content: "Reels With Maki" },
-      { property: "og:title", content: SITE_TITLE },
-      { property: "og:description", content: SITE_DESC },
-      { property: "og:type", content: "profile" },
-      { property: "profile:first_name", content: "Ahmed" },
-      { property: "profile:last_name", content: "Maki" },
-      { property: "og:locale", content: "en_US" },
-      { property: "og:locale:alternate", content: "ar_EG" },
-      { property: "og:url", content: "https://ahmeddmakyy.lovable.app/" },
-      { property: "og:image", content: OG_IMAGE },
-      { property: "og:image:alt", content: "Ahmed Maki — AI content creator & video editor" },
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: SITE_TITLE },
-      { name: "twitter:description", content: SITE_DESC },
-      { name: "twitter:image", content: OG_IMAGE },
-      { name: "twitter:image:alt", content: "Ahmed Maki — AI content creator & video editor" },
-    ],
-    links: [
-      { rel: "canonical", href: "https://ahmeddmakyy.lovable.app/" },
-      { rel: "manifest", href: "/manifest.webmanifest" },
-      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
-      { rel: "stylesheet", href: appCss },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap",
-      },
-    ],
-    scripts: [
-      {
-        type: "application/ld+json",
-        children: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "ProfilePage",
-          mainEntity: {
-            "@type": "Person",
-            name: "Ahmed Maki",
-            alternateName: "Reels With Maki",
-            jobTitle: "AI Content Creator & Video Editor",
-            description: SITE_DESC,
-            url: "https://ahmeddmakyy.lovable.app/",
-            email: "ahmeddmakyy@gmail.com",
-            image: OG_IMAGE,
-            sameAs: [
-              "https://www.instagram.com/reelswithmaki/",
-              "https://www.linkedin.com/in/ahmeddmakyy11",
-            ],
-            address: {
-              "@type": "PostalAddress",
-              addressLocality: "Cairo",
-              addressRegion: "Cairo",
-              addressCountry: "EG",
+  // Runs on the server for the first request, so the reels are already in the
+  // HTML — the VideoObject markup below stays crawlable and there is no
+  // client-side loading state. loadSiteData never rejects.
+  loader: async (): Promise<SiteData> => loadSiteData(),
+
+  head: ({ loaderData }) => {
+    // head() can run before the loader settles; fall back so the SEO block is
+    // never emitted empty.
+    const data = loaderData ?? fallbackData();
+
+    return {
+      meta: [
+        { charSet: "utf-8" },
+        { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+        { name: "theme-color", content: "#050505" },
+        // "Add to Home Screen" launches standalone, edge-to-edge, no browser chrome
+        // — the layout already honours viewport-fit=cover + safe-area insets.
+        { name: "mobile-web-app-capable", content: "yes" },
+        { name: "apple-mobile-web-app-capable", content: "yes" },
+        { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+        { name: "apple-mobile-web-app-title", content: "Maki" },
+        { title: SITE_TITLE },
+        { name: "description", content: SITE_DESC },
+        { name: "author", content: "Ahmed Maki" },
+        { property: "og:site_name", content: "Reels With Maki" },
+        { property: "og:title", content: SITE_TITLE },
+        { property: "og:description", content: SITE_DESC },
+        { property: "og:type", content: "profile" },
+        { property: "profile:first_name", content: "Ahmed" },
+        { property: "profile:last_name", content: "Maki" },
+        { property: "og:locale", content: "en_US" },
+        { property: "og:locale:alternate", content: "ar_EG" },
+        { property: "og:url", content: "https://ahmeddmakyy.lovable.app/" },
+        { property: "og:image", content: OG_IMAGE },
+        { property: "og:image:alt", content: "Ahmed Maki — AI content creator & video editor" },
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:title", content: SITE_TITLE },
+        { name: "twitter:description", content: SITE_DESC },
+        { name: "twitter:image", content: OG_IMAGE },
+        { name: "twitter:image:alt", content: "Ahmed Maki — AI content creator & video editor" },
+      ],
+      links: [
+        { rel: "canonical", href: "https://ahmeddmakyy.lovable.app/" },
+        { rel: "manifest", href: "/manifest.webmanifest" },
+        { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+        { rel: "stylesheet", href: appCss },
+        { rel: "preconnect", href: "https://fonts.googleapis.com" },
+        { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+        {
+          rel: "stylesheet",
+          href: "https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap",
+        },
+      ],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ProfilePage",
+            mainEntity: {
+              "@type": "Person",
+              name: "Ahmed Maki",
+              alternateName: "Reels With Maki",
+              jobTitle: "AI Content Creator & Video Editor",
+              description: SITE_DESC,
+              url: "https://ahmeddmakyy.lovable.app/",
+              email: "ahmeddmakyy@gmail.com",
+              image: OG_IMAGE,
+              sameAs: [
+                "https://www.instagram.com/reelswithmaki/",
+                "https://www.linkedin.com/in/ahmeddmakyy11",
+              ],
+              address: {
+                "@type": "PostalAddress",
+                addressLocality: "Cairo",
+                addressRegion: "Cairo",
+                addressCountry: "EG",
+              },
+              worksFor: { "@type": "Organization", name: "Renew Media" },
+              alumniOf: { "@type": "CollegeOrUniversity", name: "Ain Shams University" },
+              knowsLanguage: ["ar", "en"],
+              hasOccupation: {
+                "@type": "Occupation",
+                name: "AI Content Creator & Video Editor",
+              },
+              knowsAbout: [
+                "AI video production",
+                "Video editing",
+                "Brand strategy",
+                "Copywriting",
+                "Content strategy",
+              ],
+              makesOffer: [
+                {
+                  "@type": "Offer",
+                  itemOffered: { "@type": "Service", name: "Brand Strategy & Content Planning" },
+                },
+                {
+                  "@type": "Offer",
+                  itemOffered: { "@type": "Service", name: "AI Video Production" },
+                },
+                {
+                  "@type": "Offer",
+                  itemOffered: { "@type": "Service", name: "Copywriting & Brand Voice" },
+                },
+              ],
             },
-            worksFor: { "@type": "Organization", name: "Renew Media" },
-            alumniOf: { "@type": "CollegeOrUniversity", name: "Ain Shams University" },
-            knowsLanguage: ["ar", "en"],
-            hasOccupation: {
-              "@type": "Occupation",
-              name: "AI Content Creator & Video Editor",
-            },
-            knowsAbout: [
-              "AI video production",
-              "Video editing",
-              "Brand strategy",
-              "Copywriting",
-              "Content strategy",
-            ],
-            makesOffer: [
-              {
-                "@type": "Offer",
-                itemOffered: { "@type": "Service", name: "Brand Strategy & Content Planning" },
+          }),
+        },
+        {
+          // One VideoObject per published reel, built from the same rows the
+          // grid renders so the markup can never drift from the page.
+          // thumbnailUrl + uploadDate are derived from each Cloudinary src.
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            name: "AI ads & reels by Ahmed Maki",
+            itemListElement: data.reels.map((r, i) => ({
+              "@type": "ListItem",
+              position: i + 1,
+              item: {
+                "@type": "VideoObject",
+                name: r.en.title,
+                description: r.en.description,
+                genre: r.en.tag,
+                thumbnailUrl: posterUrlFromSrc(r.src),
+                contentUrl: r.src,
+                uploadDate: uploadDateFromSrc(r.src),
+                creator: {
+                  "@type": "Person",
+                  name: "Ahmed Maki",
+                  url: "https://ahmeddmakyy.lovable.app/",
+                },
               },
-              {
-                "@type": "Offer",
-                itemOffered: { "@type": "Service", name: "AI Video Production" },
-              },
-              {
-                "@type": "Offer",
-                itemOffered: { "@type": "Service", name: "Copywriting & Brand Voice" },
-              },
-            ],
-          },
-        }),
-      },
-      {
-        // One VideoObject per reel (in VIDEO_MEDIA / CONTENT.en.videos order),
-        // built from the shared media list so it can never drift from the grid.
-        // thumbnailUrl + uploadDate are derived from each Cloudinary src.
-        type: "application/ld+json",
-        children: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "ItemList",
-          name: "AI ads & reels by Ahmed Maki",
-          itemListElement: CONTENT.en.videos.map((v, i) => ({
-            "@type": "ListItem",
-            position: i + 1,
-            item: {
-              "@type": "VideoObject",
-              name: v.title,
-              description: v.description,
-              genre: v.tag,
-              thumbnailUrl: posterUrlFromSrc(VIDEO_MEDIA[i].src),
-              contentUrl: VIDEO_MEDIA[i].src,
-              uploadDate: uploadDateFromSrc(VIDEO_MEDIA[i].src),
-              creator: {
-                "@type": "Person",
-                name: "Ahmed Maki",
-                url: "https://ahmeddmakyy.lovable.app/",
-              },
-            },
-          })),
-        }),
-      },
-    ],
-  }),
+            })),
+          }),
+        },
+      ],
+    };
+  },
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
@@ -234,10 +245,11 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const data = Route.useLoaderData();
 
   return (
     <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
+      <LanguageProvider data={data}>
         <Outlet />
       </LanguageProvider>
     </QueryClientProvider>

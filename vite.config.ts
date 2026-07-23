@@ -6,10 +6,16 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
+// Honour an externally assigned PORT so a second dev server can run alongside
+// one that already holds the default. Untouched when PORT is unset, so the
+// normal `bun run dev` behaviour is unchanged.
+const assignedPort = process.env.PORT ? Number(process.env.PORT) : undefined;
+
 export default defineConfig({
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  ...(assignedPort ? { vite: { server: { port: assignedPort, strictPort: false } } } : {}),
 });

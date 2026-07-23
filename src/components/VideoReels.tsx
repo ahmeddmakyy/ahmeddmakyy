@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useLang } from "@/i18n";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -6,62 +6,76 @@ import { useCursorFxReduced } from "@/components/cursorFx";
 import MorphWord from "@/components/MorphWord";
 import Doodle from "@/components/Doodle";
 import FireFrame from "@/components/FireFrame";
-import { VIDEO_MEDIA } from "@/video-media";
+import { countReelView } from "@/lib/view-counter";
 
 // ─────────────────────────────────────────────────────────────
-// Category membership is still the single source of truth (order MUST match
-// CONTENT[lang].videos / VIDEO_MEDIA). The Videos section no longer renders one
-// stacked block PER group — instead these groups become the FILTER CHIPS of one
-// bounded gallery, so the section height is decoupled from the library size.
-//   0 Renew Story · 1 Renew Star · 2 Easy Way · 3 Golf City · 4 Alwassef · 5 Dr. ElKashef
-//   6 It's a Story Problem · 7 Let's Go Big · 8 Portfolio in Motion
-//   9 Abbas App · 10 Abbas Chat · 11 Quick Loan · 12 Demo Star
-//   13 Alwassef Geely EX2 · 14 Trust Motors · 15 Trust Summer Coast Trip
-//   16 Golf Star Motors (FB/Google UI simulation)
+// Category membership, ordering and the featured pick now come from the
+// database (see lib/site-data.ts) and arrive through useLang(). The Videos
+// section renders one bounded gallery whose FILTER CHIPS are the three
+// categories, so the section height is decoupled from the library size —
+// and adding a reel from the dashboard needs no edit in this file.
+//   category 0 Cinematic AI Ads · 1 Motion Graphics & Type · 2 UI Animation
 // ─────────────────────────────────────────────────────────────
-const VIDEO_GROUPS: number[][] = [
-  [0, 1, 2, 3, 4, 5, 13, 14, 15], // Cinematic AI Ads
-  [6, 7, 8], // Motion Graphics & Type
-  [9, 10, 11, 12, 16], // UI Animation
-];
-
-// The one persistent editorial "featured" reel. Excluded from every filter pool
-// so it never double-renders, and always shown as the stage regardless of filter.
-const HERO_GI = 0;
-
-// idx → group number, derived once (used for deep-link chip sync).
-const GROUP_OF: Record<number, number> = {};
-VIDEO_GROUPS.forEach((g, gi) => g.forEach((i) => (GROUP_OF[i] = gi)));
-
-// Newest-first within each group (his latest uploads land in the opening view,
-// not buried) and the hero pulled out of the Ads pool.
-const adsPool = VIDEO_GROUPS[0].filter((i) => i !== HERO_GI).slice().reverse();
-const motionPool = VIDEO_GROUPS[1].slice().reverse();
-const uiPool = VIDEO_GROUPS[2].slice().reverse();
-
 const FILTER_KEYS = ["all", "ads", "motion", "ui"] as const;
 type FilterKey = (typeof FILTER_KEYS)[number];
-const POOLS: Record<FilterKey, number[]> = {
-  all: [...adsPool, ...motionPool, ...uiPool],
-  ads: adsPool,
-  motion: motionPool,
-  ui: uiPool,
+
+type ReelLayout = {
+  // The one persistent editorial "featured" reel. Excluded from every filter
+  // pool so it never double-renders, and always shown as the stage.
+  heroIndex: number;
+  // idx → category (used for deep-link chip sync and the role credit).
+  groupOf: Record<number, number>;
+  // Newest-first within each category, so his latest uploads land in the
+  // opening view instead of buried.
+  pools: Record<FilterKey, number[]>;
+  // Stable full ordering for the lightbox prev/next (hero first, then
+  // everything), independent of the current filter so browsing never dead-ends.
+  navOrder: number[];
 };
 
-// Stable full ordering for the lightbox prev/next (hero first, then everything),
-// independent of the current filter so browsing never dead-ends.
-const NAV_ORDER = [HERO_GI, ...POOLS.all];
+function buildLayout(groups: number[][], heroIndex: number): ReelLayout {
+  const groupOf: Record<number, number> = {};
+  groups.forEach((g, gi) => g.forEach((i) => (groupOf[i] = gi)));
 
-const categoryKeyForIndex = (idx: number): FilterKey =>
-  idx === HERO_GI ? "all" : ((["ads", "motion", "ui"][GROUP_OF[idx]] as FilterKey) ?? "all");
+  const poolFor = (gi: number) =>
+    (groups[gi] ?? [])
+      .filter((i) => i !== heroIndex)
+      .slice()
+      .reverse();
+
+  const ads = poolFor(0);
+  const motion = poolFor(1);
+  const ui = poolFor(2);
+
+  const pools: Record<FilterKey, number[]> = {
+    all: [...ads, ...motion, ...ui],
+    ads,
+    motion,
+    ui,
+  };
+
+  return { heroIndex, groupOf, pools, navOrder: [heroIndex, ...pools.all] };
+}
+
+function useReelLayout(): ReelLayout {
+  const { groups, heroIndex } = useLang();
+  return useMemo(() => buildLayout(groups, heroIndex), [groups, heroIndex]);
+}
+
+const categoryKeyForIndex = (idx: number, layout: ReelLayout): FilterKey =>
+  idx === layout.heroIndex
+    ? "all"
+    : ((["ads", "motion", "ui"][layout.groupOf[idx]] as FilterKey) ?? "all");
 
 // A short, language-independent "role" credit for the lightbox — derived from the
-// group (not the localized tag string) so it's accurate in EN and AR without any
-// per-reel data. The "case-study depth" line, minus the metrics.
-function roleCredit(idx: number, lang: "en" | "ar"): string {
-  const g = GROUP_OF[idx];
+// category (not the localized tag string) so it's accurate in EN and AR without
+// any per-reel data. The "case-study depth" line, minus the metrics.
+function roleCredit(idx: number, lang: "en" | "ar", layout: ReelLayout): string {
+  const g = layout.groupOf[idx];
   if (g === 2)
-    return lang === "ar" ? "فكرة · إخراج واجهات · توجيه الـ AI · مونتاج" : "Concept · UI direction · AI direction · edit";
+    return lang === "ar"
+      ? "فكرة · إخراج واجهات · توجيه الـ AI · مونتاج"
+      : "Concept · UI direction · AI direction · edit";
   if (g === 1)
     return lang === "ar" ? "فكرة · موشن ديزاين · مونتاج" : "Concept · motion design · edit";
   return lang === "ar"
@@ -77,16 +91,39 @@ function roleCredit(idx: number, lang: "en" | "ar"): string {
 // all, so there's no hydration mismatch and no bandwidth cost off desktop.
 let activePreviewVideo: HTMLVideoElement | null = null;
 
-const HOVER_CAPABLE =
-  typeof window !== "undefined" &&
-  typeof window.matchMedia === "function" &&
-  window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-
-function previewSrc(src: string): string {
-  // w_400 + du_12 → a ~few-hundred-KB teaser, not the delivery master.
-  return src.replace("/upload/", "/upload/w_400,q_auto,du_12/");
+/**
+ * Live, REACTIVE hover capability — deliberately NOT a module-level const.
+ * A module const is a one-shot snapshot taken whenever the chunk happens to be
+ * evaluated; if that ever ran before the browser settled (or in an odd
+ * hydration order) it baked in `false` forever and the preview silently died.
+ */
+function useHoverCapable(): boolean {
+  const [ok, setOk] = useState(false);
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") return;
+    const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
+    const sync = () => setOk(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+  return ok;
 }
 
+function previewSrc(src: string): string {
+  // Tiny + short so it paints almost immediately on hover. The old
+  // w_400/du_12 rendition was ~0.8-1.4MB (~1s), long enough that a normal
+  // hover ended while the element was still showing its poster — which looks
+  // exactly like "nothing happened".
+  return src.replace("/upload/", "/upload/w_320,q_auto:eco,du_6/");
+}
+
+/**
+ * The <video> stays MOUNTED the whole time previewing is possible (preload="none",
+ * so it costs zero network until play() is called). Hover only flips play/pause
+ * and opacity — there is no conditional mount, so no ref/effect ordering race can
+ * swallow it, which is the class of bug that made this fail silently before.
+ */
 function useReelPreview(enabled: boolean) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);
@@ -95,8 +132,8 @@ function useReelPreview(enabled: boolean) {
   const start = useCallback(() => {
     if (!enabled) return;
     window.clearTimeout(armTimer.current);
-    // small intent delay so brushing past a tile never fetches a clip
-    armTimer.current = window.setTimeout(() => setPlaying(true), 170);
+    // short intent delay so brushing past a tile never fetches a clip
+    armTimer.current = window.setTimeout(() => setPlaying(true), 90);
   }, [enabled]);
 
   const stop = useCallback(() => {
@@ -106,15 +143,22 @@ function useReelPreview(enabled: boolean) {
 
   useEffect(() => {
     const v = videoRef.current;
-    if (!v || !playing) return;
-    if (activePreviewVideo && activePreviewVideo !== v) activePreviewVideo.pause();
-    activePreviewVideo = v;
-    v.play().catch(() => {
-      /* autoplay of a muted clip can still be refused — poster stays, no harm */
-    });
-    return () => {
+    if (!v) return;
+    if (playing) {
+      if (activePreviewVideo && activePreviewVideo !== v) activePreviewVideo.pause();
+      activePreviewVideo = v;
+      void v.play().catch(() => {
+        /* a muted clip can still be refused — the poster stays, no harm */
+      });
+    } else {
+      v.pause();
+      try {
+        v.currentTime = 0;
+      } catch {
+        /* seeking before metadata can throw — harmless */
+      }
       if (activePreviewVideo === v) activePreviewVideo = null;
-    };
+    }
   }, [playing]);
 
   useEffect(() => () => window.clearTimeout(armTimer.current), []);
@@ -147,8 +191,8 @@ function ReelCard({
   onPlay: (gi: number) => void;
   eager?: boolean;
 }) {
-  const { content: c } = useLang();
-  const media = VIDEO_MEDIA[gi];
+  const { content: c, media: allMedia } = useLang();
+  const media = allMedia[gi];
   const v = c.videos[gi];
   const imgRef = useRef<HTMLImageElement>(null);
   const [loaded, setLoaded] = useState(false);
@@ -157,7 +201,7 @@ function ReelCard({
   // The preview rides with the fire/liquid: on by default, and it silences
   // together with them the moment the "Reduce Animations" toggle is pressed
   // (and under OS reduced-motion) — not only on the OS setting.
-  const previewEnabled = HOVER_CAPABLE && !reduce && !cursorFxReduced;
+  const previewEnabled = useHoverCapable() && !reduce && !cursorFxReduced;
   const pv = useReelPreview(previewEnabled);
 
   // A cached poster is already `.complete` on mount and never fires onLoad —
@@ -199,10 +243,14 @@ function ReelCard({
           className={loaded ? "is-loaded" : undefined}
           onLoad={() => setLoaded(true)}
         />
-        {previewEnabled && pv.playing && (
+        {previewEnabled && (
           <video
             ref={pv.videoRef}
             className="reel-preview"
+            // Opacity is set INLINE, not via a class: this project's CSS
+            // optimiser has repeatedly dropped rules (it already ate this
+            // element's fade-in @keyframes), and inline style is immune.
+            style={{ opacity: pv.playing ? 1 : 0 }}
             src={previewSrc(media.src)}
             poster={media.poster}
             muted
@@ -235,9 +283,9 @@ function ReelCard({
  * reads as one system, just larger.
  */
 function StageCard({ onPlay }: { onPlay: (gi: number) => void }) {
-  const { content: c } = useLang();
-  const media = VIDEO_MEDIA[HERO_GI];
-  const v = c.videos[HERO_GI];
+  const { content: c, media: allMedia, heroIndex } = useLang();
+  const media = allMedia[heroIndex];
+  const v = c.videos[heroIndex];
   const imgRef = useRef<HTMLImageElement>(null);
   const [loaded, setLoaded] = useState(false);
   const reduce = useReducedMotion();
@@ -245,7 +293,7 @@ function StageCard({ onPlay }: { onPlay: (gi: number) => void }) {
   // The preview rides with the fire/liquid: on by default, and it silences
   // together with them the moment the "Reduce Animations" toggle is pressed
   // (and under OS reduced-motion) — not only on the OS setting.
-  const previewEnabled = HOVER_CAPABLE && !reduce && !cursorFxReduced;
+  const previewEnabled = useHoverCapable() && !reduce && !cursorFxReduced;
   const pv = useReelPreview(previewEnabled);
 
   useEffect(() => {
@@ -256,7 +304,7 @@ function StageCard({ onPlay }: { onPlay: (gi: number) => void }) {
     <button
       type="button"
       className="reel-card reel-card--stage"
-      onClick={() => onPlay(HERO_GI)}
+      onClick={() => onPlay(heroIndex)}
       onMouseDown={(e) => e.preventDefault()}
       onPointerEnter={pv.start}
       onPointerLeave={pv.stop}
@@ -275,10 +323,14 @@ function StageCard({ onPlay }: { onPlay: (gi: number) => void }) {
           className={loaded ? "is-loaded" : undefined}
           onLoad={() => setLoaded(true)}
         />
-        {previewEnabled && pv.playing && (
+        {previewEnabled && (
           <video
             ref={pv.videoRef}
             className="reel-preview"
+            // Opacity is set INLINE, not via a class: this project's CSS
+            // optimiser has repeatedly dropped rules (it already ate this
+            // element's fade-in @keyframes), and inline style is immune.
+            style={{ opacity: pv.playing ? 1 : 0 }}
             src={previewSrc(media.src)}
             poster={media.poster}
             muted
@@ -403,6 +455,7 @@ function ShowAllSheet({
   fireOn: boolean;
 }) {
   const { content: c } = useLang();
+  const layout = useReelLayout();
   const innerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -418,7 +471,7 @@ function ShowAllSheet({
     };
   }, [onClose]);
 
-  const pool = POOLS[filter];
+  const pool = layout.pools[filter];
 
   return (
     <div
@@ -435,7 +488,12 @@ function ShowAllSheet({
         onClick={onClose}
       >
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <path
+            d="M6 6l12 12M18 6L6 18"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
         </svg>
       </button>
       {/* Guarded: never runs while a reel is open above (single WebGL2 fire). */}
@@ -453,7 +511,12 @@ function ShowAllSheet({
             panelId="sheetpanel"
           />
         </div>
-        <div className="reel-allsheet-grid" id="sheetpanel" role="tabpanel" aria-labelledby={`sheettab-${filter}`}>
+        <div
+          className="reel-allsheet-grid"
+          id="sheetpanel"
+          role="tabpanel"
+          aria-labelledby={`sheettab-${filter}`}
+        >
           {pool.map((gi) => (
             <ReelCard key={gi} gi={gi} onPlay={onPlay} />
           ))}
@@ -466,12 +529,30 @@ function ShowAllSheet({
 function CopyGlyph({ done }: { done: boolean }) {
   return done ? (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M5 12.5l4.5 4.5L19 7"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   ) : (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M10.5 6.5l1-1a4 4 0 015.6 5.6l-2 2a4 4 0 01-5.6 0" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M13.5 17.5l-1 1a4 4 0 01-5.6-5.6l2-2a4 4 0 015.6 0" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M10.5 6.5l1-1a4 4 0 015.6 5.6l-2 2a4 4 0 01-5.6 0"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M13.5 17.5l-1 1a4 4 0 01-5.6-5.6l2-2a4 4 0 015.6 0"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
@@ -509,7 +590,8 @@ function VideoLightbox({
   onClose: () => void;
   onNav: (gi: number) => void;
 }) {
-  const { content: c, lang } = useLang();
+  const { content: c, lang, media: allMedia } = useLang();
+  const layout = useReelLayout();
   const dialogRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
   const filmRef = useRef<HTMLVideoElement>(null);
@@ -517,14 +599,14 @@ function VideoLightbox({
   const openedFrom = useRef<HTMLElement | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const pos = gi === null ? -1 : NAV_ORDER.indexOf(gi);
+  const pos = gi === null ? -1 : layout.navOrder.indexOf(gi);
   const hasPrev = pos > 0;
-  const hasNext = pos >= 0 && pos < NAV_ORDER.length - 1;
+  const hasNext = pos >= 0 && pos < layout.navOrder.length - 1;
   const goPrev = () => {
-    if (hasPrev) onNav(NAV_ORDER[pos - 1]);
+    if (hasPrev) onNav(layout.navOrder[pos - 1]);
   };
   const goNext = () => {
-    if (hasNext) onNav(NAV_ORDER[pos + 1]);
+    if (hasNext) onNav(layout.navOrder[pos + 1]);
   };
 
   useEffect(() => {
@@ -584,7 +666,7 @@ function VideoLightbox({
 
   const copyLink = async () => {
     if (gi === null) return;
-    const url = `${window.location.origin}${window.location.pathname}?v=${VIDEO_MEDIA[gi].slug}`;
+    const url = `${window.location.origin}${window.location.pathname}?v=${allMedia[gi].slug}`;
     try {
       await navigator.clipboard.writeText(url);
     } catch {
@@ -607,7 +689,7 @@ function VideoLightbox({
   };
 
   if (gi === null) return null;
-  const media = VIDEO_MEDIA[gi];
+  const media = allMedia[gi];
   const v = c.videos[gi];
   return (
     <div
@@ -626,7 +708,12 @@ function VideoLightbox({
         ref={closeBtnRef}
       >
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <path
+            d="M6 6l12 12M18 6L6 18"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
         </svg>
       </button>
       {/* Desktop-only side arrows: browse the whole library without closing. */}
@@ -679,7 +766,7 @@ function VideoLightbox({
           <h4>{v.title}</h4>
           <p className="reel-lightbox-client">{v.client}</p>
           <p className="reel-lightbox-desc">{v.description}</p>
-          <p className="reel-lightbox-role">{roleCredit(gi, lang)}</p>
+          <p className="reel-lightbox-role">{roleCredit(gi, lang, layout)}</p>
           <button
             type="button"
             className={`reel-copy${copied ? " is-copied" : ""}`}
@@ -704,7 +791,8 @@ function VideoLightbox({
  * the open film in the URL (?v=<slug>) so a specific reel can be deep-linked.
  */
 export default function VideoReels() {
-  const { content: c } = useLang();
+  const { content: c, media: allMedia } = useLang();
+  const layout = useReelLayout();
   const reduce = useReducedMotion();
   const isMobile = useIsMobile();
   const cap = isMobile ? 4 : 6;
@@ -720,9 +808,13 @@ export default function VideoReels() {
   // from the slug inside copyLink() (it never reads the live URL), so dropping the
   // history write costs nothing but the ?v= in the address bar while a reel is open
   // — and the deep-link read below still lets a fresh ?v=<slug> visit open the reel.
-  const openReel = useCallback((gi: number) => {
-    setActive(gi);
-  }, []);
+  const openReel = useCallback(
+    (gi: number) => {
+      setActive(gi);
+      countReelView(allMedia[gi]?.slug);
+    },
+    [allMedia],
+  );
 
   const closeReel = useCallback(() => {
     setActive(null);
@@ -741,33 +833,38 @@ export default function VideoReels() {
   useEffect(() => {
     const slug = new URLSearchParams(window.location.search).get("v");
     if (!slug) return;
-    const idx = VIDEO_MEDIA.findIndex((m) => m.slug === slug);
+    const idx = allMedia.findIndex((m) => m.slug === slug);
     if (idx < 0) return;
     setActive(idx);
+    // A shared ?v= link that lands on a reel is a view like any other.
+    countReelView(slug);
     try {
-      if (idx !== HERO_GI) {
-        const key = categoryKeyForIndex(idx);
+      if (idx !== layout.heroIndex) {
+        const key = categoryKeyForIndex(idx, layout);
         setFilter(key);
         // Desktop cap (6) at first paint; if the tile is past it, open the overlay
         // so closing the lightbox reveals it rather than a view that hides it.
-        if (POOLS[key].indexOf(idx) >= 6) setShowAll(true);
+        if (layout.pools[key].indexOf(idx) >= 6) setShowAll(true);
       }
     } catch {
       /* chip-sync is best-effort — the reel is already open */
     }
     const el = document.getElementById("videos");
     if (el) requestAnimationFrame(() => el.scrollIntoView());
+    // Deep-link read runs once on mount; allMedia/layout are stable for a
+    // given page load.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const labels = [c.videosSection.all, ...c.videosSection.groups];
   const counts: Record<FilterKey, number> = {
-    all: POOLS.all.length,
-    ads: POOLS.ads.length,
-    motion: POOLS.motion.length,
-    ui: POOLS.ui.length,
+    all: layout.pools.all.length,
+    ads: layout.pools.ads.length,
+    motion: layout.pools.motion.length,
+    ui: layout.pools.ui.length,
   };
 
-  const pool = POOLS[filter];
+  const pool = layout.pools[filter];
   const shown = pool.slice(0, cap);
   const ghosts = Math.max(0, cap - shown.length);
 
@@ -855,7 +952,13 @@ export default function VideoReels() {
                   {c.videosSection.showAll} ({pool.length})
                 </span>
                 <svg className="arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M7 17L17 7M17 7H9M17 7v8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path
+                    d="M7 17L17 7M17 7H9M17 7v8"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               </button>
             ) : (

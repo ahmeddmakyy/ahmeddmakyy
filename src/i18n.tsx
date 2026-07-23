@@ -1,22 +1,41 @@
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { type Lang, type SiteContent } from "@/content";
 import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
-import { CONTENT, type Lang, type SiteContent } from "@/content";
+  contentFor,
+  fallbackData,
+  groupsOf,
+  heroIndexOf,
+  mediaOf,
+  type SiteData,
+} from "@/lib/site-data";
+import type { VideoMedia } from "@/video-media";
 
 type LangCtx = {
   lang: Lang;
   content: SiteContent;
   setLang: (l: Lang) => void;
   toggle: () => void;
+  // Language-independent reel data, derived from the same source as `content`
+  // so the two can never disagree about how many reels there are or their order.
+  media: VideoMedia[];
+  groups: number[][];
+  heroIndex: number;
 };
 
 const Ctx = createContext<LangCtx | null>(null);
 
-export function LanguageProvider({ children }: { children: ReactNode }) {
+// The hardcoded site, built once. Used when the root loader passed nothing
+// (Supabase unconfigured, unreachable, or not migrated yet).
+const FALLBACK = fallbackData();
+
+export function LanguageProvider({
+  children,
+  data,
+}: {
+  children: ReactNode;
+  /** Loaded from Supabase by the root route. Omitted → hardcoded content. */
+  data?: SiteData;
+}) {
   // SSR + first client render must agree → always start "en", then adopt the
   // stored preference in an effect (avoids hydration mismatch).
   const [lang, setLang] = useState<Lang>("en");
@@ -36,12 +55,28 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     window.localStorage.setItem("lang", lang);
   }, [lang]);
 
-  const value: LangCtx = {
-    lang,
-    content: CONTENT[lang],
-    setLang,
-    toggle: () => setLang((l) => (l === "en" ? "ar" : "en")),
-  };
+  const siteData = data ?? FALLBACK;
+
+  // Reel order/grouping only changes when the data does, not on every toggle.
+  const derived = useMemo(
+    () => ({
+      media: mediaOf(siteData),
+      groups: groupsOf(siteData),
+      heroIndex: heroIndexOf(siteData),
+    }),
+    [siteData],
+  );
+
+  const value: LangCtx = useMemo(
+    () => ({
+      lang,
+      content: contentFor(lang, siteData),
+      setLang,
+      toggle: () => setLang((l) => (l === "en" ? "ar" : "en")),
+      ...derived,
+    }),
+    [lang, siteData, derived],
+  );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
@@ -64,7 +99,9 @@ export function LangToggle({ className }: { className?: string }) {
       title={lang === "en" ? "عربي" : "English"}
     >
       <span className={lang === "en" ? "is-active" : ""}>EN</span>
-      <span className="lang-sep" aria-hidden="true">|</span>
+      <span className="lang-sep" aria-hidden="true">
+        |
+      </span>
       <span className={lang === "ar" ? "is-active" : ""}>ع</span>
     </button>
   );
