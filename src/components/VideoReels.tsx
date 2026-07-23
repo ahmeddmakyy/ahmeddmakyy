@@ -16,11 +16,12 @@ import { VIDEO_MEDIA } from "@/video-media";
 //   6 It's a Story Problem · 7 Let's Go Big · 8 Portfolio in Motion
 //   9 Abbas App · 10 Abbas Chat · 11 Quick Loan · 12 Demo Star
 //   13 Alwassef Geely EX2 · 14 Trust Motors · 15 Trust Summer Coast Trip
+//   16 Golf Star Motors (FB/Google UI simulation)
 // ─────────────────────────────────────────────────────────────
 const VIDEO_GROUPS: number[][] = [
   [0, 1, 2, 3, 4, 5, 13, 14, 15], // Cinematic AI Ads
   [6, 7, 8], // Motion Graphics & Type
-  [9, 10, 11, 12], // UI Animation
+  [9, 10, 11, 12, 16], // UI Animation
 ];
 
 // The one persistent editorial "featured" reel. Excluded from every filter pool
@@ -53,6 +54,73 @@ const NAV_ORDER = [HERO_GI, ...POOLS.all];
 const categoryKeyForIndex = (idx: number): FilterKey =>
   idx === HERO_GI ? "all" : ((["ads", "motion", "ui"][GROUP_OF[idx]] as FilterKey) ?? "all");
 
+// A short, language-independent "role" credit for the lightbox — derived from the
+// group (not the localized tag string) so it's accurate in EN and AR without any
+// per-reel data. The "case-study depth" line, minus the metrics.
+function roleCredit(idx: number, lang: "en" | "ar"): string {
+  const g = GROUP_OF[idx];
+  if (g === 2)
+    return lang === "ar" ? "فكرة · إخراج واجهات · توجيه الـ AI · مونتاج" : "Concept · UI direction · AI direction · edit";
+  if (g === 1)
+    return lang === "ar" ? "فكرة · موشن ديزاين · مونتاج" : "Concept · motion design · edit";
+  return lang === "ar"
+    ? "إخراج إبداعي · كتابة برومبتات · ڤويس أوفر ومونتاج"
+    : "Creative direction · AI prompt writing · VO & edit";
+}
+
+// ── Desktop hover-to-preview ────────────────────────────────────────────────
+// Only one preview plays at a time (module-level guard), only on real hover +
+// fine pointer, never under reduced-motion, and the clip is a lightweight
+// low-res / short Cloudinary rendition fetched on hover intent — never the
+// full-weight lightbox mp4. Touch, SSR and reduced-motion mount no <video> at
+// all, so there's no hydration mismatch and no bandwidth cost off desktop.
+let activePreviewVideo: HTMLVideoElement | null = null;
+
+const HOVER_CAPABLE =
+  typeof window !== "undefined" &&
+  typeof window.matchMedia === "function" &&
+  window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+function previewSrc(src: string): string {
+  // w_400 + du_12 → a ~few-hundred-KB teaser, not the delivery master.
+  return src.replace("/upload/", "/upload/w_400,q_auto,du_12/");
+}
+
+function useReelPreview(enabled: boolean) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [playing, setPlaying] = useState(false);
+  const armTimer = useRef(0);
+
+  const start = useCallback(() => {
+    if (!enabled) return;
+    window.clearTimeout(armTimer.current);
+    // small intent delay so brushing past a tile never fetches a clip
+    armTimer.current = window.setTimeout(() => setPlaying(true), 170);
+  }, [enabled]);
+
+  const stop = useCallback(() => {
+    window.clearTimeout(armTimer.current);
+    setPlaying(false);
+  }, []);
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v || !playing) return;
+    if (activePreviewVideo && activePreviewVideo !== v) activePreviewVideo.pause();
+    activePreviewVideo = v;
+    v.play().catch(() => {
+      /* autoplay of a muted clip can still be refused — poster stays, no harm */
+    });
+    return () => {
+      if (activePreviewVideo === v) activePreviewVideo = null;
+    };
+  }, [playing]);
+
+  useEffect(() => () => window.clearTimeout(armTimer.current), []);
+
+  return { videoRef, playing, start, stop };
+}
+
 function PlayGlyph() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -83,6 +151,9 @@ function ReelCard({
   const v = c.videos[gi];
   const imgRef = useRef<HTMLImageElement>(null);
   const [loaded, setLoaded] = useState(false);
+  const reduce = useReducedMotion();
+  const previewEnabled = HOVER_CAPABLE && !reduce;
+  const pv = useReelPreview(previewEnabled);
 
   // A cached poster is already `.complete` on mount and never fires onLoad —
   // without this it would sit at opacity:0 forever behind a cache hit.
@@ -106,7 +177,12 @@ function ReelCard({
       {/* data-liquid marks the whole tile as a liquid-lens region; the lens
           samples the poster <img> inside it (the tile's overlays sit above the
           image, so the region must be the container, not the img). */}
-      <span className="reel-thumb" data-liquid="">
+      <span
+        className="reel-thumb"
+        data-liquid=""
+        onPointerEnter={pv.start}
+        onPointerLeave={pv.stop}
+      >
         <img
           ref={imgRef}
           src={media.poster}
@@ -117,6 +193,20 @@ function ReelCard({
           className={loaded ? "is-loaded" : undefined}
           onLoad={() => setLoaded(true)}
         />
+        {previewEnabled && pv.playing && (
+          <video
+            ref={pv.videoRef}
+            className="reel-preview"
+            src={previewSrc(media.src)}
+            poster={media.poster}
+            muted
+            loop
+            playsInline
+            preload="none"
+            aria-hidden="true"
+            tabIndex={-1}
+          />
+        )}
         <span className="reel-tag">{v.tag}</span>
         <span className="reel-play">
           <PlayGlyph />
@@ -144,6 +234,9 @@ function StageCard({ onPlay }: { onPlay: (gi: number) => void }) {
   const v = c.videos[HERO_GI];
   const imgRef = useRef<HTMLImageElement>(null);
   const [loaded, setLoaded] = useState(false);
+  const reduce = useReducedMotion();
+  const previewEnabled = HOVER_CAPABLE && !reduce;
+  const pv = useReelPreview(previewEnabled);
 
   useEffect(() => {
     if (imgRef.current?.complete) setLoaded(true);
@@ -157,7 +250,12 @@ function StageCard({ onPlay }: { onPlay: (gi: number) => void }) {
       onMouseDown={(e) => e.preventDefault()}
       aria-label={`${c.player.play}: ${v.title}`}
     >
-      <span className="reel-thumb" data-liquid="">
+      <span
+        className="reel-thumb"
+        data-liquid=""
+        onPointerEnter={pv.start}
+        onPointerLeave={pv.stop}
+      >
         <img
           ref={imgRef}
           src={media.poster}
@@ -168,6 +266,20 @@ function StageCard({ onPlay }: { onPlay: (gi: number) => void }) {
           className={loaded ? "is-loaded" : undefined}
           onLoad={() => setLoaded(true)}
         />
+        {previewEnabled && pv.playing && (
+          <video
+            ref={pv.videoRef}
+            className="reel-preview"
+            src={previewSrc(media.src)}
+            poster={media.poster}
+            muted
+            loop
+            playsInline
+            preload="none"
+            aria-hidden="true"
+            tabIndex={-1}
+          />
+        )}
         <span className="reel-tag">{v.tag}</span>
         <span className="reel-play">
           <PlayGlyph />
@@ -558,6 +670,7 @@ function VideoLightbox({
           <h4>{v.title}</h4>
           <p className="reel-lightbox-client">{v.client}</p>
           <p className="reel-lightbox-desc">{v.description}</p>
+          <p className="reel-lightbox-role">{roleCredit(gi, lang)}</p>
           <button
             type="button"
             className={`reel-copy${copied ? " is-copied" : ""}`}

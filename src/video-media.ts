@@ -22,6 +22,7 @@ import quickLoanPoster from "@/assets/posters/quick_loan.webp";
 import demoStarPoster from "@/assets/posters/demo_star.webp";
 import trustMotorsPoster from "@/assets/posters/trust_motors.webp";
 import summerCoastPoster from "@/assets/posters/summer_coast.webp";
+import golfStarPoster from "@/assets/posters/golf_star.webp";
 
 const CLOUD = "https://res.cloudinary.com/ahmedmakyy/video/upload";
 
@@ -99,6 +100,11 @@ export const VIDEO_MEDIA: VideoMedia[] = [
     slug: "trust-summer",
     src: `${CLOUD}/v1784738431/compressO-START_YOUR_SUMMER_sohhcs.mp4`,
     poster: summerCoastPoster,
+  },
+  {
+    slug: "golf-star",
+    src: `${CLOUD}/v1784764047/0607_Golf_Star_Motors_vvscid.mp4`,
+    poster: golfStarPoster,
   },
 ];
 

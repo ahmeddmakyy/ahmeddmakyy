@@ -279,6 +279,13 @@ const en: SiteContent = {
       description:
         "A vertical social reel for a car dealership, made entirely with AI: an Egyptian family sets off on their North Coast summer holiday in their new car — the father shutting the packed boot in the driveway, a hood-mounted shot of the family mid-drive, and a drone sweep of the car alone on the coastal road, over an Egyptian-Arabic summer voice-over on one line: the coast is waiting, and we’re ready. The hard part was keeping the car and the four family members identical across every shot — AI tends to redraw a car’s features and move them oddly — so I locked reference sheets for the car and the family and wrote physics-aware prompts, and it holds its shape and moves believably. Directed shot by shot.",
     },
+    {
+      title: "Golf Star Motors — Your Next Car?",
+      tag: "UI Animation",
+      client: "Car Dealership · Cairo",
+      description:
+        "A UI-animation reel that rebuilds the whole way a buyer finds a showroom — a Google search for “Golf Star Motors”, then a pixel-perfect Facebook page, then a run of Facebook Stories that reveal the MG ONE 2026 card by card: a bold design, a 12.3-inch CarPlay screen, 168 hp, six airbags and a 360° camera — closing on the hook that actually sells here: the lowest down payment in Egypt, the rest in easy installments. The Facebook and Google interfaces are rebuilt in code and the car is AI-generated, directed frame by frame.",
+    },
   ],
   about: {
     name: "Ahmed Maki",
@@ -547,6 +554,13 @@ const ar: SiteContent = {
       client: "معرض عربيات · ريلز سوشيال",
       description:
         "ريلز سوشيال طولي لمعرض عربيات، متعمل بالكامل بالذكاء الاصطناعي: عيلة مصرية طالعة تصيّف على الساحل الشمالي في عربيتهم الجديدة — الأب بيقفل شنطة العربية المليانة في الجراج، لقطة من على كابوت العربية للعيلة وهي مبسوطة في الطريق، ولقطة درون للعربية لوحدها على طريق الساحل، وفوقها ڤويس أوفر صيفي بالمصري على جملة واحدة: الساحل مستنّي، واحنا جاهزين. أصعب حاجة كانت إني أخلّي العربية والأربع أفراد شكلهم ثابت في كل لقطة — الـ AI بيميل يعيد رسم ملامح العربية ويحرّكها غلط — فقفلت أوراق ريفرانس للعربية وللعيلة وكتبت برومبتات واعية بالفيزياء، فالعربية حافظت على شكلها واتحركت بتصديق. متخرجة لقطة لقطة.",
+    },
+    {
+      title: "Golf Star Motors — عربيتك الجاية؟",
+      tag: "أنيميشن واجهات",
+      client: "معرض عربيات · القاهرة",
+      description:
+        "ريلز أنيميشن واجهات بيعيد بناء رحلة أي حد بيدوّر على معرض — بحث جوجل على «جولف ستار موتورز»، وبعدين صفحة فيسبوك متعملة طبق الأصل، وبعدها سلسلة ستوريهات فيسبوك بتكشف الـ MG ONE موديل 2026 كارت ورا كارت: تصميم جريء، وشاشة 12.3 بوصة بـ CarPlay، و168 حصان، و6 إيرباج وكاميرا 360° — وتقفل على الهوك اللي بيبيع فعلاً هنا: أقل مقدم في مصر، والباقي أقساط مريحة. واجهات فيسبوك وجوجل متبنية بالكود والعربية بالذكاء الاصطناعي، متخرجة لقطة لقطة.",
     },
   ],
   about: {

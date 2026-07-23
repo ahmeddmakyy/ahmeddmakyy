@@ -1071,6 +1071,11 @@ svg.doodle { display: inline-block; vertical-align: middle; overflow: visible; }
   from { transform: translateX(0); }
   to { transform: translateX(-100%); }
 }
+/* WCAG 2.2.2 / reduced-motion: stop the auto-scrolling tool marquee. The two
+   groups still sit side by side, so a static first group reads fine. */
+@media (prefers-reduced-motion: reduce) {
+  .marquee-group { animation: none; }
+}
 
 /* ══════════ SECTIONS ══════════ */
 .section { padding: clamp(4.75rem, 9vw, 8.125rem) 0; }
@@ -2669,6 +2674,24 @@ html[lang="ar"] .name-reveal { direction: rtl; }
 html.js .reel-thumb img:not(.is-loaded) { opacity: 0; }
 .reel-thumb img.is-loaded { opacity: 1; }
 
+/* Desktop hover-to-preview: a muted, looped, low-res teaser mounted only on
+   hover (see useReelPreview). Sits above the poster but below the shade/info/tag
+   so the copy stays legible; fades in so the swap from the poster is soft. The
+   liquid-lens already goes quiet while a video plays, so the two don't fight. */
+.reel-preview {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  opacity: 0;
+  animation: reelPreviewIn 0.45s var(--ease) forwards;
+  pointer-events: none;
+}
+@keyframes reelPreviewIn { to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .reel-preview { display: none; } }
+
 .reel-tag {
   position: absolute;
   top: 0.75rem;
@@ -2856,6 +2879,17 @@ html.js .reel-thumb img:not(.is-loaded) { opacity: 0; }
   color: rgba(255, 255, 255, 0.82);
   max-width: 44ch;
   margin: 0;
+}
+/* Role credit — the "case-study depth" line without the metrics: what Ahmed
+   actually did on the reel, scannable under the description. */
+.reel-lightbox-role {
+  margin: 0;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.62);
 }
 /* copy-video-link pill — share a deep link (?v=<slug>) that reopens this film */
 .reel-copy {
