@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { LanguageProvider } from "@/i18n";
 import { posterUrlFromSrc, uploadDateFromSrc } from "@/video-media";
 import { fallbackData, loadSiteData, type SiteData } from "@/lib/site-data";
+import { startBeacon } from "@/lib/visit-beacon";
 
 function NotFoundComponent() {
   return (
@@ -85,7 +86,26 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   // Runs on the server for the first request, so the reels are already in the
   // HTML — the VideoObject markup below stays crawlable and there is no
   // client-side loading state. loadSiteData never rejects.
-  loader: async (): Promise<SiteData> => loadSiteData(),
+  loader: async (): Promise<SiteData & { visitorCountry: string | null }> => {
+    const data = await loadSiteData();
+
+    // Country comes free from the edge proxy on the initial SSR request —
+    // Vercel and Cloudflare (Lovable) each set their own header. The
+    // import.meta.env.SSR guard makes this branch dead code in the client
+    // bundle, so no server module ever ships to the browser.
+    let visitorCountry: string | null = null;
+    if (import.meta.env.SSR) {
+      try {
+        const { getRequestHeader } = await import("@tanstack/react-start/server");
+        visitorCountry =
+          getRequestHeader("x-vercel-ip-country") ?? getRequestHeader("cf-ipcountry") ?? null;
+      } catch {
+        /* not inside a request (prerender) — country stays unknown */
+      }
+    }
+
+    return { ...data, visitorCountry };
+  },
 
   head: ({ loaderData }) => {
     // head() can run before the loader settles; fall back so the SEO block is
@@ -246,6 +266,11 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const data = Route.useLoaderData();
+
+  // Fire the visitor beacon once per mount; country was resolved during SSR.
+  useEffect(() => {
+    startBeacon(data.visitorCountry ?? null);
+  }, [data.visitorCountry]);
 
   return (
     <QueryClientProvider client={queryClient}>

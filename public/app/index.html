@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- viewport-fit=cover: the app draws edge-to-edge on Android 15+; safe
+         areas are handled in CSS with env(safe-area-inset-*). -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#F5F5F5" />
+    <meta name="format-detection" content="telephone=no" />
+    <!-- The dashboard must never surface in search results. -->
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" type="image/png" href="/app/icon-512.png" />
+    <!-- The two hosts every session talks to. -->
+    <link rel="preconnect" href="https://dupimmnebzkvxyjydnyq.supabase.co" />
+    <link rel="preconnect" href="https://res.cloudinary.com" />
+    <!-- Fonts ship inside the APK (src/assets/fonts) — no runtime font fetch. -->
+    <title>Maki Dashboard</title>
+    <script type="module" crossorigin src="/app/assets/index-fNygRg7i.js"></script>
+    <link rel="stylesheet" crossorigin href="/app/assets/index-CibijxMZ.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
