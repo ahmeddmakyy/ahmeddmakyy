@@ -208,7 +208,24 @@ export function createLiquidMedia(canvas: HTMLCanvasElement): LiquidMediaControl
   function mediaOf(el: HTMLElement | null): Media | null {
     if (!el) return null;
     if (el instanceof HTMLImageElement || el instanceof HTMLVideoElement) return el;
-    return el.querySelector<Media>("img, video");
+    // A preview <video> that is actually SHOWING FRAMES wins over the poster.
+    // `querySelector("img, video")` returns whichever comes first in DOCUMENT
+    // order — always the poster inside a reel tile — so the video branch of
+    // resting() below was dead code: the lens never went quiet and painted a
+    // FROZEN poster snapshot over the playing clip (only a ~7px edge feather
+    // let the real video through). Requiring readyState >= 2 keeps the normal
+    // poster behaviour while the preview is still paused/empty.
+    const v = el.querySelector<HTMLVideoElement>("video");
+    if (v && v.readyState >= 2) return v;
+    return el.querySelector<HTMLImageElement>("img");
+  }
+
+  // True while a descendant video is actively rendering frames. The lens must go
+  // quiet INSTANTLY then — an eased fade would still veil the first frames.
+  function hasLiveVideo(el: HTMLElement | null): boolean {
+    if (!el) return false;
+    const v = el.querySelector("video");
+    return !!v && !v.paused && !v.ended && v.readyState >= 2;
   }
   // "resting" = a loaded image, or a paused / not-yet-playing video. A video that
   // is actually playing returns false → the surface goes quiet while you watch.
@@ -250,10 +267,13 @@ export function createLiquidMedia(canvas: HTMLCanvasElement): LiquidMediaControl
     if (!prog || !vao) return;
     const t = (now - t0) / 1000;
 
-    // ease presence toward whether we have a live, resting target
+    // ease presence toward whether we have a live, resting target — but a tile
+    // whose hover-preview is actually playing goes quiet immediately
     const media = mediaOf(target);
-    const want = target && resting(media) ? 1 : 0;
-    active += (want - active) * TUNING.ACTIVE_EASE;
+    const live = hasLiveVideo(target);
+    const want = target && !live && resting(media) ? 1 : 0;
+    if (live) active = 0;
+    else active += (want - active) * TUNING.ACTIVE_EASE;
 
     gl!.clearColor(0, 0, 0, 0);
     gl!.clear(gl!.COLOR_BUFFER_BIT);
