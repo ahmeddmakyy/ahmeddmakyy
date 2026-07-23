@@ -348,6 +348,8 @@ function Index() {
         <section className="section dark" id="services">
           <div className="container services-wrap">
             <div className="section-head" data-reveal>
+              <Doodle shape="burst" className="head-doodle svc-burst" />
+              <Doodle shape="dots" className="head-doodle svc-dots" />
               <h2 className="section-title"><Rich parts={c.services.title} /></h2>
               <p className="section-lede">{c.services.lede}</p>
             </div>
@@ -402,6 +404,8 @@ function Index() {
         <section className="section dark" id="work">
           <div className="container">
             <div className="section-head" data-reveal>
+              <Doodle shape="star" className="head-doodle work-star" />
+              <Doodle shape="loop" className="head-doodle work-loop" />
               <h2 className="section-title"><Rich parts={c.work.title} /></h2>
             </div>
             <MorphCards
@@ -440,6 +444,8 @@ function Index() {
         <section className="section light" id="process">
           <div className="container">
             <div className="section-head" data-reveal>
+              <Doodle shape="sparkle" className="head-doodle proc-spark" />
+              <Doodle shape="zigzag" className="head-doodle proc-zig" />
               <h2 className="section-title"><Rich parts={c.process.title} /></h2>
               <p className="section-lede">{c.process.lede}</p>
             </div>

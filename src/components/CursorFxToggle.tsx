@@ -35,18 +35,37 @@ export default function CursorFxToggle() {
       aria-label={label}
       title={label}
     >
-      <span className="fx-toggle-ico" aria-hidden="true">
+      {/* ico colour + the slash reveal are set inline (not via a .is-reduced CSS
+          rule) because the CSS optimiser was dropping those single-selector
+          reduced rules; inline style is immune to that. */}
+      <span
+        className="fx-toggle-ico"
+        style={{ color: reduced ? "var(--heading)" : "var(--orange)" }}
+        aria-hidden="true"
+      >
         <svg viewBox="0 0 24 24" fill="none">
-          {/* a 4-point spark + two small sparks = "cursor magic" */}
+          {/* a bold 4-point sparkle + two smaller companions on a clean diagonal —
+              a tidier "cursor magic" cluster than the old scattered one. Coloured
+              live orange when effects are ON, muted + slashed when reduced. */}
           <path
             className="fx-spark-main"
-            d="M12 4.5c.5 2.7 1.3 3.5 4 4-2.7.5-3.5 1.3-4 4-.5-2.7-1.3-3.5-4-4 2.7-.5 3.5-1.3 4-4z"
+            d="M11 3.4c.68 4.1 1.82 5.24 5.92 5.92-4.1.68-5.24 1.82-5.92 5.92-.68-4.1-1.82-5.24-5.92-5.92 4.1-.68 5.24-1.82 5.92-5.92Z"
             fill="currentColor"
           />
-          <path className="fx-spark-a" d="M18.5 13c.25 1.2.6 1.55 1.8 1.8-1.2.25-1.55.6-1.8 1.8-.25-1.2-.6-1.55-1.8-1.8 1.2-.25 1.55-.6 1.8-1.8z" fill="currentColor" />
-          <path className="fx-spark-b" d="M6.5 14c.2.95.5 1.25 1.45 1.45-.95.2-1.25.5-1.45 1.45-.2-.95-.5-1.25-1.45-1.45.95-.2 1.25-.5 1.45-1.45z" fill="currentColor" />
-          {/* slash shown when reduced */}
-          <line className="fx-slash" x1="4.5" y1="4.5" x2="19.5" y2="19.5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+          <path className="fx-spark-a" d="M18 13.2c.32 1.9.86 2.44 2.76 2.76-1.9.32-2.44.86-2.76 2.76-.32-1.9-.86-2.44-2.76-2.76 1.9-.32 2.44-.86 2.76-2.76Z" fill="currentColor" />
+          <path className="fx-spark-b" d="M19.2 3.3c.16 1 .46 1.3 1.46 1.46-1 .16-1.3.46-1.46 1.46-.16-1-.46-1.3-1.46-1.46 1-.16 1.3-.46 1.46-1.46Z" fill="currentColor" />
+          {/* slash shown when reduced (opacity/scale inline — see note above) */}
+          <line
+            className="fx-slash"
+            style={{ opacity: reduced ? 0.95 : 0, transform: reduced ? "scale(1)" : "scale(0.4)" }}
+            x1="4.4"
+            y1="4.4"
+            x2="19.6"
+            y2="19.6"
+            stroke="currentColor"
+            strokeWidth="1.9"
+            strokeLinecap="round"
+          />
         </svg>
       </span>
       <span className="fx-toggle-label">{label}</span>

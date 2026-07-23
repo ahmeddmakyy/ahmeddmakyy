@@ -247,7 +247,9 @@ ul, ol { list-style: none; }
     display: grid;
     place-items: center;
   }
-  .fx-toggle-ico svg { width: 1.4rem; height: 1.4rem; overflow: visible; }
+  /* the sparkles glow live orange while effects are ON */
+  .fx-toggle-ico { color: var(--orange); transition: color 0.25s var(--ease); }
+  .fx-toggle-ico svg { width: 1.45rem; height: 1.45rem; overflow: visible; }
   .fx-toggle-label {
     max-width: 0;
     opacity: 0;
@@ -274,21 +276,33 @@ ul, ol { list-style: none; }
   .fx-toggle .fx-spark-main,
   .fx-toggle .fx-spark-a,
   .fx-toggle .fx-spark-b { transition: opacity 0.25s var(--ease); }
+  /* the big sparkle twinkles gently while effects are ON — a live hint that this
+     controls motion (stopped in the reduced state + under reduced-motion). */
+  .fx-toggle .fx-spark-main { animation: fxTwinkle 3.2s var(--ease) infinite; transform-origin: 11px 9.3px; }
+  .fx-toggle .fx-spark-b { opacity: 0.85; }
   .fx-toggle .fx-slash {
     opacity: 0;
     transform: scale(0.4);
     transform-origin: center;
     transition: opacity 0.25s var(--ease), transform 0.25s var(--ease);
   }
-  /* reduced state: dim the sparks, reveal the slash, tint the whole chip warm */
-  .fx-toggle.is-reduced { color: var(--orange-deep); background: #FFF3E9; }
+  /* reduced state: the sparkles go quiet + ink, the slash crosses them out, and
+     the chip warms — it visibly reads as "motion off". */
+  .fx-toggle.is-reduced { color: var(--heading); background: #FFF1E6; }
   .fx-toggle.is-reduced .fx-spark-main,
   .fx-toggle.is-reduced .fx-spark-a,
-  .fx-toggle.is-reduced .fx-spark-b { opacity: 0.4; }
-  .fx-toggle.is-reduced .fx-slash { opacity: 0.92; transform: scale(1); }
+  .fx-toggle.is-reduced .fx-spark-b { opacity: 0.32; animation: none; }
+  /* NB: the ico-colour swap + slash reveal for the reduced state are driven by
+     inline style in CursorFxToggle.tsx — the CSS optimiser was dropping the
+     equivalent single-selector rules here (the multi-selector spark rule survives). */
+}
+@keyframes fxTwinkle {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  50% { transform: scale(1.12) rotate(8deg); opacity: 0.9; }
 }
 @media (min-width: 981px) and (prefers-reduced-motion: reduce) {
   .fx-toggle, .fx-toggle-label { transition: none; animation: none; }
+  .fx-toggle .fx-spark-main { animation: none; }
 }
 
 /* ── Mobile app chrome: the "STICKER DOCK" (≤980px, GlassTabBar.tsx) ──
@@ -3009,5 +3023,38 @@ html.js .reel-thumb img:not(.is-loaded) { opacity: 0; }
   .reel-lightbox-video { max-height: 48vh; max-height: 48dvh; }
   .reel-lightbox-desc { -webkit-line-clamp: 2; }
   .reel-lightbox-meta h4 { font-size: 1.15rem; }
+}
+
+/* ══════════ SECTION-HEAD DOODLES ══════════ */
+/* Small orange marks tucked into the empty corners of the Services / Work /
+   Process headings — more of the site's hand-drawn character, dropped into dead
+   space. Absolutely positioned so they never disturb the flex head; shrunk +
+   re-tucked on phones (.doodle.x = 0,2,0 beats svg.doodle = 0,1,1). */
+.section-head { position: relative; }
+.head-doodle { position: absolute; color: var(--orange); z-index: 2; pointer-events: none; }
+.svc-burst { top: -1.35rem; right: 0.35rem; width: 1.7rem; height: 1.7rem; animation: sparkPulse 3.6s var(--ease) infinite; }
+.svc-dots { top: -0.85rem; right: 3rem; width: 2.1rem; height: 0.65rem; opacity: 0.85; }
+.work-star { top: -1.2rem; right: 0.6rem; width: 1.55rem; height: 1.55rem; animation: sparkPulse 4.1s var(--ease) infinite; }
+.work-loop { bottom: 0.15rem; right: 2.25rem; width: 5.5rem; height: 2.6rem; transform: rotate(-5deg); opacity: 0.9; }
+.proc-spark { top: -1.3rem; right: 0.5rem; width: 1.6rem; height: 1.6rem; }
+.proc-zig { top: -0.5rem; right: 2.8rem; width: 3.6rem; height: 0.85rem; opacity: 0.8; }
+@media (max-width: 760px) {
+  .doodle.svc-burst, .doodle.work-star, .doodle.proc-spark { top: -0.9rem; right: 0.3rem; width: 1.25rem; height: 1.25rem; }
+  .doodle.svc-dots, .doodle.proc-zig { top: -0.6rem; right: 2rem; width: 1.75rem; }
+  .doodle.work-loop { bottom: auto; top: -0.7rem; right: 1.9rem; width: 3.3rem; height: 1.55rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .svc-burst, .work-star { animation: none; }
+}
+
+/* ══════════ MOBILE CTAs ══════════ */
+/* Bigger, thumb-friendly primary actions on phones: the hero pair becomes two
+   equal-width sticker buttons; the contact pair stacks full-width with the
+   WhatsApp primary on top. */
+@media (max-width: 640px) {
+  .glass-cta { width: min(92vw, 25rem); gap: 0.5rem; padding: 0; }
+  .glass-cta .btn { flex: 1 1 0; justify-content: center; padding: 0.9rem 0.75rem; font-size: 0.9375rem; }
+  .contact-cta { flex-direction: column; gap: 0.75rem; }
+  .contact-cta .morph-btn { width: 100%; max-width: 22rem; justify-content: center; height: 3.5rem; }
 }
 

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useLang } from "@/i18n";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useCursorFxReduced } from "@/components/cursorFx";
 import MorphWord from "@/components/MorphWord";
 import Doodle from "@/components/Doodle";
 import FireFrame from "@/components/FireFrame";
@@ -152,7 +153,11 @@ function ReelCard({
   const imgRef = useRef<HTMLImageElement>(null);
   const [loaded, setLoaded] = useState(false);
   const reduce = useReducedMotion();
-  const previewEnabled = HOVER_CAPABLE && !reduce;
+  const cursorFxReduced = useCursorFxReduced();
+  // The preview rides with the fire/liquid: on by default, and it silences
+  // together with them the moment the "Reduce Animations" toggle is pressed
+  // (and under OS reduced-motion) — not only on the OS setting.
+  const previewEnabled = HOVER_CAPABLE && !reduce && !cursorFxReduced;
   const pv = useReelPreview(previewEnabled);
 
   // A cached poster is already `.complete` on mount and never fires onLoad —
@@ -235,7 +240,11 @@ function StageCard({ onPlay }: { onPlay: (gi: number) => void }) {
   const imgRef = useRef<HTMLImageElement>(null);
   const [loaded, setLoaded] = useState(false);
   const reduce = useReducedMotion();
-  const previewEnabled = HOVER_CAPABLE && !reduce;
+  const cursorFxReduced = useCursorFxReduced();
+  // The preview rides with the fire/liquid: on by default, and it silences
+  // together with them the moment the "Reduce Animations" toggle is pressed
+  // (and under OS reduced-motion) — not only on the OS setting.
+  const previewEnabled = HOVER_CAPABLE && !reduce && !cursorFxReduced;
   const pv = useReelPreview(previewEnabled);
 
   useEffect(() => {
