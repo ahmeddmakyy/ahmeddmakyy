@@ -315,8 +315,8 @@ float fFrameFire(vec2 uv, vec4 card, float cardR, float cardIg, float uTime, out
   // upward bias: flames on top/sides reach higher; the BOTTOM hugs tight so it
   // never reaches a caption sitting below the frame.
   float up=clamp((p.y+card.w)/(card.w*2.0),0.0,1.0);   // 0 bottom .. 1 top
-  float outerReach=mix(11.0, 33.0, up);                 // hug tighter (less spiky)
-  float innerReach=3.0;                                 // was 16 → no inward spill
+  float outerReach=mix(12.0, 42.0, up);                 // taller, livelier tongues up top
+  float innerReach=3.0;                                 // no inward spill (frame now gapped out too)
 
   float prof = sd>0.0 ? exp(-sd/outerReach) : exp(-(-sd)/innerReach);
   prof *= smoothstep(-2.5, 0.5, sd);                    // hard clip: nothing >2px inside
@@ -325,17 +325,21 @@ float fFrameFire(vec2 uv, vec4 card, float cardR, float cardIg, float uTime, out
 
   // SEAMLESS licking noise: sample on a circle in noise-space (periodic in ang),
   // animated by translating the whole circle over time; radial detail via edge.
-  vec2 nc=vec2(cos(ang),sin(ang))*9.0 + vec2(uTime*0.5,-uTime*0.8) + edge*vec2(0.010,0.014) + 3.1;
+  vec2 nc=vec2(cos(ang),sin(ang))*9.0 + vec2(uTime*0.74,-uTime*1.2) + edge*vec2(0.011,0.016) + 3.1;
   float warp=fFbm(nc*0.6);
-  float n=fFbm(nc+warp*1.2);
+  float n=fFbm(nc+warp*1.3);
 
-  float heat=prof*(0.5+1.15*n);
+  float heat=prof*(0.5+1.2*n);
   heat*=smoothstep(0.10,0.80, prof*(0.4+n));
-  // outward licks — masked to the OUTSIDE so shards never cross into the content
-  heat+=smoothstep(0.58,0.95,n)*exp(-max(0.0,sd)/(outerReach*1.25))*outside*0.5;
+  // outward licks — masked to the OUTSIDE so shards never cross into the content;
+  // longer + more frequent tongues now so the ring visibly dances
+  heat+=smoothstep(0.53,0.95,n)*exp(-max(0.0,sd)/(outerReach*1.35))*outside*0.7;
   heat*=reveal;
-  // flicker — INTEGER angular frequency (9) so it stays seamless at the wrap
-  heat*=0.90 + 0.14*sin(uTime*2.3 + ang*9.0) + 0.10*n;
+  // flicker — INTEGER angular frequency (9) keeps it seamless at the wrap; bigger
+  // amplitude + a little faster so the flame reads as alive, not a static glow
+  heat*=0.82 + 0.24*sin(uTime*2.9 + ang*9.0) + 0.15*n;
+  // a second, slower breathing pulse layered on for organic life
+  heat*=0.94 + 0.10*sin(uTime*1.1 - ang*3.0);
   heat=max(heat,0.0);
 
   // cool smoke drifting up off the TOP edge only (seamless nc-based)

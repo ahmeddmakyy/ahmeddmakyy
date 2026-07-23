@@ -198,9 +198,9 @@ const en: SiteContent = {
     {
       title: "Alwassef Motors — Your Day, Your Car",
       tag: "AI Ad",
-      client: "Car Showroom",
+      client: "Car Dealership",
       description:
-        "A cinematic AI ad for a car showroom — a day-in-the-life story that carries one driver from his morning coffee to the wheel of his new car, written, directed and produced end to end with AI.",
+        "A cinematic AI ad for a car dealership — a day-in-the-life story that carries one driver from his morning coffee to the wheel of his new car, written, directed and produced end to end with AI.",
     },
     {
       title: "Dr. Ahmed ElKashef — Move Without Pain",
@@ -233,23 +233,23 @@ const en: SiteContent = {
     {
       title: "Mohamed Abbas Motors — Finance It",
       tag: "UI Animation",
-      client: "Car Showroom",
+      client: "Car Dealership",
       description:
-        "A light, playful UI-animation concept for a car showroom that sells new and used cars on easy installments — not a real app. The lineup scrolls, one tap on “Finance it” under a Toyota Fortuner, and instant approval: the whole pitch as a smooth in-app flow, built entirely in code, directed with AI.",
+        "A light, playful UI-animation concept for a car dealership that sells new and used cars on easy installments — not a real app. The lineup scrolls, one tap on “Finance it” under a Toyota Fortuner, and instant approval: the whole pitch as a smooth in-app flow, built entirely in code, directed with AI.",
     },
     {
       title: "Mohamed Abbas Motors — Ask ChatGPT",
       tag: "UI Animation",
-      client: "Car Showroom",
+      client: "Car Dealership",
       description:
-        "A scroll-stopping hook built as a pixel-perfect ChatGPT recreation: ask for Egypt’s best car-installment showroom — the answer reveals the brand.",
+        "A scroll-stopping hook built as a pixel-perfect ChatGPT recreation: ask for Egypt’s best car-installment dealership — the answer reveals the brand.",
     },
     {
       title: "Quick Loan — Cars & Financing",
       tag: "UI Animation",
       client: "Automotive · Finance",
       description:
-        "A UI animation reel for a car showroom and financing brand — designed and animated entirely in code, directed with AI, from the brand’s own assets.",
+        "A UI animation reel for a car dealership and financing brand — designed and animated entirely in code, directed with AI, from the brand’s own assets.",
     },
     {
       title: "Demo Star — Men’s Fashion Experience",
@@ -261,14 +261,14 @@ const en: SiteContent = {
     {
       title: "Alwassef Motors — He’s Never Driven One",
       tag: "AI Ad",
-      client: "Car Showroom · Geely EX2",
+      client: "Car Dealership · Geely EX2",
       description:
         "A cinematic AI reel for the electric Geely EX2 launch: a cafe know-it-all warns against Chinese cars, until the man who actually drove one answers him with the keys in his hand. Characters, shots and Arabic voice-over all AI-directed, shot by shot.",
     },
     {
       title: "Trust Motors — The Opportunity Won’t Wait",
       tag: "AI Ad",
-      client: "Car Showroom · Cairo",
+      client: "Car Dealership · Cairo",
       description:
         "A cinematic AI teaser for a multi-brand Cairo dealership — one gleaming car held under a spotlight while a warehouse of dust-covered classics looks on, all on a single line: some opportunities won’t wait. AI cinematic footage, Arabic voice-over and kinetic Arabic type, directed shot by shot.",
     },
@@ -284,7 +284,7 @@ const en: SiteContent = {
       tag: "UI Animation",
       client: "Car Dealership · Cairo",
       description:
-        "A UI-animation reel that rebuilds the whole way a buyer finds a showroom — a Google search for “Golf Star Motors”, then a pixel-perfect Facebook page, then a run of Facebook Stories that reveal the MG ONE 2026 card by card: a bold design, a 12.3-inch CarPlay screen, 168 hp, six airbags and a 360° camera — closing on the hook that actually sells here: the lowest down payment in Egypt, the rest in easy installments. The Facebook and Google interfaces are rebuilt in code and the car is AI-generated, directed frame by frame.",
+        "A UI-animation reel that rebuilds the whole way a buyer finds a dealership — a Google search for “Golf Star Motors”, then a pixel-perfect Facebook page, then a run of Facebook Stories that reveal the MG ONE 2026 card by card: a bold design, a 12.3-inch CarPlay screen, 168 hp, six airbags and a 360° camera — closing on the hook that actually sells here: the lowest down payment in Egypt, the rest in easy installments. The Facebook and Google interfaces are rebuilt in code and the car is AI-generated, directed frame by frame.",
     },
   ],
   about: {

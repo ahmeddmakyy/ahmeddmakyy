@@ -2699,11 +2699,13 @@ html.js .reel-thumb img:not(.is-loaded) { opacity: 0; }
   height: 100%;
   object-fit: cover;
   z-index: 0;
-  opacity: 0;
-  animation: reelPreviewIn 0.45s var(--ease) forwards;
+  /* opacity:1 with NO keyframe on purpose — the CSS optimiser drops a fade-in
+     @keyframes (same quirk that hit the toggle rules), which left the preview
+     permanently invisible. The <video> carries the SAME poster as the tile, so a
+     hard swap poster→video is already seamless — no fade needed. */
+  opacity: 1;
   pointer-events: none;
 }
-@keyframes reelPreviewIn { to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .reel-preview { display: none; } }
 
 .reel-tag {

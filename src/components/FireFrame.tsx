@@ -86,12 +86,17 @@ export default function FireFrame({
             if (!el) return null;
             const r = el.getBoundingClientRect();
             if (r.width < 1 || r.height < 1) return null;
+            // Ring the frame with a small OUTWARD gap so the flames (and their
+            // ~2px inner reach) sit JUST OUTSIDE the content, never licking over
+            // the video itself — that inner lick read as "an effect on the video"
+            // that then vanished when the bare <video> went native-fullscreen.
+            const GAP = 7;
             return {
-              left: r.left,
-              top: r.top,
-              width: r.width,
-              height: r.height,
-              radius: cfg.current.radius,
+              left: r.left - GAP,
+              top: r.top - GAP,
+              width: r.width + GAP * 2,
+              height: r.height + GAP * 2,
+              radius: cfg.current.radius + GAP,
             };
           },
         });

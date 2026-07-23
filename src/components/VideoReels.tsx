@@ -657,7 +657,7 @@ function VideoLightbox({
       {/* Fiery portal ringing the film frame. Behind the inner in DOM so the
           video paints over the inner glow and the flames lick around its edges;
           pointer-events:none, so the player controls stay clickable. */}
-      <FireFrame targetRef={filmRef} onDark={1} radius={16} />
+      <FireFrame targetRef={filmRef} onDark={1} radius={24} />
       <div
         className={`reel-lightbox-inner${lang === "ar" ? " is-ar" : ""}`}
         ref={innerRef}
