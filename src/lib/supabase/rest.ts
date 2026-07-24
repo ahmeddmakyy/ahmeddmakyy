@@ -53,3 +53,24 @@ export async function restRpc(fn: string, args: Record<string, unknown>): Promis
     return false;
   }
 }
+
+/** POST to an RPC and return its JSON result (null on any failure). */
+export async function restRpcResult<T>(
+  fn: string,
+  args: Record<string, unknown>,
+): Promise<T | null> {
+  if (!isSupabaseConfigured) return null;
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+      method: "POST",
+      headers: { ...headers(), "Content-Type": "application/json" },
+      body: JSON.stringify(args),
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as T;
+  } catch {
+    return null;
+  }
+}
